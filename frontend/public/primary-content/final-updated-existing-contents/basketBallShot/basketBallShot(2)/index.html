@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #1a6e3e 0%, #4a90e2 100%);
+            background-size: cover;
+            background-position: center;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-family: 'Arial', sans-serif;
+            position: relative;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        /* Responsive styles for mobile */
+        @media (max-width: 600px) {
+            .containAll {
+                min-height: 100vh;
+            }
+            .container {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                align-items: flex-end;
+                gap: 4vw;
+                margin-top: 14vw;
+                margin-bottom: 28vw;
+                position: relative;
+                z-index: 20;
+            }
+            .cars {
+                position: relative !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 20vw;
+                height: 20vw;
+                min-width: 60px;
+                min-height: 60px;
+                font-size: 7vw;
+                margin: 0;
+                z-index: 21;
+            }
+            .parachute {
+                font-size: 8vw;
+                top: 4vw;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 0 4vw;
+                margin-bottom: 4vw;
+                position: relative;
+                z-index: 30;
+            }
+            .hoop {
+                width: 36vw;
+                height: 36vw;
+                right: 5vw;
+                left: unset;
+                transform: none;
+                bottom: 2vw;
+                z-index: 10;
+            }
+            .student {
+                width: 16vw;
+                height: 24vw;
+                left: 2vw;
+                transform: none;
+            }
+            .game-controls {
+                z-index: 50;
+                top: 4px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+            .game-overlay .overlay-content {
+                padding: 1rem 0.5rem;
+                font-size: 1.2rem;
+            }
+            /* .game-button sizes now come from base rule to match desktop */
+            .stars-container {
+                flex-direction: row;
+                padding: 6px 8px;
+                align-self: flex-start;
+                align-items: flex-start;
+                margin-left: 0;
+            }
+            .stars {
+                width: 7vw;
+                height: 7vw;
+                min-width: 28px;
+                min-height: 28px;
+                justify-content: flex-start;
+            }
+            .level-indicator {
+                text-align: left;
+            }
+        }
+        
+        /* Basketball court lines */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                /* Center line */
+                linear-gradient(to right, white 0%, white 100%) 50% 0 / 4px 100% no-repeat,
+                /* Free throw line */
+                linear-gradient(to right, white 0%, white 100%) 30% 0 / 2px 100% no-repeat,
+                /* Three-point line */
+                radial-gradient(circle at 30% 50%, transparent 0%, transparent 30%, white 30%, white 31%, transparent 31%);
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+        .parachute {
+            background: chartreuse;
+            /* width: 20vw; */
+            padding: 0 2vw;
+            position: absolute;
+            top: 12vw;
+            left: 14vw;
+            font-size: 8vw;
+            font-weight: bold;
+            font-family: century gothic;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .hoop {
+            background: url('./assets/basketball_hoop_1.png') no-repeat;
+            background-size: contain;
+            width: 25vw;
+            height: 25vw;
+            position: absolute;
+            bottom: 0;
+            right: 5vw;
+            z-index: 100;
+        }
+
+        .containAll {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Classroom elements */
+        .classroom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20%;
+            background: #8B4513;
+            z-index: 1;
+        }
+        
+        .classroom::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: #A0522D;
+            border-radius: 50% 50% 0 0 / 10px 10px 0 0;
+        }
+        
+        /* Particle effects */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+            background: #FFD700;
+            border-radius: 50%;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* Student character */
+        .student {
+            position: absolute;
+            width: 100px;
+            height: 150px;
+            bottom: 0;
+            left: 2%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400"><rect x="50" y="100" width="100" height="200" fill="%2333a1fd"/><circle cx="100" cy="70" r="50" fill="%23ffdbac"/><rect x="40" y="300" width="30" height="100" fill="%2333a1fd"/><rect x="130" y="300" width="30" height="100" fill="%2333a1fd"/><rect x="70" y="200" width="60" height="120" fill="%23ff6b6b"/></svg>') no-repeat bottom left;
+            background-size: contain;
+            z-index: 5;
+            transform-origin: bottom center;
+            transition: transform 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .student.throwing {
+            animation: throwMotion 0.8s ease-out;
+        }
+        
+        .student.celebrating {
+            animation: celebrate 1.5s ease-in-out;
+        }
+        
+        @keyframes throwMotion {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            30% { transform: translateY(-10%) rotate(-5deg); }
+            70% { transform: translateY(0) rotate(5deg); }
+        }
+        
+        @keyframes celebrate {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            25% { transform: translateY(-10%) rotate(-5deg); }
+            50% { transform: translateY(0) rotate(5deg); }
+            75% { transform: translateY(-5%) rotate(-3deg); }
+        }
+
+        .cars {
+            background: url('./assets/ball_6.png') no-repeat;
+            background-size: contain;
+            background-position: center;
+            height: 10vw;
+            width: 10vw;
+            min-width: 80px;
+            min-height: 80px;
+            text-align: center;
+            font-size: 4vw;
+            font-weight: bold;
+            font-family: century gothic;
+            cursor: pointer;
+            position: absolute;
+            top: 60vh;
+            z-index: 10;
+        }
+        /* Classroom elements */
+        .classroom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20%;
+            background: #8B4513;
+            z-index: 1;
+        }
+        #car1 { left: 12%; }
+        #car2 { left: 22%; }
+        #car3 { left: 32%; }
+        @media (max-width: 600px) {
+            #car1, #car2, #car3 {
+                left: unset !important;
+            }
+        }
+
+        /* Audio controls container */
+        .audio-controls {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 150;
+        }
+        /* Top-right navigation (Back, Home) */
+        .top-right-nav {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 2001;
+        }
+        .nav-button {
+            background: #ffffff;
+            border: none;
+            border-radius: 14px;
+            padding: 4px 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .nav-button:active { transform: translateY(1px); }
+        /* Bottom-right controls (mute + streak) */
+        .bottom-right-controls {
+            position: fixed;
+            right: 10px;
+            bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 2001;
+        }
+        
+        .readAgain {
+            background-size: contain;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            min-height: 32px;
+            max-width: 32px;
+            max-height: 32px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        /* Ensure mute button has consistent size across viewports */
+        .mute-button {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            min-height: 24px;
+            max-width: 24px;
+            max-height: 24px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        /* Standardize icon size and remove hover scaling differences */
+        .mute-button .icon { font-size: 12px; line-height: 1; }
+        .readAgain:hover, .mute-button:hover { transform: none; }
+        .streak-counter {
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 16px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .stars-container {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 15px;
+            border-radius: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-right: 0;
+            margin-left: 5px;
+        }
+        
+        .stars {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        
+        .star {
+            width: 30px;
+            height: 30px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23FFD700"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.5));
+        }
+        
+        .star.filled {
+            opacity: 1;
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+        }
+        
+        .star.active {
+            animation: starPulse 0.5s ease-out;
+        }
+        
+        @keyframes starPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5) rotate(15deg); }
+            100% { transform: scale(1) rotate(0); }
+        }
+        
+        @keyframes levelUp {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); color: #FFD700; }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes dunkBall {
+            0% {
+                transform: translate(0, 0) scale(1);
+                left: var(--ball-left, 8%);
+                top: var(--ball-top, 60vh);
+                opacity: 1;
+                z-index: 101;
+            }
+            30% {
+                transform: translate(-10%, -100%) scale(1);
+                left: 60%;
+                top: 20vh;
+                z-index: 101;
+            }
+            60% {
+                transform: translate(0, 0) scale(0.9);
+                left: 70%;
+                top: 45vh;
+                z-index: 101;
+            }
+            80% {
+                transform: translate(0, 5%) scale(0.9);
+                left: 70%;
+                top: 65vh;
+                z-index: 101;
+            }
+            100% {
+                transform: translate(0, 10%) scale(0.9);
+                left: 70%;
+                top: 75vh;
+                opacity: 1;
+                z-index: 101;
+            }
+        }
+
+        @keyframes missBall {
+            0% {
+                transform: scale(1.2);
+            }
+
+            50% {
+                left: 50%;
+                top: 10vw;
+            }
+
+            100% {
+                left: 70%;
+                top: 50vw;
+            }
+        }
+
+        /* Game Overlay */
+        .game-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .overlay-content {
+            background: white;
+            padding: 2rem 3rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .overlay-content h1 {
+            color: #333;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+        
+        .game-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 18px; /* unified with mobile */
+            font-size: 1.1rem; /* unified with mobile */
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            outline: none;
+            white-space: nowrap;
+            margin-left: 5px;
+        }
+        
+        .game-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .game-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .game-controls {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            right: 70px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0;
+            z-index: 100;
+            box-sizing: border-box;
+        }
+        /* Desktop adjustments: none (use same sizes as mobile/base) */
+    </style>
+</head>
+
+<body>
+    <!-- Game Overlay -->
+    <div class="game-overlay" id="startScreen">
+        <div class="overlay-content">
+            <h1>Basketball Game</h1>
+            <button id="startButton" class="game-button">Start Game</button>
+        </div>
+    </div>
+
+    <div class="game-controls">
+        <button id="restartButton" class="game-button" style="display: none;">Restart</button>
+    </div>
+    <div class="top-right-nav">
+        <button id="backButton" class="nav-button">Back</button>
+        <button id="homeButton" class="nav-button">Home</button>
+    </div>
+    <div class="bottom-right-controls">
+        <div class="streak-counter">Streak: <span id="streakCount">0</span></div>
+        <button id="muteButton" class="mute-button" aria-label="Mute cheering sound" aria-pressed="false" title="Mute cheering sound">
+            <span class="icon">🔊</span>
+        </button>
+    </div>
+    <div class="containAll">
+        <div class="classroom"></div>
+        <div class="student" id="student">
+            <!-- Student character will be rendered here -->
+        </div>
+        <div class="parachute"></div>
+        <div class="container">
+            <div class="cars" id="car1"><p></p></div>
+            <div class="cars" id="car2"><p></p></div>
+            <div class="cars" id="car3"><p></p></div>
+        </div>
+        <div class="hoop"></div>
+        <div id="particles"></div>
+    </div>
+    <audio class="letterSound" src="" autoplay></audio>
+    <div class="readAgain" id="readAgain" title="Read Again"></div>
+
+</body>
+<script>
+    // Game state
+    let gameActive = false;
+    let correctAnswers = 0;
+    let currentLevel = 1;
+    let starsEarned = 0;
+    const starsNeededForLevel = 5; // Stars needed to level up
+    let streak = 0;
+    
+    // Game elements
+    let startScreen, restartButton, startButton, student;
+    let gameElements = []; // To store game elements for easy cleanup
+    
+    // Update streak counter
+    function updateStreak(isCorrect) {
+        streak = isCorrect ? streak + 1 : 0;
+        const sc = document.getElementById('streakCount');
+        if (sc) sc.textContent = streak;
+    }
+    
+    function levelUp() {
+        currentLevel++;
+        const levelElement = document.getElementById('currentLevel');
+        if (levelElement) {
+            levelElement.textContent = currentLevel;
+            levelElement.style.animation = 'levelUp 1s';
+            setTimeout(() => { levelElement.style.animation = ''; }, 1000);
+        }
+        if (letterSound) {
+            const originalSrc = letterSound.src;
+            letterSound.src = './assets/claps.mp3';
+            letterSound.play().then(() => {
+                setTimeout(() => { letterSound.src = originalSrc; }, 1000);
+            });
+        }
+    }
+    
+    var arrOfStr2 = ["C","D","H"];//end-var
+    var arrOfStr = ['Chocolate', 'Donute', 'Heart']//end-var
+
+    var parach;
+    var letterSound = document.getElementsByClassName("letterSound")[0];
+    var array;
+    var text;
+    var rand;
+    var sth
+    var slicer
+
+    let pageTitle = ["Game"];//end-var
+    function setPageTitle(selector) {
+        let titleElt = document.querySelector(selector);
+        let title = document.querySelector("title");
+        title.innerText = pageTitle[0];
+        if (titleElt) {
+            titleElt.innerText = pageTitle[0];
+        }
+    }
+    setPageTitle('.header')
+
+
+
+    // Game control functions
+    function startGame() {
+        gameActive = true;
+        startScreen.style.display = 'none';
+        restartButton.style.display = 'block';
+        
+        // Make sure student is visible
+        const student = document.getElementById('student');
+        student.style.display = 'block';
+        
+        // Reset game state
+        resetGame();
+        
+        // Initialize game elements
+        createElement();
+        assignLetter();
+        checkAnswer();
+        readAgain();
+    }
+    
+    function resetGame() {
+        // Reset game state
+        correctAnswers = 0;
+        currentLevel = 1;
+        starsEarned = 0;
+        
+        // Ensure student is visible and in default state
+        const student = document.getElementById('student');
+        student.className = 'student';
+        student.style.display = 'block';
+        const lvl = document.getElementById('currentLevel');
+        if (lvl) lvl.textContent = currentLevel;
+        
+        // Reset streak
+        streak = 0;
+        const sc = document.getElementById('streakCount');
+        if (sc) sc.textContent = '0';
+        
+        // Clear any existing game elements
+        clearGameElements();
+    }
+    
+    function clearGameElements() {
+        // Remove all game elements
+        const container = document.querySelector('.container');
+        if (container) {
+            container.remove();
+        }
+    }
+    
+    // Student character functions
+    function throwBall(callback) {
+        const student = document.getElementById('student');
+        student.classList.remove('celebrating');
+        student.classList.add('throwing');
+        
+        // Reset the throwing animation after it completes
+        setTimeout(() => {
+            student.classList.remove('throwing');
+            if (callback) callback();
+        }, 800);
+    }
+    
+    function createParticles(x, y, count = 20) {
+        const particles = [];
+        const container = document.getElementById('particles');
+        
+        for (let i = 0; i < count; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            // Random size between 4 and 10 pixels
+            const size = Math.random() * 6 + 4;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            
+            // Random angle and distance
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.random() * 100 + 50;
+            
+            // Set initial position
+            particle.style.left = `${x}px`;
+            particle.style.top = `${y}px`;
+            
+            // Add to DOM
+            container.appendChild(particle);
+            
+            // Animate
+            const animation = particle.animate([
+                { 
+                    transform: 'translate(0, 0) scale(1)',
+                    opacity: 1 
+                },
+                { 
+                    transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0)`, 
+                    opacity: 0 
+                }
+            ], {
+                duration: 1000,
+                easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+            });
+            
+            // Remove after animation
+            animation.onfinish = () => particle.remove();
+        }
+    }
+    
+    function celebrate() {
+        const student = document.getElementById('student');
+        const studentRect = student.getBoundingClientRect();
+        const x = studentRect.left + studentRect.width / 2;
+        const y = studentRect.top + studentRect.height / 2;
+        
+        student.classList.add('celebrating');
+        createParticles(x, y);
+        
+        // Remove the celebration class after animation completes
+        setTimeout(() => {
+            student.classList.remove('celebrating');
+        }, 1500);
+    }  
+    // Initialize game
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get UI elements
+        startScreen = document.getElementById('startScreen');
+        restartButton = document.getElementById('restartButton');
+        startButton = document.getElementById('startButton');
+        student = document.getElementById('student');
+        
+        // Set up event listeners
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+        // Initialize mute toggle immediately so it works before starting the game
+        muteSound();
+        
+        // Top-right navigation actions
+        const backBtn = document.getElementById('backButton');
+        const homeBtn = document.getElementById('homeButton');
+        if (backBtn) backBtn.addEventListener('click', () => window.history.back());
+        if (homeBtn) homeBtn.addEventListener('click', () => window.location.href = './index.html');
+    });
+
+
+    function createElement() {
+        var container = document.createElement("div")
+        container.className = "container"
+        document.getElementsByClassName("containAll")[0].appendChild(container);
+        for (let i = 0; i < 3; i++) {
+            var cars = document.createElement("div");
+            var p = document.createElement("p");
+            cars.className = "cars"
+            cars.id = "car" + (i + 1)
+            cars.appendChild(p)
+            container.appendChild(cars)
+        }
+
+    }
+
+
+
+    function assignLetter() {
+        text = document.getElementsByTagName("p")
+        parach = document.getElementsByClassName("parachute")[0]
+        slicer = arrOfStr2.slice(0,)
+        wordSlicer = arrOfStr.slice(0,)
+        array = [];
+        wordArray = []
+        for (let i = 0; i < text.length; i++) {
+            var random = Math.floor(Math.random() * slicer.length);
+            let splicer = slicer.splice(random, 1)
+            let wordSplicer = wordSlicer.splice(random, 1)
+            array.push(splicer[0])
+            wordArray.push(wordSplicer[0])
+        }
+        for (let i = 0; i < text.length; i++) {
+            text[i].innerText = array[i];
+        }
+        const ind = Math.floor(Math.random() * array.length)
+        parach.innerText = wordArray[ind]
+        var tm = wordArray.indexOf(parach.innerText)
+        letterSound.src = './assets/' + array[tm].toLowerCase() + '.mp3'; // Changed toLowerCase to match assets
+    }
+
+
+    function checkAnswer() {
+        for (let i = 0; i < document.getElementsByClassName("cars").length; i++) {
+            document.getElementsByClassName("cars")[i].onclick = function() {
+                if (!gameActive) return;
+                
+                const ball = this;
+                const ballIndex = i; // Capture the current index
+                
+                // Disable all balls while processing
+                Array.from(document.getElementsByClassName('cars')).forEach(b => {
+                    b.style.pointerEvents = 'none';
+                });
+                
+                // Student throws the ball
+                throwBall(() => {
+                    const ballRect = ball.getBoundingClientRect();
+                    
+                    // Set custom properties for the animation start position
+                    ball.style.setProperty('--ball-left', `${ballRect.left}px`);
+                    ball.style.setProperty('--ball-top', `${ballRect.top}px`);
+                    
+                    if (arrOfStr2.indexOf(text[ballIndex].innerText) == arrOfStr.indexOf(parach.innerText)) {
+                        // Update streak and play success sound
+                        updateStreak(true);
+                        letterSound.src = './assets/claps.mp3';
+                        letterSound.play();
+                        
+                        // Apply dunk animation
+                        ball.style.animation = 'none';
+                        void ball.offsetWidth; // Trigger reflow
+                        ball.style.animation = 'dunkBall 1.5s forwards';
+                        ball.style.background = "url('./assets/ball_66.png') no-repeat";
+                        ball.style.backgroundSize = "contain";
+                        
+                        // Student celebrates
+                        celebrate();
+                        
+                        // Reset after animation
+                        setTimeout(() => {
+                            ball.style.animation = '';
+                            ball.style.background = "url('./assets/ball_6.png') no-repeat";
+                            ball.style.backgroundSize = "contain";
+                            assignLetter();
+                            
+                            // Re-enable all balls
+                            Array.from(document.getElementsByClassName('cars')).forEach(b => {
+                                b.style.pointerEvents = 'auto';
+                            });
+                        }, 1500);
+                    } else {
+                        // Reset streak for wrong answer
+                        updateStreak(false);
+                        
+                        // Visual feedback for wrong answer
+                        ball.style.background = "url('./assets/ball_31.png') no-repeat";
+                        ball.style.backgroundSize = "100%";
+                        ball.style.animation = "missBall 2.5s";
+                        letterSound.src = './assets/ev_hoop_ball_17.mp3';
+                        letterSound.play();
+                        
+                        // Reset after animation
+                        setTimeout(() => {
+                            ball.style.background = "url('./assets/ball_6.png') no-repeat";
+                            ball.style.backgroundSize = "contain";
+                            ball.style.animation = "";
+                            
+                            // Re-enable all balls
+                            Array.from(document.getElementsByClassName('cars')).forEach(b => {
+                                b.style.pointerEvents = 'auto';
+                            });
+                        }, 2500);
+                    }
+                });
+            };
+        }
+    }
+
+
+    function muteSound() {
+        const btn = document.getElementById('muteButton');
+        const ls = document.getElementsByClassName('letterSound')[0];
+        if (!btn || !ls) return;
+        // Avoid attaching multiple times
+        if (btn.dataset.bound === '1') return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', function() {
+            ls.muted = !ls.muted;
+            const icon = btn.querySelector('.icon');
+            if (icon) icon.textContent = ls.muted ? '🔇' : '🔊';
+            btn.setAttribute('aria-pressed', String(ls.muted));
+            btn.title = ls.muted ? 'Unmute cheering sound' : 'Mute cheering sound';
+        });
+        // Set initial icon/aria according to current state
+        const initIcon = btn.querySelector('.icon');
+        if (initIcon) initIcon.textContent = ls.muted ? '🔇' : '🔊';
+        btn.setAttribute('aria-pressed', String(ls.muted));
+        btn.title = ls.muted ? 'Unmute cheering sound' : 'Mute cheering sound';
+    }
+
+    function readAgain() {
+        document.getElementsByClassName("readAgain")[0].onclick = function () {
+            letterSound.play()
+        }
+    }
+
+
+    // function dynamics(){
+    //     let randomX = Math.floor(Math.random()*80)
+    //         let randomY = Math.floor(Math.random()*20)
+    //         document.getElementsByClassName("parachute")[0].style.top = randomY + "%";
+    //         document.getElementsByClassName("parachute")[0].style.left = randomX + "%";
+    // }
+    // document.getElementsByTagName("body")[0].onload = function(){
+    //     dynamics()
+    //     setInterval(dynamics,5000)
+    // }
+
+</script>
+
+</html>

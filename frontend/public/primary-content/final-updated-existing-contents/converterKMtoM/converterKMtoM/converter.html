@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Unit Master</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at 0% 0%, #60a5fa, transparent 50%),
+                        radial-gradient(circle at 100% 0%, #a855f7, transparent 50%),
+                        radial-gradient(circle at 100% 100%, #ec4899, transparent 50%),
+                        #6ecbf5;
+            position: relative;
+            overscroll-behavior-y: none;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(#ffffff 20%, transparent 20%), radial-gradient(#ffffff 20%, transparent 20%);
+            background-position: 0 0, 50px 50px;
+            background-size: 100px 100px;
+            opacity: 0.2;
+            z-index: -1;
+        }
+
+        .app-shell {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 32px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
+            overflow: hidden;
+            border-bottom: 8px solid rgba(2, 119, 171, 0.25);
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .card-header {
+            background: #059ee3;
+            height: 80px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 2;
+        }
+
+        .lang-menu-wrapper {
+            position: relative;
+        }
+
+        .lang-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+
+        .lang-button:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        .lang-flag {
+            font-size: 18px;
+        }
+
+        .chevron {
+            width: 14px;
+            height: 14px;
+            border-left: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            transform: rotate(-45deg);
+            transition: transform 0.2s ease;
+        }
+
+        .chevron.open {
+            transform: rotate(135deg);
+        }
+
+        .lang-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 8px;
+            width: 190px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.30);
+            border: 2px solid rgba(5, 158, 227, 0.2);
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .lang-option {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            font-weight: 700;
+            font-size: 13px;
+            border: none;
+            background: #ffffff;
+            color: #4b5563;
+            cursor: pointer;
+        }
+
+        .lang-option:hover {
+            background: #eff6ff;
+        }
+
+        .lang-option.active {
+            background: #dbeafe;
+            color: #059ee3;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .round-icon-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .card-body {
+            padding: 24px 16px 24px 16px;
+            background: #ffffff;
+            min-height: 420px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 900;
+            color: #024566;
+            text-align: center;
+        }
+
+        .streak-row {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #eff6ff;
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 2px solid #dbeafe;
+        }
+
+        .streak-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .flame-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fed7aa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .streak-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #9ca3af;
+        }
+
+        .streak-value {
+            font-size: 20px;
+            font-weight: 900;
+            color: #024566;
+        }
+
+        .sound-toggle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .sound-on {
+            background: rgba(6, 182, 212, 0.15);
+            color: #059ee3;
+        }
+
+        .sound-off {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+
+        .rule-pill {
+            margin: 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: rgba(250, 204, 21, 0.2);
+            color: #92400e;
+            border: 1px solid #facc15;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .star-icon {
+            width: 10px;
+            height: 10px;
+            background: #facc15;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+        }
+
+        .inputs-card {
+            margin-top: 10px;
+            background: #f9fafb;
+            border-radius: 24px;
+            border: 2px solid #e5e7eb;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+        }
+
+        .field-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #059ee3;
+            margin-left: 10px;
+            margin-bottom: 4px;
+        }
+
+        .field-input {
+            width: 100%;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 900;
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 0;
+            border-bottom: 4px solid #059ee3;
+            outline: none;
+        }
+
+        .field-input:disabled {
+            background: transparent;
+            border-bottom-color: #e5e7eb;
+            color: #9ca3af;
+        }
+
+        .field-input-editable {
+            background: #ffffff;
+            color: #024566;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+        }
+
+        .swap-icon-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            border-radius: 999px;
+            padding: 6px;
+            border: 2px solid #e5e7eb;
+            margin-top: 4px;
+            z-index: 5;
+        }
+
+        .swap-icon {
+            width: 18px;
+            height: 18px;
+            border-left: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            transform: rotate(-45deg);
+            position: relative;
+        }
+
+        .swap-icon::before,
+        .swap-icon::after {
+            content: "";
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-top: 2px solid currentColor;
+            border-right: 2px solid currentColor;
+        }
+
+        .swap-icon::before {
+            top: -2px;
+            left: -2px;
+            transform: rotate(-45deg);
+        }
+
+        .swap-icon::after {
+            bottom: -2px;
+            right: -2px;
+            transform: rotate(135deg);
+        }
+
+        .bottom-buttons {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px;
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .reset-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            border: none;
+            background: #f3f4f6;
+            color: #6b7280;
+            font-weight: 700;
+            font-size: 26px;
+            cursor: pointer;
+        }
+
+        .check-button {
+            border-radius: 16px;
+            border: none;
+            background: #059ee3;
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 15px 30px rgba(5, 158, 227, 0.4);
+            padding: 0 16px;
+        }
+
+        .check-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            position: relative;
+        }
+
+        .check-icon::after {
+            content: "";
+            position: absolute;
+            left: 4px;
+            top: 6px;
+            width: 6px;
+            height: 10px;
+            border-right: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+            transform: rotate(45deg);
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 20;
+            animation: pop 0.4s ease-out forwards;
+        }
+
+        .overlay.visible {
+            display: flex;
+        }
+
+        .overlay-bg {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 0 0 32px 32px;
+        }
+
+        .overlay-content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 260px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .overlay-text {
+            font-size: 32px;
+            font-weight: 900;
+            transform: rotate(-3deg);
+            text-align: center;
+        }
+
+        .overlay-text.good {
+            color: #22c55e;
+        }
+
+        .overlay-text.bad {
+            color: #ec4899;
+        }
+
+        .overlay-image-wrapper {
+            width: 180px;
+            height: 180px;
+            border-radius: 24px;
+            background: #ffffff;
+            overflow: hidden;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.3);
+            border: 4px solid #ffffff;
+        }
+
+        .overlay-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .overlay-buttons {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .try-again-button,
+        .next-button {
+            width: 100%;
+            padding: 10px 0;
+            border-radius: 16px;
+            border: none;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .try-again-button {
+            background: #eff6ff;
+            color: #059ee3;
+        }
+
+        .next-button-good {
+            background: #22c55e;
+            color: #ffffff;
+        }
+
+        .next-button-bad {
+            background: #059ee3;
+            color: #ffffff;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <div class="card" id="unit-card">
+            <div class="card-header">
+                <div class="lang-menu-wrapper">
+                    <button class="lang-button" id="lang-button">
+                        <span class="lang-flag" id="lang-flag">🇬🇧</span>
+                        <span id="lang-label">English</span>
+                        <span class="chevron" id="lang-chevron"></span>
+                    </button>
+                    <div class="lang-menu" id="lang-menu" style="display:none;"></div>
+                </div>
+                <div class="header-buttons">
+                    <button class="round-icon-button" id="home-button">🏠</button>
+                    <button class="round-icon-button" id="back-button">⬅</button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <h1 class="title" id="title-text">Unit Master</h1>
+
+                <div class="streak-row">
+                    <div class="streak-left">
+                        <div class="flame-icon">🔥</div>
+                        <div>
+                            <div class="streak-label" id="streak-label">Streak</div>
+                            <div class="streak-value" id="streak-value">0</div>
+                        </div>
+                    </div>
+                    <button class="sound-toggle sound-on" id="sound-toggle" title="Toggle sound">🔊</button>
+                </div>
+
+                <div class="rule-pill">
+                    <div class="star-icon"></div>
+                    <span id="rule-text">1000 m = 1 km</span>
+                </div>
+
+                <div class="inputs-card">
+                    <div>
+                        <div class="field-label" id="km-label">Kilometers (km)</div>
+                        <input type="number" id="km-input" class="field-input" placeholder="? km">
+                    </div>
+
+                    <div class="swap-icon-wrapper">
+                        <div class="swap-icon"></div>
+                    </div>
+
+                    <div>
+                        <div class="field-label" id="m-label">Meters (m)</div>
+                        <input type="number" id="m-input" class="field-input" placeholder="? m">
+                    </div>
+                </div>
+
+                <div class="bottom-buttons">
+                    <button class="reset-button" id="reset-button" title="Reset">⟳</button>
+                    <button class="check-button" id="check-button">
+                        <span id="check-text">Check!</span>
+                        <span class="check-icon"></span>
+                    </button>
+                </div>
+
+                <div class="overlay" id="feedback-overlay">
+                    <div class="overlay-bg"></div>
+                    <div class="overlay-content">
+                        <div class="overlay-text" id="feedback-text">YAY!</div>
+                        <div class="overlay-image-wrapper">
+                            <img id="feedback-image" class="overlay-image" src="" alt="feedback" />
+                        </div>
+                        <div class="overlay-buttons">
+                            <button class="try-again-button" id="try-again-button">Try Again</button>
+                            <button class="next-button-good" id="next-button">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const LANGUAGES = [
+            { code: 'en', label: 'English', flag: '🇬🇧' },
+            { code: 'am', label: 'Amharic', flag: '🇪🇹' },
+            { code: 'tg', label: 'Tigrinya', flag: 'tig' },
+            { code: 'om', label: 'Afan Oromo', flag: '🌳' },
+        ];
+
+        const CONTENT = {
+            en: {
+                title: "Unit Master",
+                rule: "1000 m = 1 km",
+                km: "Kilometers (km)",
+                m: "Meters (m)",
+                check: "Check!",
+                next: "Next",
+                reset: "Reset",
+                streak: "Score",
+                good: ["YAY!", "WOW!", "COOL!", "SUPER!"],
+                bad: ["OOPS!", "OH NO!", "TRY AGAIN"],
+                phKm: "? km",
+                phM: "? m",
+            },
+            am: {
+                title: "መለኪያ ጨዋታ",
+                rule: "1000 ሜትር = 1 ኪሎሜትር",
+                km: "ኪሎሜትር (ኪሜ)",
+                m: "ሜትር (ሜ)",
+                check: "አረጋግጥ",
+                next: "ቀጣይ",
+                reset: "ጀምር",
+                streak: "ነጥብ",
+                good: ["ጎበዝ!", "አሪፍ!", "ጎበዝ!"],
+                bad: ["አይዞህ!", "እንደገና ሞክር"],
+                phKm: "? ኪሜ",
+                phM: "? ሜ",
+            },
+            tg: {
+                title: "ፀወታ ዓቀን ",
+                rule: "1000 ሜትር = 1 ኪሎሜትር",
+                km: "ኪሎሜትር (ኪሜ)",
+                m: "ሜትር (ሜ)",
+                check: "ፈትሽ",
+                next: "ዝቕፅል",
+                reset: "ጀምር",
+                streak: "ነጥቢ",
+                good: ["ንፉዕ!", "ፅቡቕ!", "ጎበዝ!"],
+                bad: ["ኣይዞኻ!", "ደጊምካ ፈትን"],
+                phKm: "? ኪሜ",
+                phM: "? ሜ",
+            },
+            om: {
+                title: "Tapha Yuunitii",
+                rule: "1000 m = 1 km",
+                km: "Kilomeetira (km)",
+                m: "Meetira (m)",
+                check: "Mirkaneessi",
+                next: "Itti Aanu",
+                reset: "Eegsi",
+                streak: "Qabxii",
+                good: ["Baay'ee Gaarii!", "Jabaa!", "Sirrii!"],
+                bad: ["Lakki!", "Irra Deebi'i"],
+                phKm: "? km",
+                phM: "? m",
+            }
+        };
+
+        const GIFS = {
+            correct: "assets/award.jpg",
+            wrong: "assets/wrong.jpg"
+        };
+
+        const SOUNDS = {
+            correct: "assets/success.mp3",
+            wrong: "assets/a_aa.mp3"
+        };
+
+        let currentLang = 'en';
+        let currentQuestion = null;
+        let currentInput = '';
+        let streak = 0;
+        let soundOn = true;
+        let feedbackState = { show: false, correct: false, msg: '' };
+
+        const langButton = document.getElementById('lang-button');
+        const langFlag = document.getElementById('lang-flag');
+        const langLabel = document.getElementById('lang-label');
+        const langChevron = document.getElementById('lang-chevron');
+        const langMenu = document.getElementById('lang-menu');
+
+        const titleText = document.getElementById('title-text');
+        const ruleText = document.getElementById('rule-text');
+        const kmLabel = document.getElementById('km-label'); // Changed from cmLabel
+        const mLabel = document.getElementById('m-label');
+        const checkText = document.getElementById('check-text');
+        const streakLabel = document.getElementById('streak-label');
+        const streakValue = document.getElementById('streak-value');
+
+        const kmInput = document.getElementById('km-input'); // Changed from cmInput
+        const mInput = document.getElementById('m-input');
+
+        const soundToggle = document.getElementById('sound-toggle');
+        const resetButton = document.getElementById('reset-button');
+        const checkButton = document.getElementById('check-button');
+
+        const overlay = document.getElementById('feedback-overlay');
+        const feedbackText = document.getElementById('feedback-text');
+        const feedbackImage = document.getElementById('feedback-image');
+        const tryAgainButton = document.getElementById('try-again-button');
+        const nextButton = document.getElementById('next-button');
+
+        function applyLanguage() {
+            const txt = CONTENT[currentLang];
+            titleText.textContent = txt.title;
+            ruleText.textContent = txt.rule;
+            kmLabel.textContent = txt.km; // Changed from cmLabel
+            mLabel.textContent = txt.m;
+            checkText.textContent = txt.check;
+            streakLabel.textContent = txt.streak;
+            kmInput.placeholder = txt.phKm; // Changed from cmInput
+            mInput.placeholder = txt.phM;
+
+            const langInfo = LANGUAGES.find(l => l.code === currentLang) || LANGUAGES[0];
+            langFlag.textContent = langInfo.flag;
+            langLabel.textContent = langInfo.label;
+        }
+
+        function updateInputs() {
+            if (!currentQuestion) return;
+
+            if (currentQuestion.type === 'km') { // if converting km to m
+                kmInput.value = currentQuestion.val.toFixed(3); // Display km with 3 decimal places
+                kmInput.disabled = true;
+                kmInput.classList.remove('field-input-editable');
+
+                mInput.disabled = false;
+                mInput.classList.add('field-input-editable');
+                mInput.value = currentInput;
+            } else { // if converting m to km
+                mInput.value = currentQuestion.val; // Display meters (integer)
+                mInput.disabled = true;
+                mInput.classList.remove('field-input-editable');
+
+                kmInput.disabled = false;
+                kmInput.classList.add('field-input-editable');
+                kmInput.value = currentInput;
+            }
+        }
+
+        function newQuestion() {
+            const isKmToM = Math.random() > 0.5; // True for km to m, false for m to km
+            let val, ans; // val is the given value, ans is the correct answer
+
+            if (isKmToM) {
+                // km to m conversion
+                // Generate km value between 1.000 and 10.000
+                // For example, 1.000, 5.234, 9.999
+                val = (Math.random() * (10000 - 1000) + 1000) / 1000; // Random float from 1.0 to 9.999...
+                val = parseFloat(val.toFixed(3)); // Ensure 3 decimal places for display and internal value
+                ans = val * 1000; // Answer in meters (will be an integer if val has 3 decimal places)
+            } else {
+                // m to km conversion
+                // Generate m value between 1000 and 10000 (inclusive)
+                val = Math.floor(Math.random() * (10000 - 1000 + 1)) + 1000; // e.g., 1000, 2500, 9900 meters
+                ans = val / 1000; // Answer in km, might have decimals
+                ans = parseFloat(ans.toFixed(3)); // Ensure 3 decimal places for comparison
+            }
+
+            currentQuestion = { type: isKmToM ? 'km' : 'm', val, ans };
+            currentInput = '';
+            feedbackState = { show: false, correct: false, msg: '' };
+            overlay.classList.remove('visible');
+            updateInputs();
+        }
+
+        function speak(success) {
+            if (!soundOn) return;
+
+            const src = success ? SOUNDS.correct : SOUNDS.wrong;
+            try {
+                const audio = new Audio(src);
+                audio.play().catch(() => {});
+            } catch (e) {
+                if ('speechSynthesis' in window) {
+                    const text = success ? 'Yaaay!' : 'Aaah';
+                    const utt = new SpeechSynthesisUtterance(text);
+                    utt.pitch = success ? 1.5 : 0.8;
+                    utt.rate = success ? 1.2 : 0.9;
+
+                    const voices = window.speechSynthesis.getVoices();
+                    const friendly = voices && voices.find(v => v.name.includes('Google US English') || v.name.includes('Female'));
+                    if (friendly) utt.voice = friendly;
+
+                    window.speechSynthesis.speak(utt);
+                }
+            }
+        }
+
+        function showFeedback(isCorrect) {
+            const txt = CONTENT[currentLang];
+            const pool = isCorrect ? txt.good : txt.bad;
+            const msg = pool[Math.floor(Math.random() * pool.length)];
+
+            feedbackState = { show: true, correct: isCorrect, msg };
+            feedbackText.textContent = msg;
+            feedbackText.className = 'overlay-text ' + (isCorrect ? 'good' : 'bad');
+            feedbackImage.src = isCorrect ? GIFS.correct : GIFS.wrong;
+
+            nextButton.textContent = txt.next;
+            nextButton.className = isCorrect ? 'next-button-good next-button' : 'next-button-bad next-button';
+
+            if (isCorrect) {
+                tryAgainButton.style.display = 'none';
+            } else {
+                tryAgainButton.style.display = 'block';
+                tryAgainButton.textContent = txt.bad[txt.bad.length - 1] || 'Try Again';
+            }
+
+            overlay.classList.add('visible');
+        }
+
+        function handleCheck() {
+            if (!currentQuestion) return;
+
+            const editableInput = currentQuestion.type === 'km' ? mInput : kmInput; // If type is km, user fills mInput; else fills kmInput
+            const valueStr = editableInput.value.trim();
+            if (!valueStr) return;
+
+            const userVal = parseFloat(valueStr);
+            if (isNaN(userVal)) return;
+
+            // Compare with a small tolerance for floating point numbers, especially if answer can have decimals
+            const isCorrect = Math.abs(userVal - currentQuestion.ans) < 0.001; // Tolerance for 3 decimal places
+            if (isCorrect) {
+                streak += 1;
+                speak(true);
+            } else {
+                streak = 0;
+                speak(false);
+            }
+            streakValue.textContent = streak;
+            showFeedback(isCorrect);
+        }
+
+        function buildLangMenu() {
+            langMenu.innerHTML = '';
+            LANGUAGES.forEach(lang => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'lang-option' + (lang.code === currentLang ? ' active' : '');
+                btn.innerHTML = `<span>${lang.label}</span><span>${lang.flag}</span>`;
+                btn.addEventListener('click', () => {
+                    currentLang = lang.code;
+                    applyLanguage();
+                    langMenu.style.display = 'none';
+                    langChevron.classList.remove('open');
+                });
+                langMenu.appendChild(btn);
+            });
+        }
+
+        function initEvents() {
+            langButton.addEventListener('click', () => {
+                const isOpen = langMenu.style.display === 'block';
+                langMenu.style.display = isOpen ? 'none' : 'block';
+                langChevron.classList.toggle('open', !isOpen);
+            });
+
+            document.addEventListener('mousedown', (e) => {
+                if (!langMenu.contains(e.target) && !langButton.contains(e.target)) {
+                    langMenu.style.display = 'none';
+                    langChevron.classList.remove('open');
+                }
+            });
+
+            soundToggle.addEventListener('click', () => {
+                soundOn = !soundOn;
+                soundToggle.classList.toggle('sound-on', soundOn);
+                soundToggle.classList.toggle('sound-off', !soundOn);
+                soundToggle.textContent = soundOn ? '🔊' : '🔇';
+            });
+
+            resetButton.addEventListener('click', () => {
+                streak = 0;
+                streakValue.textContent = streak;
+                newQuestion();
+            });
+
+            checkButton.addEventListener('click', handleCheck);
+
+            kmInput.addEventListener('input', (e) => { // Changed from cmInput
+                if (currentQuestion && currentQuestion.type === 'm') { // If user is converting m to km
+                    currentInput = e.target.value;
+                }
+            });
+
+            mInput.addEventListener('input', (e) => {
+                if (currentQuestion && currentQuestion.type === 'km') { // If user is converting km to m
+                    currentInput = e.target.value;
+                }
+            });
+
+            tryAgainButton.addEventListener('click', () => {
+                overlay.classList.remove('visible');
+            });
+
+            nextButton.addEventListener('click', () => {
+                newQuestion();
+            });
+
+            document.getElementById('home-button').addEventListener('click', () => {
+                alert('Home!');
+            });
+
+            document.getElementById('back-button').addEventListener('click', () => {
+                alert('Back!');
+            });
+        }
+
+        (function init() {
+            applyLanguage();
+            buildLangMenu();
+            initEvents();
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+            }
+            newQuestion();
+        })();
+    </script>
+</body>
+</html>

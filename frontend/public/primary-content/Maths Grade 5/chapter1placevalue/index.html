@@ -1,0 +1,475 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Place Value - ዓድታት ቁጽሪ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4CC9F0;
+            --secondary: #F72585;
+            --accent: #F9C74F;
+            --success: #43AA8B;
+            --text: #2d3748;
+            --bg: #f0f9ff;
+            --card-bg: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Comic Neue', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(rgba(240, 249, 255, 0.06), rgba(240, 249, 255, 0.06)),
+                url('assets/bg.jpg');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
+            background-attachment: fixed;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.78);
+            padding: 0.8rem 1.5rem;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.10);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 5px solid var(--primary);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            width: 120px; /* Balance for center alignment */
+        }
+
+        .header-center {
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .header-right {
+            display: flex;
+            justify-content: flex-end;
+            width: 120px;
+        }
+
+        #app-title {
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: none; /* Hidden on mobile to save space */
+        }
+
+        #header-lesson-title {
+            color: var(--secondary);
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0;
+            white-space: nowrap;
+            text-shadow: 2px 2px 0px rgba(247, 37, 133, 0.1);
+        }
+
+        /* Language Selector */
+        select {
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 2px solid var(--primary);
+            font-family: inherit;
+            font-weight: bold;
+            color: var(--text);
+            cursor: pointer;
+            outline: none;
+            background: rgba(255,255,255,0.9);
+            font-size: 0.9rem;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.10);
+        }
+
+        /* Main Layout */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* Interactive Card */
+        .lesson-card {
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 30px;
+            padding: 32px 18px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.55);
+            min-height: 75vh;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        p.instruction {
+            font-size: 1.3rem;
+            color: #718096;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.72);
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255,255,255,0.85);
+            box-shadow: 0 14px 28px rgba(0,0,0,0.10);
+        }
+
+        /* Number Input */
+        .input-group {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto 50px auto;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 20px;
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            border: 4px solid var(--accent);
+            border-radius: 25px;
+            outline: none;
+            color: var(--secondary);
+            letter-spacing: 8px;
+            background: rgba(255, 251, 235, 0.92);
+            box-shadow: 0 16px 34px rgba(0,0,0,0.12), inset 0 2px 5px rgba(0,0,0,0.06);
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 6px rgba(247, 37, 133, 0.22), 0 18px 40px rgba(0,0,0,0.14);
+            transform: scale(1.02);
+        }
+
+        /* Place Value Grid */
+        .pv-grid {
+            display: flex;
+            flex-direction: row-reverse; /* Ones on the right */
+            justify-content: center;
+            align-items: flex-end; /* Align bottom to show height difference */
+            flex-wrap: wrap;
+            gap: 12px;
+            min-height: 300px; /* Space for growth */
+            padding-bottom: 20px;
+        }
+
+        .pv-box {
+            background: rgba(255,255,255,0.78);
+            border-radius: 15px 15px 5px 5px;
+            width: 100px;
+            /* Height is dynamic */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 5px;
+            box-shadow: 0 14px 0px rgba(0,0,0,0.10), 0 18px 35px rgba(0,0,0,0.12);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0;
+            border: 2px solid rgba(0,0,0,0.05);
+            border-bottom-width: 8px;
+            position: relative;
+            transition: height 0.3s ease;
+        }
+
+        /* Color Coding Places */
+        .pv-box.ones { border-bottom-color: var(--secondary); background: linear-gradient(to top, rgba(255, 245, 249, 0.90), rgba(255,255,255,0.78)); }
+        .pv-box.tens { border-bottom-color: var(--accent); background: linear-gradient(to top, rgba(255, 250, 240, 0.90), rgba(255,255,255,0.78)); }
+        .pv-box.hundreds { border-bottom-color: var(--success); background: linear-gradient(to top, rgba(240, 255, 244, 0.90), rgba(255,255,255,0.78)); }
+        .pv-box.thousands { border-bottom-color: var(--primary); background: linear-gradient(to top, rgba(235, 248, 255, 0.90), rgba(255,255,255,0.78)); }
+        .pv-box.ten-thousands { border-bottom-color: #805ad5; background: linear-gradient(to top, rgba(250, 245, 255, 0.90), rgba(255,255,255,0.78)); }
+        .pv-box.hundred-thousands { border-bottom-color: #dd6b20; background: linear-gradient(to top, rgba(255, 250, 240, 0.90), rgba(255,255,255,0.78)); }
+        .pv-box.millions { border-bottom-color: #3182ce; background: linear-gradient(to top, rgba(235, 248, 255, 0.90), rgba(255,255,255,0.78)); }
+
+        .digit {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #2d3748;
+            margin-bottom: auto;
+            margin-top: auto;
+            text-shadow: 2px 2px 0px white;
+        }
+
+        .label {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #4a5568;
+            text-align: center;
+            background: rgba(255,255,255,0.9);
+            padding: 4px 8px;
+            border-radius: 8px;
+            width: 90%;
+            margin-bottom: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .value-repr {
+            font-size: 0.7rem;
+            background: #2d3748;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            color: white;
+            margin-top: 5px;
+        }
+
+        /* Helper Text */
+        .info-box {
+            background: #e6fffa;
+            border: 2px solid var(--success);
+            padding: 20px;
+            border-radius: 20px;
+            margin-top: 50px;
+            text-align: left;
+            display: flex;
+            align-items: start;
+            gap: 15px;
+        }
+
+        .info-icon {
+            font-size: 2rem;
+            background: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .info-title {
+            color: var(--success);
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        /* Animations */
+        @keyframes popIn {
+            0% { transform: scale(0.5) translateY(50px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            #header-lesson-title { font-size: 1.2rem; }
+            #app-title { display: none; }
+            header { padding: 0.5rem 1rem; }
+            
+            .pv-grid {
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: center; /* Center align on mobile wrap */
+            }
+
+            .pv-box.millions { order: 0; }
+            .pv-box.hundred-thousands { order: 1; }
+            .pv-box.ten-thousands { order: 2; }
+            .pv-box.thousands { order: 3; }
+            .pv-box.hundreds { order: 4; }
+            .pv-box.tens { order: 5; }
+            .pv-box.ones { order: 6; }
+
+            .pv-box {
+                width: 90px;
+                height: 120px !important; /* Flatten height diff on mobile for grid fit */
+                margin-bottom: 10px;
+            }
+
+            .digit { font-size: 2.5rem; }
+            .label { font-size: 0.7rem; }
+            
+            input[type="text"] { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <span style="background:var(--secondary); color:white; padding:5px 12px; border-radius:50%; font-weight:bold; font-size:1.2rem;">5</span>
+        <span id="app-title" style="margin-left: 10px;">ሒሳብ</span>
+    </div>
+    <div class="header-center">
+        <h1 id="header-lesson-title">ዓድታት ቁጽሪ</h1>
+    </div>
+    <div class="header-right">
+        <select id="lang-select" onchange="changeLanguage()">
+            <option value="ti">ትግርኛ</option>
+            <option value="am">አማርኛ</option>
+            <option value="en">English</option>
+            <option value="om">Afan Oromoo</option>
+            <option value="so">Soomaali</option>
+        </select>
+    </div>
+</header>
+
+<div class="container">
+    <div class="lesson-card">
+        <p class="instruction" id="instruction">ቁጽሪ የእትዉ እሞ ዓድታቱ ርኣዩ</p>
+
+        <div class="input-group">
+            <input type="text" id="numberInput" placeholder="123..." maxlength="7" oninput="validateAndRender(this.value)">
+        </div>
+
+        <div class="pv-grid" id="visualization">
+            <!-- Place value boxes will appear here -->
+        </div>
+
+        <div class="info-box">
+            <div class="info-icon">💡</div>
+            <div>
+                <span class="info-title" id="did-you-know">ትፈልጡ ዶ?</span>
+                <p id="fact-text">ዓድታት ቁጽሪ፡ ዋጋ ናይ ሓደ ቁጽሪ ኣብቲ ዝተቀመጠሉ ቦታ ይውስኖ።</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Translation Database
+    const translations = {
+        ti: {
+            lessonTitle: "ዓድታት ቁጽሪ",
+            instruction: "ቁጽሪ የእትዉ እሞ ዓድታቱ ርኣዩ (ክሳብ 1,000,000)",
+            places: ["ሓደ", "ዓሰርተ", "ሚኢቲ", "ሽሕ", "ዓሰርተ ሽሕ", "ሚኢቲ ሽሕ", "ሚሊዮን"],
+            didYouKnow: "ትፈልጡ ዶ?",
+            fact: "ዓድታት ቁጽሪ፡ ዋጋ ናይ ሓደ ቁጽሪ ኣብቲ ዝተቀመጠሉ ቦታ ይውስኖ። ንኣብነት ኣብ 50፡ እቲ 5 ዋጋኡ 50 እዩ።"
+        },
+        am: {
+            lessonTitle: "የቁጥር ቤቶች",
+            instruction: "ቁጥር ያስገቡ እና የቁጥር ቤቶቹን ይመልከቱ (እስከ 1,000,000)",
+            places: ["አንድ", "አስር", "መቶ", "ሽህ", "አስር ሽህ", "መቶ ሽህ", "ሚሊዮን"],
+            didYouKnow: "ይህንን ያውቃሉ?",
+            fact: "የቁጥር ቤት ዋጋ ማለት አንድ አሃዝ በቁጥሩ ውስጥ ባለው ቦታ የሚወክለው ዋጋ ነው። ለምሳሌ በ 50 ውስጥ 5ቱ 50ን ይወክላል።"
+        },
+        en: {
+            lessonTitle: "Place Value",
+            instruction: "Type a number to see its place value (up to 1,000,000)",
+            places: ["Ones", "Tens", "Hundreds", "Thousands", "Ten Thousands", "Hundred Thousands", "Millions"],
+            didYouKnow: "Did you know?",
+            fact: "Place value is the value of each digit in a number. For example, the 5 in 50 represents 50."
+        },
+        om: {
+            lessonTitle: "Iddoo Lakkoofsaa",
+            instruction: "Lakkoofsa galchuun iddoo isaa ilaali (Hanga 1,000,000)",
+            places: ["Tokko", "Kudhan", "Dhibba", "Kuma", "Kuma Kudhan", "Kuma Dhibba", "Miiliyoona"],
+            didYouKnow: "Beektuu laata?",
+            fact: "Iddoo lakkoofsaa jechuun gatii lakkoofsi tokko bakka inni qabaterratti hundaa'uudha."
+        },
+        so: {
+            lessonTitle: "Kagaarka Tirooyinka",
+            instruction: "Geli tiro si aad u aragto kagaarkeeda (Ilaa 1,000,000)",
+            places: ["Koow", "Toban", "Boqol", "Kun", "Toban Kun", "Boqol Kun", "Milyan"],
+            didYouKnow: "Ma ogtahay?",
+            fact: "Kagaarka tirada waa qiimaha ay tiro leedahay iyadoo ku xiran booska ay ku jirto."
+        }
+    };
+
+    // Styling classes for place values
+    const placeClasses = ['ones', 'tens', 'hundreds', 'thousands', 'ten-thousands', 'hundred-thousands', 'millions'];
+    
+    let currentLang = 'ti';
+
+    // Validation to allow only numbers
+    function validateAndRender(val) {
+        const cleanVal = val.replace(/[^0-9]/g, '');
+        if (cleanVal !== val) {
+            document.getElementById('numberInput').value = cleanVal;
+        }
+        renderVisualization(cleanVal);
+    }
+
+    // Main Logic to Render Grid
+    function renderVisualization(numberStr) {
+        const container = document.getElementById('visualization');
+        container.innerHTML = '';
+        
+        if (!numberStr) return;
+
+        // Split digits and iterate backwards (Ones first)
+        // We use split reverse to process from Ones place (index 0) up to Millions (index 6)
+        const digits = numberStr.split('').reverse();
+        const t = translations[currentLang];
+
+        digits.forEach((digit, index) => {
+            if (index >= 7) return; // Limit to millions
+
+            const box = document.createElement('div');
+            box.className = `pv-box ${placeClasses[index]}`;
+            
+            // Stagger animations
+            box.style.animationDelay = `${index * 0.1}s`;
+
+            // Calculate Visual Height Difference
+            // Base height 140px, add 15px for each magnitude step
+            // This creates the "staircase" effect highlighting magnitude
+            const height = 140 + (index * 15);
+            box.style.height = `${height}px`;
+
+            // Calculate actual value (e.g., 5 in tens place = 50)
+            const value = digit * Math.pow(10, index);
+
+            box.innerHTML = `
+                <span class="label">${t.places[index]}</span>
+                <span class="digit">${digit}</span>
+                <span class="value-repr">x ${Math.pow(10, index).toLocaleString()}</span>
+            `;
+            
+            // Append to container. Since flex-direction is row-reverse:
+            // The first item appended (Ones) goes to the far right.
+            // The last item appended (Millions) goes to the far left.
+            // This visually aligns with how we read numbers (Left to Right), but place values increase Right to Left.
+            container.appendChild(box); 
+        });
+    }
+
+    // Change Language Function
+    function changeLanguage() {
+        currentLang = document.getElementById('lang-select').value;
+        const t = translations[currentLang];
+
+        // Update Text
+        document.getElementById('header-lesson-title').textContent = t.lessonTitle;
+        document.getElementById('instruction').textContent = t.instruction;
+        document.getElementById('did-you-know').textContent = t.didYouKnow;
+        document.getElementById('fact-text').textContent = t.fact;
+
+        // Re-render current input with new language
+        const currentInput = document.getElementById('numberInput').value;
+        renderVisualization(currentInput);
+    }
+
+    // Initial Render
+    window.onload = function() {
+        document.getElementById('numberInput').value = "56723";
+        renderVisualization("56723");
+    };
+
+</script>
+</body>
+</html>

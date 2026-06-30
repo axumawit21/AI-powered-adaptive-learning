@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Art Studio: Fractions | ቀላሚ ጉዚታት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --studio-bg: #f8fafc;
+            --paper: #ffffff;
+            --ink: #334155;
+            --paint-primary: #0ea5e9; /* Sky Blue */
+            --paint-secondary: #f43f5e; /* Rose */
+            --paint-accent: #f59e0b; /* Amber */
+            --canvas-border: #e2e8f0;
+            --success: #10b981;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--studio-bg);
+            background-image: 
+                linear-gradient(var(--canvas-border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--canvas-border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--ink);
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2000; }
+
+        header {
+            width: 100%; max-width: 1000px; padding: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+
+        .lang-select {
+            padding: 10px 20px; border-radius: 12px; border: 2px solid #e2e8f0;
+            font-family: inherit; font-weight: 700; cursor: pointer; outline: none;
+            background: white; color: var(--paint-primary); box-shadow: var(--shadow);
+            transition: 0.2s;
+        }
+        .lang-select:hover { border-color: var(--paint-primary); }
+
+        .score-display {
+            background: white; padding: 10px 25px; border-radius: 15px;
+            font-weight: 800; font-size: 1.4rem; color: var(--paint-accent);
+            box-shadow: var(--shadow); border: 2px solid #fffbeb;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 900px; padding: 10px 20px;
+            display: flex; flex-direction: column; align-items: center; gap: 20px;
+        }
+
+        .mode-switcher {
+            display: flex; background: #f1f5f9; padding: 6px; border-radius: 18px;
+            gap: 5px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .mode-btn {
+            padding: 10px 25px; border-radius: 14px; border: none; font-weight: 700;
+            cursor: pointer; background: transparent; color: #64748b; transition: 0.3s;
+            font-size: 1rem;
+        }
+        .mode-btn.active { background: white; color: var(--paint-primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+        /* The "Sketchbook" Card */
+        .sketchbook {
+            width: 100%; background: var(--paper); border-radius: 35px;
+            padding: 40px; border: 1px solid #e2e8f0;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+            position: relative; display: flex; flex-direction: column; gap: 30px;
+            animation: cardFadeIn 0.6s ease-out;
+        }
+
+        @keyframes cardFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Story/Instruction Text */
+        .instruction-box {
+            background: #f0f9ff; border-left: 8px solid var(--paint-primary);
+            padding: 15px 25px; border-radius: 15px;
+            text-align: left; position: relative;
+        }
+        .instr-text { font-size: 1.5rem; font-weight: 700; color: #0369a1; line-height: 1.4; }
+
+        /* Canvas Area */
+        .canvas-area {
+            height: 220px; display: flex; align-items: center; justify-content: center; position: relative;
+        }
+        .shape-frame {
+            width: 200px; height: 200px; cursor: pointer;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.05));
+        }
+
+        svg .segment {
+            fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        svg .segment.painted { fill: var(--paint-primary); stroke: #0284c7; }
+        svg .segment:hover { fill: #f1f5f9; }
+
+        .clear-link {
+            position: absolute; bottom: -10px; right: 0;
+            font-size: 0.9rem; font-weight: 700; color: #94a3b8;
+            cursor: pointer; text-decoration: underline; text-underline-offset: 4px;
+        }
+        .clear-link:hover { color: var(--paint-secondary); }
+
+        /* Write Mode Inputs */
+        .fraction-inputs { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 10px 0; }
+        .input-slot {
+            width: 80px; height: 75px; border-radius: 20px; border: 4px solid #f1f5f9;
+            background: #f8fafc; display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 800; color: var(--paint-primary);
+            cursor: pointer; transition: 0.2s; position: relative;
+        }
+        .input-slot.active { border-color: var(--paint-primary); background: white; transform: translateY(-5px); box-shadow: 0 10px 20px rgba(14, 165, 233, 0.1); }
+        .input-slot.active::after {
+            content: ''; position: absolute; bottom: -12px; width: 12px; height: 12px;
+            background: var(--paint-primary); border-radius: 50%; animation: pulse 1s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; transform: scale(1.2); } }
+        .divisor-line { width: 90px; height: 6px; background: var(--ink); border-radius: 3px; }
+
+        /* Interaction Panel */
+        .controls { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .key {
+            height: 65px; background: white; border: 2px solid #f1f5f9; border-radius: 18px;
+            font-size: 1.6rem; font-weight: 800; color: #475569; cursor: pointer;
+            box-shadow: 0 4px 0 #f1f5f9; transition: all 0.1s;
+        }
+        .key:active { transform: translateY(2px); box-shadow: 0 2px 0 #f1f5f9; }
+        .key.special { background: #fff1f2; color: var(--paint-secondary); border-color: #ffe4e6; box-shadow: 0 4px 0 #ffe4e6; }
+        
+        .check-btn {
+            height: 80px; width: 100%; background: var(--paint-primary); color: white;
+            border: none; border-radius: 22px; font-size: 1.8rem; font-weight: 800;
+            cursor: pointer; box-shadow: 0 6px 0 #0369a1; transition: 0.1s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .check-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #0369a1; }
+
+        /* Utilities */
+        .hidden { display: none !important; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        .shake { animation: shake 0.4s; }
+
+        #success-msg {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 5rem; font-weight: 900; color: var(--success); opacity: 0; pointer-events: none; z-index: 500;
+        }
+        .pop-success { animation: popSuccess 1.5s forwards; }
+        @keyframes popSuccess {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            30% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            100% { opacity: 0; transform: translate(-50%, -80%) scale(1); }
+        }
+
+        @media (max-width: 600px) {
+            .sketchbook { padding: 25px 20px; border-radius: 25px; }
+            .instr-text { font-size: 1.1rem; }
+            .problem-display { font-size: 3rem; }
+            .key { height: 55px; font-size: 1.3rem; border-radius: 14px; }
+            .check-btn { height: 70px; font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    
+    <header>
+        <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+            <option value="ti">ትግርኛ</option>
+            <option value="am">አማርኛ</option>
+            <option value="en">English</option>
+            <option value="om">Afan Oromoo</option>
+            <option value="so">Soomaali</option>
+        </select>
+        <div class="score-display">✨ <span id="scoreVal">0</span></div>
+    </header>
+
+    <div class="container">
+        <div class="mode-switcher">
+            <button class="mode-btn active" id="modePaint" onclick="setMode('paint')">ምቅላም (Paint)</button>
+            <button class="mode-btn" id="modeId" onclick="setMode('write')">ምፅሓፍ (Write)</button>
+        </div>
+
+        <div class="sketchbook" id="gameCard">
+            <div id="success-msg">ንፉዕ!</div>
+            
+            <div class="instruction-box">
+                <p class="instr-text" id="instrText">...</p>
+            </div>
+
+            <div class="canvas-area">
+                <div class="shape-frame" id="shapeCon"></div>
+                <div class="clear-link" id="btnClear" onclick="clearPaint()">መሊስካ ጀምር</div>
+            </div>
+
+            <div class="fraction-inputs hidden" id="inputsWrap">
+                <div id="numSlot" class="input-slot active" onclick="focusSlot('num')">?</div>
+                <div class="divisor-line"></div>
+                <div id="denSlot" class="input-slot" onclick="focusSlot('den')">?</div>
+            </div>
+
+            <div class="controls">
+                <div class="keypad" id="keypad">
+                    <!-- Keys 1-9, 0, Del -->
+                </div>
+                <button class="check-btn" id="btnCheck" onclick="check()">ፈትሽ (Check)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { check: "ፈትሽ", win: "ንፉዕ!", paint: "ምቅላም", write: "ምፅሓፍ", clear: "መሊስካ ጀምር", pInstr: "ነቲ ቅርፂ {f} ቀብኦ", wInstr: "እዚ ቅርፂ ዝውክሎ ጉዚ ፅሓፍ", terms: { "1/2": "ፍርቂ", "1/3": "ሲሶ", "2/3": "ክልተ ሲሶ", "1/4": "ርባዕ", "3/4": "ሰለስተ ርባዕ" } },
+            am: { check: "አረጋግጥ", win: "ድንቅ!", paint: "ቀባ", write: "ጻፍ", clear: "እንደገና ጀምር", pInstr: "ቅርጹን {f} ቀባ", wInstr: "ቅርጹ የሚወክለውን ክፍልፋይ ጻፍ", terms: { "1/2": "ግማሽ", "1/3": "ሲሶ", "2/3": "ሁለት ሲሶ", "1/4": "ሩብ", "3/4": "ሦስት አራተኛ" } },
+            en: { check: "Check", win: "Great!", paint: "Paint", write: "Write", clear: "Clear", pInstr: "Paint {f} of the shape", wInstr: "What fraction is shown?", terms: { "1/2": "Half", "1/3": "One-third", "2/3": "Two-thirds", "1/4": "Quarter", "3/4": "Three-quarters" } },
+            om: { check: "Mirkaneessi", win: "Sirrii!", paint: "Dhibi", write: "Barreessi", clear: "Haaraa", pInstr: "Bocicha {f} dhibi", wInstr: "Firaakshinii bocicha bakka bu'u barreessi", terms: { "1/2": "Walakkaa", "1/3": "Sissoo", "2/3": "Sissoo lama", "1/4": "Rubuu", "3/4": "Rubuu sadii" } },
+            so: { check: "Hubi", win: "Sax!", paint: "Rinjeey", write: "Qor", clear: "Tirtir", pInstr: "Rinjeey {f} qaabka", wInstr: "Qor jajabka qaabku u taagan yahay", terms: { "1/2": "Nus", "1/3": "Saddex-meelood", "2/3": "Laba-saddex-meelood", "1/4": "Rubuc", "3/4": "Saddex-rubuc" } }
+        };
+
+        const FRACTIONS = [
+            { n: 1, d: 2 }, { n: 1, d: 3 }, { n: 2, d: 3 }, { n: 1, d: 4 }, { n: 3, d: 4 }
+        ];
+
+        let state = {
+            mode: 'paint',
+            lang: 'ti',
+            score: 0,
+            curFrac: null,
+            userPainted: new Set(),
+            userNum: "?",
+            userDen: "?",
+            focus: 'num',
+            busy: false,
+            particles: []
+        };
+
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSfx(type) {
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type==='tap'){ o.type='sine'; o.frequency.setValueAtTime(500,n); o.frequency.exponentialRampToValueAtTime(200,n+0.1); g.gain.setValueAtTime(0.1,n); o.start(); o.stop(n+0.1); }
+            else if(type==='win'){ o.type='triangle'; [523,659,783,1046].forEach((f,i)=>o.frequency.setValueAtTime(f,n+i*0.1)); g.gain.setValueAtTime(0.1,n); o.start(); o.stop(n+0.6); }
+            else { o.type='sawtooth'; o.frequency.value=120; g.gain.setValueAtTime(0.1,n); o.start(); o.stop(n+0.3); }
+        }
+
+        function setMode(m) {
+            state.mode = m;
+            document.getElementById('modePaint').classList.toggle('active', m === 'paint');
+            document.getElementById('modeId').classList.toggle('active', m === 'write');
+            document.getElementById('inputsWrap').classList.toggle('hidden', m === 'paint');
+            document.getElementById('btnClear').classList.toggle('hidden', m === 'write');
+            generate();
+        }
+
+        function changeLang(l) {
+            state.lang = l;
+            updateUI();
+        }
+
+        function updateUI() {
+            const t = i18n[state.lang];
+            const fracStr = `${state.curFrac.n}/${state.curFrac.d}`;
+            const term = t.terms[fracStr];
+            
+            document.getElementById('instrText').innerText = state.mode === 'paint' 
+                ? t.pInstr.replace('{f}', `${term} (${fracStr})`) 
+                : t.wInstr;
+            
+            document.getElementById('btnCheck').innerText = t.check;
+            document.getElementById('btnClear').innerText = t.clear;
+            document.getElementById('modePaint').innerText = t.paint;
+            document.getElementById('modeId').innerText = t.write;
+            document.getElementById('scoreVal').innerText = state.score;
+        }
+
+        function generate() {
+            state.curFrac = FRACTIONS[Math.floor(Math.random() * FRACTIONS.length)];
+            state.userPainted.clear();
+            state.userNum = "?";
+            state.userDen = "?";
+            state.focus = 'num';
+            
+            if (state.mode === 'write') {
+                // Pre-fill some segments for user to identify
+                const indices = Array.from({length: state.curFrac.d}, (_, i) => i).sort(() => Math.random() - 0.5);
+                for(let i=0; i < state.curFrac.n; i++) state.userPainted.add(indices[i]);
+            }
+            
+            renderShape();
+            refreshInputs();
+            updateUI();
+        }
+
+        function renderShape() {
+            const con = document.getElementById('shapeCon');
+            const d = state.curFrac.d;
+            const isCircle = state.curFrac.d % 2 === 0 && Math.random() > 0.4;
+            let html = `<svg viewBox="0 0 100 100">`;
+
+            if (isCircle) {
+                const cx=50, cy=50, r=45;
+                for (let i = 0; i < d; i++) {
+                    const start = (i * 360) / d - 90, end = ((i + 1) * 360) / d - 90;
+                    const x1 = cx + r * Math.cos(Math.PI * start / 180), y1 = cy + r * Math.sin(Math.PI * start / 180);
+                    const x2 = cx + r * Math.cos(Math.PI * end / 180), y2 = cy + r * Math.sin(Math.PI * end / 180);
+                    const painted = state.userPainted.has(i) ? 'painted' : '';
+                    html += `<path d="M 50 50 L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z" class="segment ${painted}" onclick="tapSeg(${i})"></path>`;
+                }
+            } else {
+                const w=84, h=40, xs=8, ys=30, sw = w/d;
+                for (let i = 0; i < d; i++) {
+                    const painted = state.userPainted.has(i) ? 'painted' : '';
+                    html += `<rect x="${xs + i * sw}" y="${ys}" width="${sw}" height="${h}" rx="4" class="segment ${painted}" onclick="tapSeg(${i})"></rect>`;
+                }
+            }
+            html += `</svg>`;
+            con.innerHTML = html;
+        }
+
+        function tapSeg(i) {
+            if (state.mode !== 'paint' || state.busy) return;
+            playSfx('tap');
+            if (state.userPainted.has(i)) state.userPainted.delete(i);
+            else state.userPainted.add(i);
+            renderShape();
+        }
+
+        function clearPaint() {
+            state.userPainted.clear();
+            renderShape();
+            playSfx('tap');
+        }
+
+        function focusSlot(s) {
+            state.focus = s;
+            refreshInputs();
+            playSfx('tap');
+        }
+
+        function refreshInputs() {
+            const ns = document.getElementById('numSlot');
+            const ds = document.getElementById('denSlot');
+            ns.innerText = state.userNum;
+            ds.innerText = state.userDen;
+            ns.classList.toggle('active', state.focus === 'num');
+            ds.classList.toggle('active', state.focus === 'den');
+        }
+
+        function pressKey(k) {
+            if (state.mode === 'paint' || state.busy) return;
+            playSfx('tap');
+            if (k === 'bk') {
+                if (state.focus === 'num') state.userNum = "?";
+                else state.userDen = "?";
+            } else {
+                if (state.focus === 'num') {
+                    state.userNum = k;
+                    state.focus = 'den';
+                } else {
+                    state.userDen = k;
+                }
+            }
+            refreshInputs();
+        }
+
+        function check() {
+            if (state.busy) return;
+            let correct = false;
+            if (state.mode === 'paint') {
+                correct = state.userPainted.size === state.curFrac.n;
+            } else {
+                correct = parseInt(state.userNum) === state.curFrac.n && parseInt(state.userDen) === state.curFrac.d;
+            }
+
+            if (correct) {
+                state.score += 10;
+                playSfx('win');
+                fireConfetti();
+                document.getElementById('success-msg').classList.add('pop-success');
+                state.busy = true;
+                setTimeout(() => {
+                    document.getElementById('success-msg').classList.remove('pop-success');
+                    state.busy = false;
+                    generate();
+                }, 2000);
+            } else {
+                playSfx('err');
+                document.getElementById('gameCard').classList.add('shake');
+                setTimeout(() => document.getElementById('gameCard').classList.remove('shake'), 400);
+            }
+        }
+
+        function fireConfetti(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#0ea5e9', '#f43f5e', '#f59e0b', '#10b981', '#a855f7', '#3b82f6'];
+            for(let i=0; i<count; i++) state.particles.push({
+                x: Math.random() * c.width, y: c.height + 20, 
+                vx: (Math.random()-0.5)*35, vy: (Math.random()-0.8)*55,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)],
+                l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*20
+            });
+            if(!window.animLoop) { window.animLoop=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=state.particles.length-1; i>=0; i--){
+                    const p=state.particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.95; p.vx *= 0.98; p.l-=0.012; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1);
+                        x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else state.particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.animLoop=false;
+            })()}
+        }
+
+        window.onload = () => {
+            const kp = document.getElementById('keypad');
+            [1, 2, 3, 'bk', 4, 5, 6, 0, 7, 8, 9].forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key' + (k === 'bk' ? ' special' : '');
+                b.innerText = k === 'bk' ? '⌫' : k;
+                b.onclick = () => pressKey(k);
+                kp.appendChild(b);
+            });
+            generate();
+        };
+    </script>
+</body>
+</html>

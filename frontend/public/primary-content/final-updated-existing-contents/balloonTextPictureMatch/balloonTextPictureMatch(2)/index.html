@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="styleBlank.css">
+</head>
+
+
+<body>
+    <div class="container">
+        <div class="header">Text to Picture Matching</div>
+        <div class="itemWrapper"></div>
+        <div class="question">
+            <p class="questionText">
+        </div>
+        <div class="nav-controls" role="navigation" aria-label="Page navigation">
+            <select class="lang-select" aria-label="Language">
+                <option value="en">English</option>
+                <option value="am">አማርኛ</option>
+                <option value="ti">ትግርኛ</option>
+                <option value="om">Afan Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+            <button class="btn nav back" title="Back" aria-label="Back">⬅</button>
+            <button class="btn nav home" title="Home" aria-label="Home">🏠</button>
+        </div>
+        <div class="feedback-overlay" aria-hidden="true">
+            <img class="feedback-image" alt="" />
+        </div>
+        <div class="controls">
+            <button class="btn mute-toggle" aria-pressed="false" title="Mute/Unmute">🔊</button>
+            <button class="btn streak" disabled title="Streak">🔥 <span class="streak-count">0</span></button>
+        </div>
+        <audio src="./assets/water.mp3" autoplay loop></audio>
+        <audio src="./assets/background_music.mp3" autoplay loop></audio>
+        <audio class="result" autoplay></audio>
+        <audio class="again" autoplay></audio>
+    </div>
+</body>
+
+<script>
+    function storeData(title, ques, ans, status, hint = false) {
+        let data = localStorage.getItem(title);
+        if (!data) {
+            let d = {
+                title,
+                data: [{ ques, status, ans, hint, date: Date.now() }]
+            }
+            localStorage.setItem(title, JSON.stringify(d))
+        } else {
+            let d = JSON.parse(data)
+            let s = { ques, ans, status, hint, date: Date.now() }
+            d.data.push(s)
+            localStorage.setItem(title, JSON.stringify(d))
+        }
+    }
+    var arrOfStr = ["Chocolate", "Donute", "Heart"];//end-var
+
+    let pageTitle = ["Text to Picture Matching"];//end-var
+    function setPageTitle(selector) {
+        let titleElt = document.querySelector(selector);
+        let title = document.querySelector("title");
+        title.innerText = pageTitle[0];
+        if (titleElt) {
+            titleElt.innerText = pageTitle[0];
+        }
+    }
+    setPageTitle('.header');
+
+    // ----- Mute/Unmute, Streak, and Navigation -----
+    const muteBtn = document.querySelector('.mute-toggle');
+    const streakEl = document.querySelector('.streak .streak-count');
+    const backBtn = document.querySelector('.nav-controls .back');
+    const homeBtn = document.querySelector('.nav-controls .home');
+    const langSelect = document.querySelector('.lang-select');
+    // Persist only mute; streak should reset on refresh
+    try { window.__muted = JSON.parse(localStorage.getItem('tpm_muted')||'false'); } catch(e){ window.__muted=false; }
+    let streakCount = 0;
+    function updateStreakDisplay(){ if(streakEl){ streakEl.textContent = String(streakCount); } }
+    function applyMuteState(){
+        document.querySelectorAll('audio').forEach(a=>{ try{ a.muted = !!window.__muted; a.volume = window.__muted ? 0 : 1; }catch(e){} });
+        if(muteBtn){ muteBtn.setAttribute('aria-pressed', window.__muted ? 'true':'false'); muteBtn.textContent = window.__muted ? '🔇' : '🔊'; muteBtn.title = window.__muted ? 'Unmute' : 'Mute'; }
+        try{ localStorage.setItem('tpm_muted', JSON.stringify(!!window.__muted)); }catch(e){}
+    }
+    if(muteBtn){ muteBtn.addEventListener('click', ()=>{ window.__muted = !window.__muted; applyMuteState(); }); }
+    if(backBtn){ backBtn.addEventListener('click', ()=>{ if(window.history.length>1){ window.history.back(); } }); }
+    if(homeBtn){ homeBtn.addEventListener('click', ()=>{ let url=null; try{ url = localStorage.getItem('homeUrl')||null; }catch(e){} if(!url){ const entered = window.prompt('Enter Home URL or file path (saved):'); if(entered){ try{ localStorage.setItem('homeUrl', entered);}catch(e){} url = entered; } } if(url){ window.location.assign(url); } }); }
+    applyMuteState();
+    updateStreakDisplay();
+
+    const itemWrapper = document.getElementsByClassName("itemWrapper")[0]
+    const balloon = document.getElementsByClassName("balloon");
+    const fishs = document.getElementsByClassName("fishs");
+    const fishImg = document.getElementsByClassName("fishImg");
+    const bubble = document.getElementsByClassName("bubble");
+    const feedbackOverlay = document.querySelector('.feedback-overlay');
+    const feedbackImage = document.querySelector('.feedback-image');
+
+    const colors = ['red', 'yellow', 'rgb(0, 102, 255)', 'rgb(81, 255, 0)', 'rgb(217, 0, 236)', 'orangered', 'pink']
+    let randomX;
+    let randomY;
+
+    let currentLang = (function(){ try{ return localStorage.getItem('tpm_lang') || 'en'; }catch(e){ return 'en'; } })();
+    const i18n = {
+        en: { title: 'Text to Picture Matching', back: 'Back', home: 'Home', mute: ['Mute','Unmute'], streak: 'Streak' },
+        am: { title: 'ጽሑፍ ከሥዕል ጋር መስማማት', back: 'ወደኋላ', home: 'መነሻ', mute: ['ዝም','ክፍት'], streak: 'ተከታታይ' },
+        ti: { title: 'ጽሑፍ ምስ ስእሊ ምዛመድ', back: 'ተመለስ', home: 'መጀመርታ', mute: ['ምጽጋጥ','ምክፋት'], streak: 'ተከታታይ' },
+        om: { title: 'Barruu fi Fakkii Walsimsiisi', back: 'Duubatti', home: 'Mana', mute: ['Sagalee Cufi','Bani'], streak: 'Hiriira' },
+        so: { title: 'Isku dhig Qoraal iyo Sawir', back: 'Dib', home: 'Guriga', mute: ['Aamus','Fur'], streak: 'Guul isku xigta' }
+    };
+    const wordLabels = {
+        Chocolate: { en:'Chocolate' },
+        Donute: { en:'Donute' },
+        Heart: { en:'Heart' }
+    };
+    function labelFor(key){ const m = wordLabels[key]; return m ? (m[currentLang]||m.en) : key; }
+    function applyLanguage(){
+        const dict = i18n[currentLang] || i18n.en;
+        pageTitle[0] = dict.title;
+        setPageTitle('.header');
+        if(langSelect){ langSelect.value = currentLang; }
+        if(backBtn){ backBtn.title = dict.back; backBtn.setAttribute('aria-label', dict.back); }
+        if(homeBtn){ homeBtn.title = dict.home; homeBtn.setAttribute('aria-label', dict.home); }
+        if(muteBtn){ const m = window.__muted ? dict.mute[1] : dict.mute[0]; muteBtn.title = m; }
+        const qt = document.querySelector('.questionText');
+        if(qt && typeof window.__currentKey === 'string'){ qt.innerText = labelFor(window.__currentKey); }
+        try{ localStorage.setItem('tpm_lang', currentLang); }catch(e){}
+    }
+    if(langSelect){ langSelect.addEventListener('change', function(){ currentLang = this.value || 'en'; applyLanguage(); }); }
+
+    createElements()
+    assignLetters();
+    checkAnswer()
+
+    document.getElementsByTagName("body")[0].onload = function () {
+        dynamics();
+        dynamics2();
+        setInterval(dynamics, 3000)
+        setInterval(dynamics2, 4000)
+
+    }
+    function createElements() {
+        for (let i = 0; i < 8; i++) {
+            const balloon = document.createElement("div")
+            balloon.className = "balloon"
+            balloon.id = "balloon" + (i + 1)
+            itemWrapper.appendChild(balloon)
+            const bubble = document.createElement("div")
+            bubble.className = "bubble"
+            itemWrapper.appendChild(bubble)
+        }
+        document.getElementsByClassName("bubble")[0].id = "bubble1"
+        document.getElementsByClassName('bubble')[1].id = "bubble2"
+        for (let i = 0; i < arrOfStr.length; i++) { // Dynamically create fishs based on arrOfStr length
+            const fish = document.createElement("div")
+            const fishImg = document.createElement("img")
+            fishImg.className = "fishImg"
+            fish.className = "fishs"
+            fish.appendChild(fishImg)
+            itemWrapper.appendChild(fish)
+        }
+    }
+
+    function dynamics() {
+        for (let i = 0; i < balloon.length; i++) {
+            randomX = Math.floor(Math.random() * 80)
+            randomY = Math.floor(Math.random() * 60)
+            balloon[i].style.top = randomY + "%";
+            balloon[i].style.left = randomX + "%";
+            if (balloon[i].style.left > "70%") {
+                balloon[i].style.transform = "rotateY(180deg)"
+            }
+        }
+        for (let i = 0; i < bubble.length; i++) {
+            randomX = Math.floor(Math.random() * 100)
+            randomY = Math.floor(Math.random() * 70)
+            bubble[i].style.top = randomY + "%";
+            bubble[i].style.left = randomX + "%";
+        }
+
+    }
+    function dynamics2() {
+        for (let i = 0; i < fishs.length; i++) { // Loop over the actual number of fishs
+            randomX = Math.floor(Math.random() * 80)
+            randomY = Math.floor(Math.random() * 60)
+            fishs[i].style.top = randomY + "%";
+            fishs[i].style.left = randomX + "%";
+            fishs[i].style.background = "rgba(255, 255, 255, 0.6)"
+            fishs[i].style.border = `solid 2px ${colors[i % colors.length]} ` // Use modulo to cycle colors
+            fishs[i].style.backgroundSize = "100%"
+        }
+    }
+
+
+    var randomFidelGroup; // Index of the correct answer in the *original* arrOfStr
+    var shuffledDisplayOptions; // Array of items to display on the fishs
+
+    function assignLetters() {
+        // Make a copy of arrOfStr to shuffle for display options
+        shuffledDisplayOptions = [...arrOfStr].sort(() => Math.random() - 0.5);
+
+        // Select one item from the *original* arrOfStr to be the question
+        randomFidelGroup = Math.floor(Math.random() * arrOfStr.length);
+        window.__currentKey = arrOfStr[randomFidelGroup]; // This is the correct answer's text
+        document.getElementsByClassName("questionText")[0].innerText = labelFor(window.__currentKey);
+
+        // Assign images from the shuffled options to the fishs
+        for (let i = 0; i < arrOfStr.length; i++) { // Loop for the number of items in arrOfStr
+            fishImg[i].src = `./assets/${shuffledDisplayOptions[i]}.png`;
+        }
+        applyLanguage(); // Re-apply language to update question text if language changed
+    }
+
+
+    function showFeedback(type){
+        if(!feedbackOverlay||!feedbackImage) return;
+        feedbackImage.src = type === 'correct' ? './assets/yes.jpg' : './assets/no.jpg';
+        feedbackOverlay.setAttribute('aria-hidden','false');
+        feedbackOverlay.style.display = 'flex';
+        clearTimeout(window.__fb_to);
+        window.__fb_to = setTimeout(function(){
+            feedbackOverlay.style.display = 'none';
+            feedbackOverlay.setAttribute('aria-hidden','true');
+        }, 1200);
+    }
+    function checkAnswer() {
+        for (let i = 0; i < fishs.length; i++) { // Loop over the actual number of fishs
+            fishs[i].onclick = function () {
+                randomX = Math.floor(Math.random() * 1000)
+                randomY = Math.floor(Math.random() * 500)
+                fishs[i].style.top = randomY + "px";
+                fishs[i].style.left = randomX + "px";
+                fishs[i].style.background = colors[Math.floor(Math.random() * colors.length)]
+                let d = fishImg[i].src.split('/');
+
+                // Compare the text of the correct answer with the filename of the clicked image
+                if (arrOfStr[randomFidelGroup] == d[d.length - 1].split('.')[0]) {
+                    storeData("eng-textPictureMatch", arrOfStr[randomFidelGroup], d[d.length - 1].split('.')[0], "correct")
+                    let applauses = ['goodJob', 'amazing', 'intelligent', 'phenomenal']
+                    let randomApplause = Math.floor(Math.random() * applauses.length)
+                    document.getElementsByClassName("question")[0].style.color = "rgb(81, 255, 0)"
+                    const res = document.getElementsByClassName("result")[0];
+                    try { res.muted = !!window.__muted; res.volume = window.__muted ? 0 : 1; } catch(e){}
+                    res.src = "./assets/" + applauses[randomApplause] + ".mp3"
+                    streakCount += 1; updateStreakDisplay();
+                    showFeedback('correct');
+
+                    setTimeout(function () {
+                        document.getElementsByClassName("question")[0].style.color = "black"
+                        assignLetters()
+                    }, 1500)
+                }
+                else {
+                    storeData("eng-textPictureMatch", arrOfStr[randomFidelGroup], d[d.length - 1].split('.')[0], "wrong")
+
+                    let wrong = ['a_aa', 'nope', 'goodtry', 'tryagain']
+                    randomApplause = Math.floor(Math.random() * wrong.length)
+                    document.getElementsByClassName("question")[0].style.color = "red"
+                    const res = document.getElementsByClassName("result")[0];
+                    try { res.muted = !!window.__muted; res.volume = window.__muted ? 0 : 1; } catch(e){}
+                    res.src = "./assets/" + wrong[randomApplause] + ".mp3"
+                    streakCount = 0; updateStreakDisplay();
+                    showFeedback('wrong');
+
+                }
+            }
+        }
+    }
+    applyLanguage();
+</script>
+<style>
+    * {
+        padding: 0;
+        margin: 0;
+    }
+
+    html, body {
+        height: 100%;
+    }
+    body {
+        background: url('./assets/bkg_fx2.jpg');
+        background-size: cover;
+        background-position: center;
+        overflow: hidden;
+        font-family: sans-serif;
+    }
+    .container{
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        max-height: 100dvh;
+        overflow: hidden;
+    }
+    .itemWrapper{
+        position: absolute;
+        inset: 0;
+    }
+
+    .header {
+        font-size: 2.5vw;
+        color: white;
+        text-align: center;
+        margin-top: 1vw;
+        font-weight: bolder;
+    }
+
+    .balloon {
+        position: absolute;
+        top: 40%;
+        left: 45%;
+        width: 7.4vw;
+        height: 7.4vw;
+        background: url('./assets/fish.png') no-repeat;
+        background-size: 100%;
+        transition: 4s;
+        text-align: center;
+        color: rgb(255, 255, 255);
+        font-size: 6vw;
+        font-family: sans-serif;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #balloon1,
+    #balloon2 {
+        width: 14.7vw;
+        height: 14.7vw;
+        background: url('./assets/shark.png');
+        background-size: 100%;
+    }
+
+    #balloon3 {
+        width: 4.4vw;
+        height: 4.4vw;
+        background: url('./assets/fish2.png') no-repeat;
+        background-size: 100%;
+    }
+
+    #balloon4,
+    #balloon5 {
+        width: 7.4vw;
+        height: 7.4vw;
+        background: url('./assets/jellyfish.png') no-repeat;
+        background-size: 100%;
+    }
+
+    #balloon6,
+    #balloon7 {
+        width: 5.9vw;
+        height: 5.9vw;
+        background: url('./assets/starfish.png') no-repeat;
+        background-size: 100%;
+    }
+
+
+    .fishs {
+        position: absolute;
+        top: 40%;
+        left: 45%;
+        width: 10vw;
+        height: 10vw;
+        background-size: 100%;
+        transition: 5s;
+        text-align: center;
+        color: rgb(255, 255, 255);
+        font-size: 4vw;
+        font-family: sans-serif;
+        font-weight: bold;
+        cursor: pointer;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .fishImg {
+        width: 100%;
+    }
+
+    .bubble {
+        position: absolute;
+        top: 100%;
+        left: 45%;
+        width: 1.47vw;
+        height: 1.47vw;
+        border-radius: 50%;
+        background: url('./assets/bubble.png') no-repeat;
+        background-size: 100%;
+        transition: 4s;
+        text-align: center;
+        color: rgb(255, 255, 255);
+        font-size: 6vw;
+        font-family: sans-serif;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    #bubble1,
+    #bubble2 {
+        width: 3.7vw;
+        height: 3.7vw;
+    }
+
+    .question {
+        position: absolute;
+        top: 80%;
+        height: 20%;
+        width: 100%;
+        background: white;
+        border-top: solid rgb(81, 255, 0) 5px;
+        color: rgb(57, 192, 181);
+        font-size: 6vw;
+        text-align: center;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Controls (mute/unmute, streak) */
+    .controls{
+        position: fixed;
+        right: 1rem;
+        bottom: calc(1rem + env(safe-area-inset-bottom));
+        display: flex;
+        gap: 0.5rem;
+        z-index: 30;
+    }
+    .btn{
+        background: rgba(255,255,255,0.9);
+        border: 2px solid #0aa;
+        color: #034;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        line-height: 1;
+        cursor: pointer;
+    }
+    .btn[disabled]{ opacity: 0.8; }
+
+    /* Top-right Home/Back navigation */
+    .nav-controls{
+        position: fixed;
+        top: calc(0.5rem + env(safe-area-inset-top));
+        right: 1rem;
+        display: flex;
+        gap: 0.5rem;
+        z-index: 40;
+    }
+    .lang-select{
+        background: rgba(255,255,255,0.95);
+        border: 2px solid #0aa;
+        color: #034;
+        padding: 0.35rem 0.5rem;
+        border-radius: 0.6rem;
+        font-size: 0.95rem;
+    }
+    .btn.nav{
+        background: rgba(255,255,255,0.9);
+        border: 2px solid #0aa;
+        color: #034;
+        padding: 0.4rem 0.6rem;
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        line-height: 1;
+    }
+
+    /* Responsive styles for mobile */
+    @media (max-width: 600px) {
+        body {
+            overflow: hidden;
+        }
+        .header {
+            font-size: 6vw;
+            margin-top: 12vw;
+        }
+        .balloon {
+            width: 16vw;
+            height: 16vw;
+            font-size: 10vw;
+        }
+        #balloon1, #balloon2 {
+            width: 28vw;
+            height: 28vw;
+        }
+        #balloon3 {
+            width: 10vw;
+            height: 10vw;
+        }
+        #balloon4, #balloon5 {
+            width: 16vw;
+            height: 16vw;
+        }
+        #balloon6, #balloon7 {
+            width: 12vw;
+            height: 12vw;
+        }
+        .fishs {
+            width: 18vw;
+            height: 22vw;
+            font-size: 8vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .bubble {
+            width: 4vw;
+            height: 4vw;
+            font-size: 8vw;
+        }
+        #bubble1, #bubble2 {
+            width: 8vw;
+            height: 8vw;
+        }
+        .question {
+            position: fixed;
+            left: 0; right: 0; bottom: 0;
+            top: auto;
+            font-size: 8vw;
+            height: 24vw;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 3vw;
+            padding: 0 3vw;
+        }
+
+        .readAgain {
+            width: 16vw;
+            height: 16vw;
+        }
+    }
+    /* Responsive styles for large desktop */
+    @media (min-width: 1200px) {
+        .header {
+            font-size: 2vw;
+        }
+        .balloon {
+            width: 5vw;
+            height: 5vw;
+            font-size: 4vw;
+        }
+        #balloon1, #balloon2 {
+            width: 10vw;
+            height: 10vw;
+        }
+        #balloon3 {
+            width: 3vw;
+            height: 3vw;
+        }
+        #balloon4, #balloon5 {
+            width: 5vw;
+            height: 5vw;
+        }
+        #balloon6, #balloon7 {
+            width: 4vw;
+            height: 4vw;
+        }
+        .fishs {
+            width: 6vw;
+            height: 8vw;
+            font-size: 3vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .bubble {
+            width: 1vw;
+            height: 1vw;
+            font-size: 3vw;
+        }
+        #bubble1, #bubble2 {
+            width: 2vw;
+            height: 2vw;
+        }
+        .question {
+            font-size: 3vw;
+            height: 10vw;
+        }
+        .readAgain {
+            width: 8vw;
+            height: 8vw;
+        }
+    }
+
+    .readAgain {
+        background: url("./assets/speakerphone.png") no-repeat;
+        background-size: cover;
+        width: 8vw;
+        height: 8vw;
+        cursor: pointer;
+        background-color: rgb(255, 217, 0);
+        border-radius: 50%;
+        display: block;
+        margin: auto;
+        margin-top: 1vw;
+    }
+
+    .feedback-overlay{
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        pointer-events: none;
+    }
+    .feedback-image{
+        max-width: 60%;
+        max-height: 60%;
+        object-fit: contain;
+        border-radius: 0.5rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+</style>
+
+</html>

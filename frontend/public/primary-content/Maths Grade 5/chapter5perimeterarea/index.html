@@ -1,0 +1,1154 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Perimeter & Area - ዙርያን ስፍሓትን</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700;900&family=Noto+Sans+Ethiopic:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Garden Theme */
+            --grass-light: #C6F6D5;
+            --grass-dark: #48BB78;
+            --dirt: #8D6E63;
+            --wood: #D4A373;
+            --sky: #E0F7FA;
+            --sun: #FFD700;
+            --text: #2D3748;
+            --accent: #FF6B6B;
+            --success-bg: #F0FFF4;
+            --error-bg: #FFF5F5;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Comic Neue', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--sky);
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.8) 0%, transparent 20%),
+                radial-gradient(circle at 90% 30%, rgba(255, 255, 255, 0.6) 0%, transparent 20%);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 12% 18%, rgba(255, 107, 107, 0.18), transparent 45%),
+                radial-gradient(circle at 88% 18%, rgba(72, 187, 120, 0.16), transparent 45%),
+                radial-gradient(circle at 16% 86%, rgba(255, 215, 0, 0.18), transparent 50%),
+                radial-gradient(circle at 88% 88%, rgba(212, 163, 115, 0.18), transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* --- Header --- */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 25px;
+            box-shadow: 0 8px 20px rgba(72, 187, 120, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 5px solid var(--grass-dark);
+            border-radius: 0 0 30px 30px;
+            background-image: linear-gradient(90deg, rgba(72, 187, 120, 0.10), rgba(255, 215, 0, 0.12), rgba(255, 107, 107, 0.10));
+        }
+
+        .grade-badge {
+            background: var(--grass-dark);
+            color: white;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.5rem;
+            border: 3px solid white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: var(--grass-dark);
+            font-size: 1.6rem;
+            font-weight: 900;
+            margin: 0 10px;
+            text-align: center;
+            text-shadow: 1px 1px 0 white;
+        }
+
+        /* Custom Select */
+        .custom-select-wrapper { position: relative; z-index: 200; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; font-weight: 800; color: var(--text);
+            height: 45px; background: #fff; cursor: pointer;
+            border: 3px solid var(--dirt); border-radius: 25px;
+            width: 150px; font-size: 1rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 rgba(141, 110, 99, 0.3);
+        }
+        .custom-select__trigger:hover { transform: scale(1.05); }
+        .custom-options {
+            position: absolute; top: 125%; right: 0;
+            background: #fff; border: 3px solid var(--dirt);
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            opacity: 0; visibility: hidden; transform: translateY(-15px);
+            padding: 8px; display: flex; flex-direction: column; gap: 5px;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; transform: translateY(0); }
+        .custom-option { padding: 10px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+        .custom-option:hover { background: #E0F2F1; color: var(--grass-dark); }
+
+        /* --- Container --- */
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            position: relative;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            inset: -12px;
+            border-radius: 50px;
+            background:
+                linear-gradient(135deg, rgba(198, 246, 213, 0.55), rgba(255, 215, 0, 0.22), rgba(255, 107, 107, 0.18)),
+                radial-gradient(circle at 18% 18%, rgba(255,255,255,0.7), transparent 45%),
+                radial-gradient(circle at 82% 70%, rgba(255,255,255,0.55), transparent 48%);
+            filter: blur(0px);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.08);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container > * { position: relative; z-index: 1; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+            justify-content: center;
+            background: rgba(255,255,255,0.6);
+            padding: 8px;
+            border-radius: 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 900;
+            font-size: 1.2rem;
+            cursor: pointer;
+            background: transparent;
+            color: #718096;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { transform: translateY(-2px); }
+        .tab-btn.active {
+            background: var(--wood);
+            color: white;
+            box-shadow: 0 4px 0 #A1887F;
+            transform: translateY(-2px);
+        }
+        .tab-btn.active:active { transform: translateY(0); box-shadow: none; }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 40px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            border: 6px solid white;
+            width: 100%;
+            min-height: 600px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            animation: fadeIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .card.active { display: flex; }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 40px;
+            background: linear-gradient(135deg, rgba(198, 246, 213, 0.55), rgba(255, 215, 0, 0.16), rgba(255, 107, 107, 0.12));
+            opacity: 0.55;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 40px;
+            background: radial-gradient(circle at 18% 18%, rgba(255,255,255,0.92), transparent 36%);
+            opacity: 0.45;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .card > * { position: relative; z-index: 1; }
+
+        /* --- Garden Grid Visual --- */
+        .garden-container {
+            width: 100%;
+            height: 380px; /* Reduced Height */
+            background: #F1F8E9; /* Very light green */
+            border-radius: 30px;
+            border: 4px dashed var(--grass-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 25px;
+            background-image: 
+                linear-gradient(#DCEDC8 1px, transparent 1px),
+                linear-gradient(90deg, #DCEDC8 1px, transparent 1px);
+            background-size: 50px 50px; /* Bigger Grid */
+            overflow: hidden;
+        }
+
+        .garden-container::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 22% 20%, rgba(255, 215, 0, 0.20), transparent 45%),
+                radial-gradient(circle at 82% 70%, rgba(255, 107, 107, 0.16), transparent 45%);
+            pointer-events: none;
+        }
+
+        .garden-plot {
+            display: grid;
+            transition: all 0.3s;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        /* Area Tiles */
+        .tile {
+            background: var(--grass-light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem; /* Bigger Flowers */
+            animation: popIn 0.3s backwards;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .tile:hover { background: var(--grass-dark); cursor: pointer; transform: scale(1.08) rotate(-1deg); z-index: 2; filter: brightness(1.03); }
+
+        /* Perimeter Fence Blocks */
+        .fence-block {
+            background: var(--wood);
+            border: 1px solid #5D4037;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        }
+        .fence-block::after {
+            content: 'I';
+            font-weight: 900;
+            color: #5D4037;
+        }
+        
+        /* Empty center for perimeter mode */
+        .empty-block {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* Corner labels for dimensions */
+        .dim-label {
+            position: absolute;
+            background: white;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 1.4rem;
+            color: var(--text);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            z-index: 10;
+            border: 2px solid var(--dirt);
+        }
+        .dim-w { top: -35px; left: 50%; transform: translateX(-50%); }
+        .dim-h { left: -45px; top: 50%; transform: translateY(-50%); }
+
+        /* --- Controls --- */
+        .controls-panel {
+            width: 100%;
+            max-width: 700px;
+            background: #FFF8E1;
+            padding: 25px;
+            border-radius: 30px;
+            border: 4px solid #FFE082;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .slider-label { font-weight: 800; color: #F57F17; font-size: 1.2rem; display: flex; justify-content: space-between; }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 20px;
+            border-radius: 10px;
+            background: white;
+            outline: none;
+            cursor: pointer;
+            border: 2px solid #FFD54F;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 35px; height: 35px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: 4px solid white;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            transform: scale(1.1);
+            transition: transform 0.2s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        /* Mode Toggle */
+        .toggle-container {
+            grid-column: span 2;
+            display: flex;
+            background: white;
+            padding: 6px;
+            border-radius: 35px;
+            margin-top: 10px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .toggle-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 900;
+            cursor: pointer;
+            background: transparent;
+            color: #AAA;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        .toggle-btn:hover { transform: translateY(-2px); }
+        .toggle-btn.active {
+            background: var(--grass-dark);
+            color: white;
+            box-shadow: 0 4px 10px rgba(46, 196, 182, 0.4);
+        }
+        .toggle-btn.active-p {
+            background: var(--wood);
+            color: white;
+            box-shadow: 0 4px 10px rgba(141, 110, 99, 0.4);
+        }
+
+        /* Formula Display */
+        .info-panel {
+            background: var(--text);
+            color: white;
+            padding: 25px;
+            border-radius: 25px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            border: 4px solid white;
+        }
+        .formula-text { font-size: 1.6rem; font-weight: bold; margin-bottom: 10px; opacity: 0.9; }
+        .result-text { font-size: 4rem; font-weight: 900; color: var(--sun); text-shadow: 2px 2px 0 rgba(0,0,0,0.3); line-height: 1; }
+
+        /* --- Quiz Mode --- */
+        .score-board {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .score-pill {
+            background: #fff;
+            padding: 8px 25px;
+            border-radius: 25px;
+            font-weight: 900;
+            font-size: 1.2rem;
+            border: 3px solid #eee;
+            display: flex; gap: 8px; align-items: center;
+            box-shadow: 0 4px 0 #eee;
+        }
+        .score-pill.high { color: #D97706; border-color: var(--sun); background: #FFFBEB; }
+        .score-pill.curr { color: var(--grass-dark); border-color: var(--grass-dark); background: #F0FFF4; }
+
+        .question-box {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text);
+            margin-bottom: 30px;
+            text-align: center;
+            background: #E3F2FD;
+            padding: 25px;
+            border-radius: 25px;
+            width: 100%;
+            border: 5px solid #BBDEFB;
+        }
+
+        /* Quiz Visual */
+        .quiz-visual-container {
+            width: 100%;
+            height: 300px; /* Reduced Height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #FAFAFA;
+            border-radius: 30px;
+            margin-bottom: 30px;
+            border: 3px dashed #E2E8F0;
+            position: relative;
+        }
+
+        .shape-visual {
+            background: var(--accent);
+            border: 6px solid var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 10px 10px 0 rgba(0,0,0,0.1);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .shape-visual.area-mode {
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        .shape-visual.perm-mode {
+            background: transparent;
+            border: 8px dashed var(--wood);
+        }
+
+        .shape-label {
+            position: absolute;
+            background: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: 900;
+            font-size: 1.4rem;
+            color: var(--text);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            border: 2px solid var(--text);
+        }
+        .lbl-w { bottom: -25px; left: 50%; transform: translateX(-50%); }
+        .lbl-h { left: -35px; top: 50%; transform: translateY(-50%); }
+
+        .input-area {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .answer-input {
+            width: 160px;
+            padding: 20px;
+            font-size: 2.5rem;
+            text-align: center;
+            border: 5px solid #CBD5E0;
+            border-radius: 20px;
+            font-weight: 900;
+            outline: none;
+            color: var(--text);
+            background: white;
+            transition: all 0.2s;
+        }
+        .answer-input:focus { border-color: var(--grass-dark); transform: scale(1.05); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+
+        /* Feedback Overlay */
+        .feedback-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95);
+            border-radius: 40px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            animation: fadeIn 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        .feedback-overlay.show { display: flex; }
+
+        .fb-content {
+            background: white;
+            padding: 40px 60px;
+            border-radius: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            border: 6px solid;
+            animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .fb-content.correct { border-color: var(--grass-dark); background: var(--success-bg); }
+        .fb-content.wrong { border-color: var(--accent); background: var(--error-bg); }
+
+        .fb-icon { font-size: 6rem; margin-bottom: 10px; display: block; }
+        .fb-title { font-size: 3rem; font-weight: 900; margin-bottom: 10px; color: var(--text); }
+        .fb-sub { font-size: 1.5rem; color: #718096; margin-bottom: 30px; font-weight: bold; }
+        
+        .btn-action {
+            padding: 15px 50px;
+            border-radius: 40px;
+            font-size: 1.6rem; font-weight: 900;
+            color: white; border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+        .btn-check { background: var(--grass-dark); box-shadow: 0 8px 0 #2F855A; width: 100%; max-width: 300px; }
+        .btn-check:hover { transform: translateY(-2px); box-shadow: 0 10px 0 #2F855A; }
+        .btn-check:active { transform: translateY(4px); box-shadow: none; }
+
+        .btn-next { background: var(--wood); box-shadow: 0 6px 0 #8D6E63; }
+        .btn-next:hover { transform: scale(1.05); }
+        .btn-restart { background: var(--accent); box-shadow: 0 6px 0 #D9534F; }
+        .btn-restart:hover { transform: scale(1.05); }
+
+        @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes popUp { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        #confetti-canvas.show { opacity: 1; }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            header { padding: 10px 15px; flex-wrap: wrap; justify-content: center; gap: 10px; }
+            h1 { font-size: 1.4rem; margin: 0 5px; width: 100%; }
+            .grade-badge { width: 45px; height: 45px; font-size: 1.3rem; }
+            .container { padding: 0 15px; margin: 20px auto; }
+            .card { padding: 20px; border-width: 4px; min-height: 500px; border-radius: 30px; }
+            .garden-container { height: 300px; background-size: 30px 30px; }
+            .controls-panel { grid-template-columns: 1fr; }
+            .toggle-container { grid-column: span 1; }
+            .result-text { font-size: 2.5rem; }
+            .question-box { font-size: 1.3rem; padding: 15px; }
+            .answer-input { width: 100%; }
+            .quiz-visual-container { height: 250px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="grade-badge">5</div>
+    <h1 id="app-title">Perimeter & Area</h1>
+    <div class="custom-select-wrapper">
+        <div class="custom-select">
+            <div class="custom-select__trigger">
+                <span id="current-lang-label">🗺️ ትግርኛ</span>
+                <div style="font-size:0.8rem">▼</div>
+            </div>
+            <div class="custom-options">
+                <span class="custom-option selected" data-value="ti">ትግርኛ</span>
+                <span class="custom-option" data-value="am">አማርኛ</span>
+                <span class="custom-option" data-value="en">English</span>
+                <span class="custom-option" data-value="om">Afan Oromoo</span>
+                <span class="custom-option" data-value="so">Soomaali</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchMode('explore')" id="tab-explore">Garden Lab 🌻</button>
+        <button class="tab-btn" onclick="switchMode('quiz')" id="tab-quiz">Challenge 🏆</button>
+    </div>
+
+    <!-- EXPLORE MODE -->
+    <div id="card-explore" class="card active">
+        
+        <div class="garden-container" id="garden-bg">
+            <div id="garden-plot" class="garden-plot mode-area">
+                <!-- Tiles or Border generated here -->
+                <div class="dim-label dim-w" id="dim-w">5</div>
+                <div class="dim-label dim-h" id="dim-h">3</div>
+            </div>
+        </div>
+
+        <div class="controls-panel">
+            <div class="control-group">
+                <span class="slider-label" id="lbl-width">Width (ጎኒ): <span id="val-width">5</span></span>
+                <input type="range" id="slider-w" min="1" max="8" value="5" oninput="updateGarden()">
+            </div>
+            <div class="control-group">
+                <span class="slider-label" id="lbl-height">Length (ንውሓት): <span id="val-height">3</span></span>
+                <input type="range" id="slider-h" min="1" max="6" value="3" oninput="updateGarden()">
+            </div>
+            
+            <div class="toggle-container">
+                <button class="toggle-btn active" onclick="setVisualMode('area')" id="btn-area">Area (ስፍሓት)</button>
+                <button class="toggle-btn" onclick="setVisualMode('perimeter')" id="btn-perm">Perimeter (ዙርያ)</button>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <div class="formula-text" id="formula-text">Area = L × W</div>
+            <div class="result-text" id="result-text">15</div>
+        </div>
+    </div>
+
+    <!-- QUIZ MODE -->
+    <div id="card-quiz" class="card">
+        <div class="score-board">
+            <div class="score-pill high">🏆 <span id="high-score">0</span></div>
+            <div class="score-pill curr">⭐ <span id="score">0</span></div>
+        </div>
+
+        <div class="question-box" id="quiz-q">Find the Area of a 4 by 3 garden.</div>
+
+        <div class="quiz-visual-container">
+            <div id="quiz-shape" class="shape-visual area-mode">
+                <div class="shape-label lbl-w" id="q-w-label">4</div>
+                <div class="shape-label lbl-h" id="q-h-label">3</div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="number" class="answer-input" id="quiz-input" placeholder="?">
+        </div>
+
+        <button class="btn-action btn-check" onclick="checkAnswer()" id="btn-check">Check ✔️</button>
+
+        <!-- Feedback Overlay -->
+        <div class="feedback-overlay" id="feedback">
+            <div class="fb-content" id="fb-content">
+                <div class="fb-icon" id="fb-icon">🎉</div>
+                <div class="fb-title" id="fb-title">Correct!</div>
+                <div class="fb-sub" id="fb-sub"></div>
+                
+                <button class="btn-action btn-next" onclick="nextQuestion()" id="btn-next">Next ➡</button>
+                <button class="btn-action btn-restart" onclick="restartGame()" id="btn-restart" style="display:none;">Play Again 🔄</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+    // --- Audio ---
+    const AudioEngine = {
+        ctx: null,
+        init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+        playTone(freq, type, duration) {
+            this.init();
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+        },
+        playSuccess() { 
+            this.playTone(600, 'sine', 0.1); setTimeout(() => this.playTone(800, 'sine', 0.2), 100); 
+        },
+        playError() { 
+            this.playTone(200, 'sawtooth', 0.2); setTimeout(() => this.playTone(150, 'sawtooth', 0.3), 150);
+        },
+        playClick() {
+            this.playTone(400, 'sine', 0.05);
+        }
+    };
+
+    // --- Translations ---
+    const translations = {
+        ti: {
+            title: "ዙርያን ስፍሓትን",
+            tabExplore: "መሰልጠኒ (Lab) 🌻",
+            tabQuiz: "ፈተና (Challenge) 🏆",
+            lblWidth: "ጎኒ (Width):",
+            lblHeight: "ንውሓት (Length):",
+            btnArea: "ስፍሓት (Area)",
+            btnPerm: "ዙርያ (Perimeter)",
+            formArea: "ስፍሓት (Area)",
+            formPerm: "ዙርያ (Perimeter)",
+            qArea: "ስፍሓት ድለዩ (Area)?",
+            qPerm: "ዙርያ ድለዩ (Perimeter)?",
+            correct: "ትኽክል! ጀግና!",
+            wrong: "ተጋግዩ!",
+            gameover: "ጸወታ ተወዲኡ!",
+            finalScore: "ውፅኢትኩም: ",
+            btnNext: "ቀፃሊ ➡",
+            btnRestart: "እንደገና ጀምር 🔄",
+            btnCheck: "ፈትሽ ✔️"
+        },
+        am: {
+            title: "ዙሪያ እና ስፋት",
+            tabExplore: "ቤተ-ሙከራ 🌻",
+            tabQuiz: "ፈተና 🏆",
+            lblWidth: "ጎን (Width):",
+            lblHeight: "ርዝመት (Length):",
+            btnArea: "ስፋት (Area)",
+            btnPerm: "ዙሪያ (Perimeter)",
+            formArea: "ስፋት (Area)",
+            formPerm: "ዙሪያ (Perimeter)",
+            qArea: "ስፋቱን ይፈልጉ (Area)?",
+            qPerm: "ዙሪያውን ይፈልጉ (Perimeter)?",
+            correct: "ትክክል! ጎበዝ!",
+            wrong: "ስህተት!",
+            gameover: "ጨዋታው አብቅቷል!",
+            finalScore: "የእርስዎ ውጤት: ",
+            btnNext: "ቀጣይ ➡",
+            btnRestart: "እንደገና ጀምር 🔄",
+            btnCheck: "ፈትሽ ✔️"
+        },
+        en: {
+            title: "Perimeter & Area",
+            tabExplore: "Garden Lab 🌻",
+            tabQuiz: "Challenge 🏆",
+            lblWidth: "Width:",
+            lblHeight: "Length:",
+            btnArea: "Area",
+            btnPerm: "Perimeter",
+            formArea: "Area",
+            formPerm: "Perimeter",
+            qArea: "Find the Area?",
+            qPerm: "Find the Perimeter?",
+            correct: "Correct! Awesome!",
+            wrong: "Incorrect!",
+            gameover: "Game Over!",
+            finalScore: "Your Score: ",
+            btnNext: "Next ➡",
+            btnRestart: "Play Again 🔄",
+            btnCheck: "Check ✔️"
+        },
+        om: {
+            title: "Naannawaa fi Bal'ina",
+            tabExplore: "Laabii 🌻",
+            tabQuiz: "Qormaata 🏆",
+            lblWidth: "Bal'ina (Width):",
+            lblHeight: "Dheerina (Length):",
+            btnArea: "Bal'ina (Area)",
+            btnPerm: "Naannawaa (Perimeter)",
+            formArea: "Bal'ina (Area)",
+            formPerm: "Naannawaa (Perimeter)",
+            qArea: "Bal'ina barbaadi (Area)?",
+            qPerm: "Naannawaa barbaadi (Perimeter)?",
+            correct: "Sirrii! Cimina!",
+            wrong: "Dogoggora!",
+            gameover: "Tapha Dhumate!",
+            finalScore: "Qabxii Keessan: ",
+            btnNext: "Itti Aanu ➡",
+            btnRestart: "Irra Deebi'ii 🔄",
+            btnCheck: "Mirkaneessi ✔️"
+        },
+        so: {
+            title: "Wareegga & Bedka",
+            tabExplore: "Sheybaadh 🌻",
+            tabQuiz: "Imtixaan 🏆",
+            lblWidth: "Ballac:",
+            lblHeight: "Dherer:",
+            btnArea: "Bedka (Area)",
+            btnPerm: "Wareegga (Perimeter)",
+            formArea: "Bedka (Area)",
+            formPerm: "Wareegga (Perimeter)",
+            qArea: "Raadi Bedka?",
+            qPerm: "Raadi Wareegga?",
+            correct: "Sax!",
+            wrong: "Qaldan!",
+            gameover: "Ciyaartu way dhamaatay!",
+            finalScore: "Dhibcahaaga: ",
+            btnNext: "Xiga ➡",
+            btnRestart: "Dib u billow 🔄",
+            btnCheck: "Hubi ✔️"
+        }
+    };
+
+    let currentLang = 'ti';
+    let currentMode = 'area'; // 'area' or 'perimeter'
+    let score = 0;
+    let highScore = localStorage.getItem('gardenHighScore') || 0;
+    let quizQuestion = { w:0, h:0, type:'area' };
+
+    // --- Core Logic ---
+
+    function init() {
+        document.getElementById('high-score').textContent = highScore;
+        updateLanguage();
+        updateGarden();
+    }
+
+    function switchMode(mode) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-'+mode).classList.add('active');
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+        document.getElementById('card-'+mode).classList.add('active');
+        
+        if(mode === 'quiz') nextQuestion();
+        else updateGarden(); // Ensure Lab refreshes
+    }
+
+    // --- Explore Mode ---
+    function updateGarden() {
+        const w = parseInt(document.getElementById('slider-w').value);
+        const h = parseInt(document.getElementById('slider-h').value);
+        
+        document.getElementById('val-width').textContent = w;
+        document.getElementById('val-height').textContent = h;
+        document.getElementById('dim-w').textContent = w;
+        document.getElementById('dim-h').textContent = h;
+
+        const plot = document.getElementById('garden-plot');
+        const unitSize = 50; // Increased size to 50px
+        
+        // Resize Grid
+        plot.style.width = (w * unitSize) + 'px';
+        plot.style.height = (h * unitSize) + 'px';
+        plot.style.gridTemplateColumns = `repeat(${w}, 1fr)`;
+        plot.style.gridTemplateRows = `repeat(${h}, 1fr)`;
+
+        // Update Math Display
+        const t = translations[currentLang];
+        
+        if (currentMode === 'area') {
+            document.getElementById('formula-text').textContent = `${t.formArea} = ${h} × ${w}`;
+            document.getElementById('result-text').textContent = (w * h);
+            document.getElementById('result-text').style.color = "var(--grass-dark)";
+            
+            // Render Tiles
+            plot.innerHTML = `<div class="dim-label dim-w">${w}</div><div class="dim-label dim-h">${h}</div>`;
+            const total = w*h;
+            for(let i=0; i<total; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.textContent = ['🌻','🌷','🌼','🌱'][Math.floor(Math.random()*4)];
+                plot.appendChild(tile);
+            }
+        } else {
+            // Perimeter Visualization
+            // Formula request: L + L + W + W (or based on prompt 3+3+5+5)
+            // Using H+H+W+W to match "3+3+5+5" for 3x5
+            document.getElementById('formula-text').textContent = `${t.formPerm} = ${h} + ${h} + ${w} + ${w}`;
+            
+            document.getElementById('result-text').textContent = 2 * (w + h);
+            document.getElementById('result-text').style.color = "var(--wood)";
+            
+            // Render Fence blocks on perimeter
+            plot.innerHTML = `<div class="dim-label dim-w">${w}</div><div class="dim-label dim-h">${h}</div>`;
+            
+            for(let r=0; r<h; r++) {
+                for(let c=0; c<w; c++) {
+                    const cell = document.createElement('div');
+                    // Check if it's on the edge
+                    if (r === 0 || r === h-1 || c === 0 || c === w-1) {
+                        cell.className = 'fence-block';
+                    } else {
+                        cell.className = 'empty-block';
+                    }
+                    plot.appendChild(cell);
+                }
+            }
+        }
+    }
+
+    function setVisualMode(mode) {
+        currentMode = mode;
+        const plot = document.getElementById('garden-plot');
+        const btnArea = document.getElementById('btn-area');
+        const btnPerm = document.getElementById('btn-perm');
+
+        if(mode === 'area') {
+            plot.className = 'garden-plot mode-area';
+            btnArea.className = 'toggle-btn active';
+            btnPerm.className = 'toggle-btn';
+        } else {
+            plot.className = 'garden-plot mode-perimeter';
+            btnArea.className = 'toggle-btn';
+            btnPerm.className = 'toggle-btn active-p';
+        }
+        updateGarden();
+        AudioEngine.playClick();
+    }
+
+    // --- Quiz Mode ---
+    function nextQuestion() {
+        stopConfetti();
+        document.getElementById('feedback').classList.remove('show');
+        document.getElementById('quiz-input').value = '';
+        
+        // Generate random problem
+        const w = Math.floor(Math.random() * 7) + 2; // 2 to 8
+        const h = Math.floor(Math.random() * 5) + 2; // 2 to 6
+        const type = Math.random() > 0.5 ? 'area' : 'perm';
+        
+        quizQuestion = { w, h, type };
+        
+        const t = translations[currentLang];
+        document.getElementById('quiz-q').textContent = type === 'area' ? t.qArea : t.qPerm;
+        
+        // Update Visual Shape
+        const shape = document.getElementById('quiz-shape');
+        const unit = 40; // Increased base scale unit for quiz as well
+        shape.style.width = (w * unit) + 'px';
+        shape.style.height = (h * unit) + 'px';
+        
+        // Style based on type
+        if(type === 'area') {
+            shape.className = 'shape-visual area-mode';
+        } else {
+            shape.className = 'shape-visual perm-mode';
+        }
+
+        // Labels
+        document.getElementById('q-w-label').textContent = w;
+        document.getElementById('q-h-label').textContent = h;
+    }
+
+    function checkAnswer() {
+        const input = parseInt(document.getElementById('quiz-input').value);
+        let correctVal = 0;
+        if(quizQuestion.type === 'area') correctVal = quizQuestion.w * quizQuestion.h;
+        else correctVal = 2 * (quizQuestion.w + quizQuestion.h);
+
+        const t = translations[currentLang];
+        const overlay = document.getElementById('feedback');
+        const content = document.getElementById('fb-content');
+        const icon = document.getElementById('fb-icon');
+        const title = document.getElementById('fb-title');
+        const sub = document.getElementById('fb-sub');
+        const btnNext = document.getElementById('btn-next');
+        const btnRestart = document.getElementById('btn-restart');
+
+        if (input === correctVal) {
+            score += 10;
+            if(score > highScore) {
+                highScore = score;
+                localStorage.setItem('gardenHighScore', highScore);
+            }
+            document.getElementById('score').textContent = score;
+            document.getElementById('high-score').textContent = highScore;
+            
+            AudioEngine.playSuccess();
+            triggerConfetti();
+            
+            content.className = 'fb-content correct';
+            icon.textContent = '🎉';
+            title.textContent = t.correct;
+            sub.textContent = "";
+            btnNext.style.display = 'block';
+            btnRestart.style.display = 'none';
+        } else {
+            AudioEngine.playError();
+            
+            content.className = 'fb-content wrong';
+            icon.textContent = '❌';
+            title.textContent = t.gameover;
+            sub.textContent = t.finalScore + score;
+            btnNext.style.display = 'none';
+            btnRestart.style.display = 'block';
+        }
+        overlay.classList.add('show');
+    }
+
+    function restartGame() {
+        stopConfetti();
+        score = 0;
+        document.getElementById('score').textContent = 0;
+        nextQuestion();
+    }
+
+    // --- Language Change ---
+    const selectWrapper = document.querySelector('.custom-select-wrapper');
+    const selectCustom = document.querySelector('.custom-select');
+    const options = document.querySelectorAll('.custom-option');
+
+    selectWrapper.addEventListener('click', (e) => {
+        selectCustom.classList.toggle('open'); e.stopPropagation();
+    });
+
+    options.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!this.classList.contains('selected')) {
+                const prev = this.parentNode.querySelector('.custom-option.selected');
+                if(prev) prev.classList.remove('selected');
+                this.classList.add('selected');
+                
+                const label = this.textContent;
+                const value = this.getAttribute('data-value');
+                document.getElementById('current-lang-label').textContent = "🗺️ " + label;
+                selectCustom.classList.remove('open');
+                
+                currentLang = value;
+                updateLanguage();
+            }
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (!selectCustom.contains(e.target)) selectCustom.classList.remove('open');
+    });
+
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('tab-explore').textContent = t.tabExplore;
+        document.getElementById('tab-quiz').textContent = t.tabQuiz;
+        document.getElementById('lbl-width').childNodes[0].textContent = t.lblWidth + " ";
+        document.getElementById('lbl-height').childNodes[0].textContent = t.lblHeight + " ";
+        document.getElementById('btn-area').textContent = t.btnArea;
+        document.getElementById('btn-perm').textContent = t.btnPerm;
+        document.getElementById('btn-check').textContent = t.btnCheck;
+        document.getElementById('btn-next').textContent = t.btnNext;
+        document.getElementById('btn-restart').textContent = t.btnRestart;
+        
+        // Refresh question if in quiz mode
+        if(quizQuestion.type) document.getElementById('quiz-q').textContent = quizQuestion.type === 'area' ? t.qArea : t.qPerm;
+        
+        updateGarden(); 
+    }
+
+    // --- Confetti ---
+    let confettiAnimId = null;
+    let confettiRunning = false;
+    let confettiPieces = null;
+    let confettiFrame = 0;
+
+    function stopConfetti() {
+        confettiRunning = false;
+        if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+        confettiAnimId = null;
+        confettiPieces = null;
+        const canvas = document.getElementById('confetti-canvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.classList.remove('show');
+        }
+    }
+
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.classList.add('show');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        confettiRunning = true;
+        confettiFrame = 0;
+
+        if (!confettiPieces) {
+            confettiPieces = [];
+            const count = 220;
+            for (let i = 0; i < count; i++) {
+                const size = 6 + Math.random() * 10;
+                confettiPieces.push({
+                    x: Math.random() * canvas.width,
+                    y: -20 - Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 1.2,
+                    vy: 2.5 + Math.random() * 4.5,
+                    w: size,
+                    h: size + (Math.random() * 10),
+                    rot: (Math.random() - 0.5) * 0.35,
+                    ang: Math.random() * Math.PI * 2,
+                    wobble: 0.8 + Math.random() * 1.8,
+                    c: `hsl(${Math.random() * 360}, 95%, 55%)`
+                });
+            }
+        }
+
+        function anim() {
+            if (!confettiRunning) return;
+            confettiFrame++;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.globalAlpha = 1;
+
+            confettiPieces.forEach(p => {
+                p.ang += p.rot;
+                p.y += p.vy;
+                p.x += p.vx + Math.sin(confettiFrame * 0.04 + p.ang) * p.wobble;
+
+                if (p.y > canvas.height + 50) {
+                    p.y = -20 - Math.random() * 220;
+                    p.x = Math.random() * canvas.width;
+                    p.c = `hsl(${Math.random() * 360}, 95%, 55%)`;
+                }
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.ang);
+                ctx.fillStyle = p.c;
+                ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                ctx.restore();
+            });
+
+            confettiAnimId = requestAnimationFrame(anim);
+        }
+
+        if (!confettiAnimId) confettiAnimId = requestAnimationFrame(anim);
+    }
+
+    window.onload = init;
+
+</script>
+</body>
+</html>

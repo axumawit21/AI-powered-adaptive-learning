@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Digit Shredder | ብተረፍ ምምቃል</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Theme Colors for UI Elements */
+            --theme-primary: #38bdf8;
+            --theme-secondary: #ec4899;
+            --theme-accent: #a855f7;
+            --theme-glass: rgba(255, 255, 255, 0.9);
+            --theme-border: rgba(0, 0, 0, 0.1);
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            /* White Square Paper Background */
+            background-color: #ffffff;
+            background-image: 
+                linear-gradient(#f0f0f0 2px, transparent 2px),
+                linear-gradient(90deg, #f0f0f0 2px, transparent 2px);
+            background-size: 40px 40px;
+            min-height: 100vh;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            transition: background-color 0.2s;
+        }
+
+        body.error-flash { 
+            background-color: #fee2e2 !important; 
+            background-image: 
+                linear-gradient(#fecaca 2px, transparent 2px),
+                linear-gradient(90deg, #fecaca 2px, transparent 2px) !important;
+            animation: glitch 0.2s infinite; 
+        }
+        
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            25% { transform: translate(-3px, 3px); }
+            50% { transform: translate(3px, -3px); }
+            100% { transform: translate(0); }
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+        header {
+            width: 100%; max-width: 1000px; padding: 15px 25px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            flex-wrap: wrap; gap: 10px;
+        }
+
+        .stats-group { display: flex; gap: 10px; align-items: center; }
+        .pill {
+            background: #ffffff; border: 2px solid var(--theme-border);
+            padding: 8px 16px; border-radius: 50px; font-weight: 700; font-size: 0.9rem;
+            display: flex; align-items: center; gap: 6px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .pill-high { border-color: #f59e0b; color: #d97706; }
+        .pill-score { border-color: var(--theme-primary); color: var(--theme-primary); }
+
+        .header-controls { display: flex; gap: 10px; align-items: center; }
+        .btn-mute {
+            width: 45px; height: 45px; border-radius: 50%; border: 2px solid #e2e8f0;
+            background: #ffffff; color: #64748b; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .lang-select {
+            padding: 10px 15px; border-radius: 15px; border: 2px solid #e2e8f0;
+            background: #ffffff; color: #1e293b; font: inherit; font-weight: 600;
+            cursor: pointer; outline: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 900px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 20px; gap: 20px;
+        }
+
+        .game-card {
+            background: #ffffff; border-radius: 40px; padding: 40px 20px; width: 100%;
+            border: 4px solid #e2e8f0;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            text-align: center; position: relative;
+            animation: float 4s infinite ease-in-out;
+            transition: border-color 0.5s ease;
+        }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        .quest-text { font-size: 1.4rem; color: #64748b; font-weight: 600; margin-bottom: 20px; letter-spacing: 2px; }
+
+        .problem-display {
+            display: flex; flex-direction: column; align-items: center; gap: 25px; margin-bottom: 20px;
+        }
+
+        .main-number {
+            font-size: clamp(3rem, 10vw, 6rem); font-weight: 900; color: #0f172a;
+            text-shadow: 2px 2px 0 #f1f5f9; letter-spacing: 4px;
+        }
+
+        .input-row {
+            display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; width: 100%;
+        }
+
+        .input-group { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .input-label { font-weight: 800; font-size: 0.9rem; color: #94a3b8; text-transform: uppercase; }
+
+        .ans-box {
+            min-width: 150px; height: 80px; background: #f8fafc;
+            border: 4px dashed #e2e8f0; border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 900; color: var(--theme-primary);
+            cursor: pointer; transition: 0.3s;
+        }
+        .ans-box.active { 
+            border-style: solid; border-color: var(--theme-primary); 
+            background: #ffffff; 
+            box-shadow: 0 0 40px rgba(56, 189, 248, 0.2);
+            transform: scale(1.05);
+        }
+        .ans-box.remainder { color: var(--theme-secondary); min-width: 100px; }
+        .ans-box.remainder.active { border-color: var(--theme-secondary); box-shadow: 0 0 40px rgba(236, 72, 153, 0.2); }
+
+        .keypad-section { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 12px; }
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .key {
+            height: 65px; background: #ffffff; border: 2px solid #e2e8f0; border-radius: 18px;
+            font-size: 1.8rem; font-weight: 700; color: #1e293b;
+            cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 5px 0 #f1f5f9;
+        }
+        .key:active { transform: translateY(3px); box-shadow: 0 2px 0 #f1f5f9; background: #f8fafc; }
+        .key.del { color: var(--theme-secondary); border-color: #fbcfe8; }
+        .key.check { 
+            grid-column: span 4; background: linear-gradient(to right, var(--success), var(--theme-primary));
+            height: 80px; font-size: 2rem; text-transform: uppercase; letter-spacing: 3px;
+            border-radius: 25px; font-weight: 900; border: none; color: #fff;
+            box-shadow: 0 8px 0 #064e3b;
+        }
+
+        #success-overlay {
+            position: fixed; inset: 0; background: rgba(255, 255, 255, 0.98);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 9990; text-align: center;
+            backdrop-filter: blur(25px);
+        }
+        .success-icon { font-size: 8rem; margin-bottom: 20px; animation: bounceIn 0.8s; }
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        #wrong-overlay {
+            position: fixed; inset: 0; background: rgba(239, 68, 68, 0.1);
+            display: none; align-items: center; justify-content: center;
+            z-index: 8000; pointer-events: none;
+        }
+        #wrong-overlay span { font-size: clamp(10rem, 30vw, 20rem); color: #ef4444; opacity: 0.8; }
+
+        @media (max-width: 600px) {
+            header { padding: 10px; justify-content: center; }
+            .container { padding: 10px; gap: 15px; }
+            .game-card { padding: 30px 15px; }
+            .ans-box { min-width: 120px; height: 70px; font-size: 1.8rem; }
+            .key { height: 55px; font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <div id="wrong-overlay"><span>❌</span></div>
+
+    <header>
+        <div class="header-left">
+            <div class="stats-group">
+                <div class="pill level-pill">🆙 <span id="lblLvl">ደረጃ</span>: <span id="valLvl">1</span></div>
+                <div class="pill pill-high">👑 <span id="lblHigh">ዝለዓለ</span>: <span id="valHigh">0</span></div>
+                <div class="pill pill-score">⭐ <span id="lblScore">ነጥቢ</span>: <span id="valScore">0</span></div>
+            </div>
+        </div>
+        <div class="header-controls">
+            <button class="btn-mute" id="btnMute" onclick="toggleMute()">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="game-card" id="gameCard">
+            <div class="quest-text" id="txtQuest">ብ 10 ኣካፍሎ! (ተረፍ ሓውስካ)</div>
+            <div class="problem-display">
+                <div class="main-number" id="targetNum">854,327</div>
+                <div style="font-size: 3rem; color: var(--theme-primary); font-weight: 800;">÷ 10 = ?</div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <span class="input-label" id="lblQuot">ብዝሒ ድርሻ (Quotient)</span>
+                        <div class="ans-box active" id="boxQuot" onclick="setFocus('quot')">?</div>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-label" id="lblRem">ተረፍ (Remainder)</span>
+                        <div class="ans-box remainder" id="boxRem" onclick="setFocus('rem')">?</div>
+                    </div>
+                </div>
+            </div>
+            <div id="txtHint" style="color: #64748b; font-weight: 700; font-size: 0.9rem;">ምምቃል ብ10 ማለት እቲ መጨረሻ ኣሃዝ ተረፍ እዩ።</div>
+        </div>
+
+        <div class="keypad-section">
+            <div class="keypad" id="keypad">
+                <!-- Keys injected by JS -->
+            </div>
+            <button class="key check" id="btnCheck" onclick="checkAnswer()">ኣረጋግፅ (Check)</button>
+        </div>
+    </div>
+
+    <div id="success-overlay">
+        <div class="success-icon" id="successEmoji">🚀</div>
+        <h2 id="successTitle" style="font-size: 3.5rem; color: var(--success);">ብጣዕሚ ጎበዝ!</h2>
+        <p id="successSub" style="font-size: 1.8rem; opacity: 0.8; margin-top: 15px;">ብትኽክል ተመሊሱ!</p>
+        <div id="successLevelInfo" style="margin-top:20px; font-size: 1.4rem; color: var(--theme-accent); font-weight: 800;">ደረጃ 1 ተዛዚሙ!</div>
+    </div>
+
+    <script>
+        const themes = [
+            { primary: '#38bdf8', secondary: '#ec4899', accent: '#a855f7', name: 'Sky' },
+            { primary: '#10b981', secondary: '#f59e0b', accent: '#059669', name: 'Grass' },
+            { primary: '#6366f1', secondary: '#f43f5e', accent: '#4f46e5', name: 'Indigo' }
+        ];
+
+        const i18n = {
+            ti: { quest: "ብ 10 ኣካፍሎ! (ብተረፍ)", quot: "በዝሒ ድርሻ", rem: "ተረፍ", hint: "ምምቃል ብ10 ማለት እቲ መጨረሻ ኣሃዝ ተረፍ እዩ።", check: "ኣረጋግፅ", win: "ፅቡቅ ስራሕ!", winsub: "ብትኽክል ተመሊሱ!", score: "ነጥቢ", high: "ዝለዓለ", level: "ደረጃ" },
+            am: { quest: "በ 10 አካፍል! (ከተረፍ ጋር)", quot: "ድርሻ", rem: "ተረፍ", hint: "በ 10 ማካፈል ማለት የመጨረሻው አሃዝ ተረፍ ይሆናል።", check: "አረጋግጥ", win: "ድንቅ ስራ!", winsub: "በትክክል መልሰዋል!", score: "ነጥብ", high: "ከፍተኛ", level: "ደረጃ" },
+            en: { quest: "Divide by 10! (With Remainder)", quot: "Quotient", rem: "Remainder", hint: "Dividing by 10 means the last digit is the remainder.", check: "Check", win: "Great Job!", winsub: "You answered correctly!", score: "Score", high: "High", level: "Level" },
+            om: { quest: "10'n hiri! (Haftee waliin)", quot: "Dhirshaa", rem: "Haftee", hint: "10'n hiruun lakkoofsi dhumaa haftee dha.", check: "Mirkaneessi", win: "Hojii Gaarii!", winsub: "Sirriitti deebisteetta!", score: "Qabxii", high: "Olaanaa", level: "Sadarkaa" },
+            so: { quest: "10 u qaybi! (Iyo haraaga)", quot: "Qaybta", rem: "Haraaga", hint: "In 10 loo qaybiyo waxay ka dhigan tahay nambarka ugu dambeeya inuu yahay haraaga.", check: "Hubi", win: "Shaqo Fiican!", winsub: "Si sax ah ayaad u jawaabtay!", score: "Dhibco", high: "Sare", level: "Heerka" }
+        };
+
+        let state = {
+            lang: 'ti',
+            score: 0,
+            level: 1,
+            highScore: parseInt(localStorage.getItem('div_rem_high')) || 0,
+            targetNum: 0,
+            correctQuot: 0,
+            correctRem: 0,
+            userQuot: "",
+            userRem: "",
+            focus: "quot",
+            busy: false,
+            muted: false,
+            particles: [],
+            successLoop: null,
+            themeIdx: 0,
+            questionCount: 0
+        };
+
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function applyTheme() {
+            const theme = themes[state.themeIdx];
+            const root = document.documentElement;
+            root.style.setProperty('--theme-primary', theme.primary);
+            root.style.setProperty('--theme-secondary', theme.secondary);
+            root.style.setProperty('--theme-accent', theme.accent);
+        }
+
+        function playSfx(type) {
+            if (state.muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(600, n); o.frequency.exponentialRampToValueAtTime(300, n + 0.1);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046, 1318].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.8);
+                o.start(); o.stop(n + 0.8);
+            } else {
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.3);
+                o.start(); o.stop(n + 0.3);
+            }
+        }
+
+        function generate() {
+            state.busy = false;
+            state.userQuot = "";
+            state.userRem = "";
+            state.focus = "quot";
+            state.questionCount++;
+
+            if (state.questionCount % 5 === 0) {
+                state.themeIdx = (state.themeIdx + 1) % themes.length;
+                applyTheme();
+            }
+            
+            state.level = Math.floor(state.score / 50) + 1;
+            let max = state.level === 1 ? 1000 : (state.level === 2 ? 10000 : (state.level === 3 ? 100000 : 1000000));
+            
+            state.targetNum = Math.floor(Math.random() * (max - 100)) + 100;
+            state.correctQuot = Math.floor(state.targetNum / 10);
+            state.correctRem = state.targetNum % 10;
+
+            document.getElementById('targetNum').innerText = state.targetNum.toLocaleString();
+            updateDisplay();
+            updateUI();
+        }
+
+        function setFocus(f) {
+            if (state.busy) return;
+            state.focus = f;
+            playSfx('tap');
+            updateDisplay();
+        }
+
+        function pressKey(k) {
+            if (state.busy) return;
+            playSfx('tap');
+            if (k === 'bk') {
+                if (state.focus === 'quot') state.userQuot = state.userQuot.slice(0, -1);
+                else state.userRem = state.userRem.slice(0, -1);
+            } else {
+                if (state.focus === 'quot') {
+                    if (state.userQuot.length < 8) state.userQuot += k;
+                    // Auto-focus logic simplified: only move if they reached the digit count
+                    if (state.userQuot.length === state.correctQuot.toString().length) state.focus = 'rem';
+                } else {
+                    if (state.userRem.length < 1) state.userRem += k;
+                }
+            }
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('boxQuot').innerText = state.userQuot || "?";
+            document.getElementById('boxRem').innerText = state.userRem || "?";
+            
+            document.getElementById('boxQuot').classList.toggle('active', state.focus === 'quot');
+            document.getElementById('boxRem').classList.toggle('active', state.focus === 'rem');
+        }
+
+        function checkAnswer() {
+            if (state.busy) return;
+            
+            // If empty, trigger error feedback instead of returning silently
+            if (state.userQuot === "" || state.userRem === "") {
+                handleError();
+                return;
+            }
+            
+            const uQ = parseInt(state.userQuot);
+            const uR = parseInt(state.userRem);
+            
+            if (uQ === state.correctQuot && uR === state.correctRem) {
+                handleSuccess();
+            } else {
+                handleError();
+            }
+        }
+
+        function handleSuccess() {
+            state.busy = true;
+            state.score += 10;
+            if (state.score > state.highScore) {
+                state.highScore = state.score;
+                localStorage.setItem('div_rem_high', state.highScore);
+            }
+            
+            playSfx('win');
+            
+            burst(300);
+            state.successLoop = setInterval(() => burst(60), 200);
+
+            const overlay = document.getElementById('success-overlay');
+            const t = i18n[state.lang];
+            const emojis = ['🚀', '🌟', '🛸', '🛰️', '🪐', '💎', '🔥'];
+            document.getElementById('successEmoji').innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            document.getElementById('successTitle').innerText = t.win;
+            document.getElementById('successSub').innerText = t.winsub;
+            document.getElementById('successLevelInfo').innerText = `${t.level} ${state.level}`;
+            
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                clearInterval(state.successLoop);
+                overlay.style.display = 'none';
+                generate();
+            }, 3000);
+        }
+
+        function handleError() {
+            playSfx('err');
+            document.body.classList.add('error-flash');
+            document.getElementById('wrong-overlay').style.display = 'flex';
+            document.getElementById('gameCard').classList.add('shake');
+            
+            setTimeout(() => {
+                document.body.classList.remove('error-flash');
+                document.getElementById('wrong-overlay').style.display = 'none';
+                document.getElementById('gameCard').classList.remove('shake');
+                state.userQuot = "";
+                state.userRem = "";
+                state.focus = "quot";
+                updateDisplay();
+            }, 800);
+        }
+
+        function toggleMute() {
+            state.muted = !state.muted;
+            document.getElementById('btnMute').innerText = state.muted ? '🔇' : '🔊';
+        }
+
+        function changeLang(l) {
+            state.lang = l;
+            updateUI();
+        }
+
+        function updateUI() {
+            const t = i18n[state.lang];
+            document.getElementById('txtQuest').innerText = t.quest;
+            document.getElementById('lblQuot').innerText = t.quot;
+            document.getElementById('lblRem').innerText = t.rem;
+            document.getElementById('txtHint').innerText = t.hint;
+            document.getElementById('btnCheck').innerText = t.check;
+            document.getElementById('valScore').innerText = state.score;
+            document.getElementById('valHigh').innerText = state.highScore;
+            document.getElementById('valLvl').innerText = state.level;
+            document.getElementById('lblLvl').innerText = t.level;
+            document.getElementById('lblHigh').innerText = t.high;
+            document.getElementById('lblScore').innerText = t.score;
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            if (c.width !== window.innerWidth) { c.width = window.innerWidth; c.height = window.innerHeight; }
+            const colors = [
+                '#38bdf8', '#a855f7', '#ec4899', '#10b981', '#fb923c'
+            ];
+            for(let i=0; i<count; i++) state.particles.push({
+                x: Math.random() * c.width, y: c.height + 20, vx: (Math.random()-0.5)*40, vy: (Math.random()-0.8)*60,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*25
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=state.particles.length-1; i>=0; i--){
+                    const p = state.particles[i]; 
+                    if(p.l > 0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.vx *= 0.985; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); 
+                        x.shadowBlur = 10; x.shadowColor = p.c;
+                        x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else state.particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => {
+            const kp = document.getElementById('keypad');
+            [1,2,3,4,5,6,7,8,9,0].forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key'; b.innerText = k; b.onclick = () => pressKey(k); kp.appendChild(b);
+            });
+            const del = document.createElement('button');
+            del.className = 'key del'; del.innerText = '⌫'; del.onclick = () => pressKey('bk'); 
+            kp.appendChild(del);
+            applyTheme();
+            generate();
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') pressKey(e.key);
+            if (e.key === 'Backspace') pressKey('bk');
+            if (e.key === 'Enter') checkAnswer();
+        });
+    </script>
+</body>
+</html>

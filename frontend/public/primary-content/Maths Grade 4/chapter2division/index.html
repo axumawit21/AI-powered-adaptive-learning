@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Million Division Pro | ምምቃል ሚልዮናት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f2fe;
+            --neon-purple: #a855f7;
+            --neon-pink: #ec4899;
+            --cyber-dark: #020617;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --success: #10b981;
+            --danger: #ef4444;
+            --amber: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--cyber-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, #1e1b4b 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #312e81 0px, transparent 50%),
+                radial-gradient(at 50% 100%, #0f172a 0px, transparent 50%);
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden;
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+
+        body.wrong-flash { background-color: #450a0a !important; }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6000; }
+
+        header {
+            width: 100%; max-width: 1100px; padding: 15px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            gap: 15px;
+        }
+
+        .badges { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; overflow-x: auto; padding: 5px 0; }
+        .stat-pill { 
+            background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 15px; font-weight: 800; font-size: 0.85rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; gap: 5px; white-space: nowrap;
+        }
+        .stat-val { color: var(--neon-blue); }
+        .high-score-pill { border-color: var(--amber); }
+        .high-score-pill .stat-val { color: var(--amber); }
+
+        .header-controls { display: flex; gap: 8px; align-items: center; }
+
+        .btn-mute {
+            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2);
+            color: white; width: 40px; height: 40px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; transition: 0.2s; flex-shrink: 0;
+        }
+
+        .lang-select {
+            padding: 8px 12px; border-radius: 15px; border: 2px solid rgba(255,255,255,0.2); font: inherit; font-weight: bold; cursor: pointer;
+            background: #1e1b4b; color: white; outline: none; font-size: 0.85rem;
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 1300px; display: flex; flex-direction: column; 
+            padding: 10px; gap: 15px; z-index: 10; justify-content: center; align-items: center;
+        }
+
+        .game-card {
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px);
+            border-radius: 40px; padding: 25px 15px; 
+            border: 4px solid var(--glass-border);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            width: 100%; max-width: 750px; text-align: center; display: flex; flex-direction: column; gap: 10px;
+            animation: slideUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        @keyframes slideUp { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Top Visual Area */
+        .visual-hub {
+            height: 100px; width: 100%; position: relative; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; margin-bottom: 10px;
+        }
+        .data-stream-container {
+            width: 80%; height: 12px; background: rgba(0,0,0,0.3); border-radius: 10px;
+            position: relative; border: 2px solid var(--glass-border); overflow: hidden;
+        }
+        .data-bar {
+            height: 100%; width: 100%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+            box-shadow: 0 0 20px var(--neon-blue); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .ports-row {
+            width: 85%; display: flex; justify-content: space-between; margin-top: 15px;
+        }
+        .port-node {
+            width: 30px; height: 30px; border-radius: 8px; background: var(--glass);
+            border: 2px solid var(--glass-border); display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; color: var(--neon-blue); transition: 0.3s;
+        }
+        .port-node.active { background: var(--neon-blue); color: var(--cyber-dark); border-color: white; box-shadow: 0 0 15px var(--neon-blue); }
+
+        .problem-title {
+            font-size: 1.4rem; font-weight: 900; color: var(--neon-blue);
+            text-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Equation Display */
+        .equation-area {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            font-size: 2.2rem; font-weight: 900; flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        .num-box {
+            padding: 10px 20px; background: rgba(255,255,255,0.08); border-radius: 15px; border: 2px solid rgba(255,255,255,0.15);
+            font-family: monospace; letter-spacing: 2px;
+        }
+        .ans-box {
+            min-width: 120px; height: 80px; background: rgba(255,255,255,0.05); border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--neon-blue); font-size: 2.8rem; cursor: pointer;
+            border: 4px dashed var(--neon-blue); transition: 0.3s;
+            padding: 0 15px; font-family: monospace;
+        }
+        .ans-box.active { border-style: solid; background: white; color: var(--cyber-dark); box-shadow: 0 0 40px var(--neon-blue); transform: scale(1.05); }
+        .ans-box.wrong { border-color: var(--danger) !important; background: rgba(239, 68, 68, 0.3) !important; color: white !important; }
+
+        /* Keypad */
+        .keypad-section { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 10px; }
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; }
+        .key {
+            height: 60px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.05); border-radius: 15px;
+            font-size: 1.6rem; font-weight: 800; color: #fff; cursor: pointer;
+            box-shadow: 0 5px 0 rgba(0,0,0,0.3); transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
+        .key.del { background: rgba(239, 68, 68, 0.15); color: var(--danger); border-color: rgba(239, 68, 68, 0.2); }
+        .key.zeroes { background: rgba(0, 242, 254, 0.1); color: var(--neon-blue); font-size: 1.2rem; }
+
+        .key.check { 
+            grid-column: 1 / -1; background: var(--success); color: #064e3b; 
+            box-shadow: 0 8px 0 #064e3b; font-size: 1.8rem; height: 75px; margin-top: 5px;
+            text-transform: uppercase; letter-spacing: 2px; border-radius: 20px; font-weight: 900;
+        }
+
+        .key.show-ans {
+            grid-column: 1 / -1; background: rgba(255, 255, 255, 0.05); color: var(--neon-blue);
+            border: 2px solid var(--glass-border); font-size: 0.9rem; height: 45px; border-radius: 12px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-15px); } 75% { transform: translateX(15px); } }
+        .shake { animation: shake 0.4s; }
+
+        #success-overlay {
+            position: fixed; inset: 0; background: rgba(2, 6, 23, 0.95);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 5000; color: white; text-align: center;
+            backdrop-filter: blur(25px);
+        }
+        #success-overlay h2 { font-size: 3rem; margin-top: 15px; color: var(--neon-blue); text-shadow: 0 0 20px var(--neon-blue); }
+
+        #error-screen {
+            position: fixed; inset: 0; background: rgba(239, 68, 68, 0.15);
+            display: none; pointer-events: none; z-index: 4500;
+            align-items: center; justify-content: center;
+        }
+        #error-screen span { font-size: 15rem; color: white; opacity: 0.3; }
+
+        /* Desktop side-by-side */
+        @media (min-width: 1024px) {
+            header { padding: 25px 40px; max-width: 1300px; }
+            .stat-pill { font-size: 1.1rem; padding: 10px 20px; }
+            .container { flex-direction: row; gap: 60px; padding: 40px; max-width: 1500px; }
+            .game-card { max-width: 800px; padding: 50px 40px; gap: 20px; }
+            .problem-title { font-size: 2rem; }
+            .visual-hub { height: 140px; margin-bottom: 20px; }
+            .equation-area { font-size: 3.5rem; gap: 20px; }
+            .ans-box { min-width: 180px; height: 100px; font-size: 4rem; border-radius: 25px; }
+            .num-box { padding: 15px 30px; border-radius: 22px; }
+            .keypad-section { max-width: 480px; gap: 15px; }
+            .key { height: 75px; font-size: 2rem; border-radius: 20px; }
+            .key.check { height: 95px; font-size: 2.2rem; border-radius: 25px; }
+        }
+
+        @media (max-width: 768px) {
+            header { flex-direction: column; align-items: center; gap: 10px; }
+            .badges { justify-content: center; width: 100%; }
+            .header-controls { justify-content: center; width: 100%; }
+            .equation-area { font-size: 1.6rem; gap: 8px; margin-top: 10px; }
+            .ans-box { min-width: 100px; height: 70px; font-size: 2.2rem; }
+            .num-box { padding: 8px 15px; }
+            .problem-title { font-size: 1.2rem; }
+            .visual-hub { height: 80px; }
+            .port-node { width: 22px; height: 22px; font-size: 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <div id="error-screen"><span>❌</span></div>
+
+    <header>
+        <div class="badges">
+            <div class="stat-pill">🆙 <span id="lblLvl">Lvl</span>: <span id="valLvl" class="stat-val">1</span></div>
+            <div class="stat-pill high-score-pill">👑 <span id="lblHigh">High</span>: <span id="valHigh" class="stat-val">0</span></div>
+            <div class="stat-pill">⭐ <span id="lblScore">Score</span>: <span id="valScore" class="stat-val">0</span></div>
+        </div>
+        <div class="header-controls">
+            <button class="btn-mute" id="muteBtn" onclick="toggleMute()">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="game-card" id="gameCard">
+            <h1 class="problem-title" id="pageTitle">ምምቃል ሚልዮናት (Large Division)</h1>
+            
+            <div class="visual-hub">
+                <div class="data-stream-container">
+                    <div class="data-bar" id="dataBar"></div>
+                </div>
+                <div class="ports-row" id="portsRow">
+                    <!-- Port nodes generated by JS -->
+                </div>
+            </div>
+
+            <div class="equation-area" id="equation">
+                <div class="num-box" id="dispDividend">0</div>
+                <span style="color: var(--neon-pink)">÷</span>
+                <div class="num-box" id="dispDivisor">0</div>
+                <span>=</span>
+                <div class="ans-box active" id="ansBox">?</div>
+            </div>
+        </div>
+
+        <div class="keypad-section">
+            <div class="keypad" id="keypad"></div>
+            <button class="key check" id="btnCheck" onclick="checkAnswer()">ፈትሽ (Check)</button>
+            <button class="key show-ans" id="btnShow" onclick="showAnswer()">💡 መልሲ ኣርእየኒ (Show Answer)</button>
+        </div>
+    </div>
+
+    <div id="success-overlay">
+        <div style="font-size: 8rem; animation: bounce 1s infinite alternate;">📡</div>
+        <h2 id="txtWin">ዝነኣድ ስራሕ!</h2>
+        <p style="font-size: 1.5rem;" id="txtWinSub">ብትኽክል መቒልካዮ ኣለኻ!</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { title: "ምምቃል ክሳብ 1,000,000", check: "ኣረጋግፅ", show: "💡 መልሲ ኣርእየኒ", win: "ዝነኣድ ስራሕ!", winsub: "ብትኽክል ተመሊሱ!", score: "ነጥቢ", high: "ዝለዓለ", level: "ደረጃ" },
+            am: { title: "እስከ 1,000,000 ማካፈል", check: "አረጋግጥ", show: "💡 መልሱን አሳይ", win: "ድንቅ ስራ!", winsub: "በትክክል መልሰዋል!", score: "ነጥብ", high: "ከፍተኛ", level: "ደረጃ" },
+            en: { title: "Division up to 1,000,000", check: "Check", show: "💡 Show Answer", win: "Great Job!", winsub: "You divided perfectly!", score: "Score", high: "High", level: "Level" },
+            om: { title: "Hanga 1,000,000 Hiruu", check: "Mirkaneessi", show: "💡 Deebii agarsiisi", win: "Hojii Gaarii!", winsub: "Sirriitti qooddeetta!", score: "Qabxii", high: "Olaanaa", level: "Sadarkaa" },
+            so: { title: "U Qaybinta ilaa 1,000,000", check: "Hubi", show: "💡 Tusi jawaabta", win: "Shaqo Fiican!", winsub: "Si fiican ayaad u qaybisay!", score: "Dhibco", high: "Sare", level: "Heerka" }
+        };
+
+        let score = 0, lang = 'ti', currentQ = null, busy = false, muted = false;
+        let highScore = parseInt(localStorage.getItem('div_million_high')) || 0;
+        let userVal = "";
+        let particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(600, n); o.frequency.exponentialRampToValueAtTime(300, n + 0.1);
+                g.gain.setValueAtTime(0.05, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046, 1318].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.8);
+                o.start(); o.stop(n + 0.8);
+            } else {
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.3);
+                o.start(); o.stop(n + 0.3);
+            }
+        }
+
+        function toggleMute() {
+            muted = !muted;
+            document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊';
+        }
+
+        function generateQuestion() {
+            const levelNum = Math.floor(score / 50) + 1;
+            busy = false;
+            userVal = "";
+            
+            let divisor = Math.floor(Math.random() * 9) + 2; // 2-10
+            if (Math.random() > 0.7) divisor = 10; // Frequent division by 10 as per curriculum
+
+            let quotient;
+            if (levelNum === 1) quotient = (Math.floor(Math.random() * 90) + 10) * 10; // 100 - 1,000
+            else if (levelNum === 2) quotient = (Math.floor(Math.random() * 900) + 100) * 10; // 1,000 - 10,000
+            else if (levelNum === 3) quotient = (Math.floor(Math.random() * 9000) + 1000) * 10; // 10,000 - 100,000
+            else quotient = (Math.floor(Math.random() * 90000) + 10000) * 10; // 100,000 - 1,000,000
+
+            const dividend = quotient * divisor;
+            if (dividend > 1000000) return generateQuestion();
+
+            currentQ = { dividend, divisor, ans: quotient };
+            renderUI();
+        }
+
+        function renderUI() {
+            const t = i18n[lang];
+            const levelNum = Math.floor(score / 50) + 1;
+            
+            document.getElementById('valLvl').innerText = levelNum;
+            document.getElementById('lblLvl').innerText = t.level;
+            document.getElementById('valScore').innerText = score;
+            document.getElementById('valHigh').innerText = highScore;
+            document.getElementById('btnCheck').innerText = t.check;
+            document.getElementById('btnShow').innerText = t.show;
+            document.getElementById('pageTitle').innerText = t.title;
+            
+            document.getElementById('dispDividend').innerText = currentQ.dividend.toLocaleString();
+            document.getElementById('dispDivisor').innerText = currentQ.divisor;
+            document.getElementById('ansBox').innerText = userVal || "?";
+
+            // Visual Ports
+            const portsRow = document.getElementById('portsRow');
+            portsRow.innerHTML = '';
+            for(let i=1; i<=currentQ.divisor; i++) {
+                const node = document.createElement('div');
+                node.className = 'port-node';
+                node.innerText = i;
+                portsRow.appendChild(node);
+            }
+            document.getElementById('dataBar').style.width = '100%';
+        }
+
+        function press(k) {
+            if (busy) return;
+            sfx('tap');
+            if (k === 'bk') {
+                userVal = userVal.slice(0, -1);
+            } else if (k === '00') {
+                if (userVal.length > 0 && userVal.length < 6) userVal += "00";
+            } else if (k === '000') {
+                if (userVal.length > 0 && userVal.length < 5) userVal += "000";
+            } else {
+                if (userVal.length < 7) userVal += k;
+            }
+            document.getElementById('ansBox').innerText = userVal || "?";
+        }
+
+        function checkAnswer() {
+            if (busy || userVal === "") return;
+            const input = parseInt(userVal);
+
+            if (input === currentQ.ans) {
+                busy = true;
+                score += 10;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('div_million_high', highScore);
+                }
+                
+                // Visual feedback: drain bar and light up ports
+                document.getElementById('dataBar').style.width = '0%';
+                document.querySelectorAll('.port-node').forEach((n, i) => {
+                    setTimeout(() => n.classList.add('active'), i * 100);
+                });
+
+                sfx('win'); 
+                // CLOT CONFETTI
+                burst(300);
+                setTimeout(() => burst(250), 300);
+                setTimeout(() => burst(250), 600);
+                setTimeout(() => burst(200), 900);
+
+                document.getElementById('success-overlay').style.display = 'flex';
+                document.getElementById('txtWin').innerText = i18n[lang].win;
+                document.getElementById('txtWinSub').innerText = i18n[lang].winsub;
+                
+                setTimeout(() => {
+                    document.getElementById('success-overlay').style.display = 'none';
+                    generateQuestion();
+                }, 2800);
+            } else {
+                sfx('err');
+                document.body.classList.add('wrong-flash');
+                document.getElementById('error-screen').style.display = 'flex';
+                document.getElementById('gameCard').classList.add('shake');
+                document.getElementById('ansBox').classList.add('wrong');
+                
+                setTimeout(() => {
+                    document.body.classList.remove('wrong-flash');
+                    document.getElementById('error-screen').style.display = 'none';
+                    document.getElementById('gameCard').classList.remove('shake');
+                    document.getElementById('ansBox').classList.remove('wrong');
+                    userVal = "";
+                    renderUI();
+                }, 800);
+            }
+        }
+
+        function showAnswer() {
+            if (busy) return;
+            sfx('tap');
+            userVal = currentQ.ans.toString();
+            document.getElementById('ansBox').innerText = userVal;
+            renderUI();
+        }
+
+        function changeLang(l) { lang = l; renderUI(); }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#00f2fe','#a855f7','#ec4899','#ffffff','#10b981','#3b82f6'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random()*c.width, y: c.height+20, vx: (Math.random()-0.5)*45, vy: (Math.random()-0.9)*60,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*30
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.vx *= 0.99; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => {
+            const kp = document.getElementById('keypad');
+            [1,2,3,'bk',4,5,6,'00',7,8,9,0,'000'].forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key'; 
+                if(k === 'bk') { b.innerText = '⌫'; b.classList.add('del'); }
+                else if(k === '00' || k === '000') { b.innerText = k; b.classList.add('zeroes'); }
+                else b.innerText = k;
+                
+                b.onclick = () => press(k); 
+                kp.appendChild(b);
+            });
+            generateQuestion();
+        };
+    </script>
+</body>
+</html>

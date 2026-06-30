@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Time Quest | ምስላሕ ግዘ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cosmic-purple: #2e1065;
+            --neon-blue: #0ea5e9;
+            --neon-pink: #f43f5e;
+            --gold: #facc15;
+            --white: #ffffff;
+            --ink: #0f172a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--cosmic-purple);
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+            color: var(--white); overflow: hidden; position: relative;
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-top: env(safe-area-inset-top);
+        }
+
+        /* Cosmic Cartoon Background */
+        .stars {
+            position: fixed; inset: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 40px 70px, var(--gold), rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat; background-size: 150px 150px; opacity: 0.3; z-index: 0;
+        }
+        .nebula {
+            position: fixed; width: 400px; height: 400px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(244, 63, 94, 0.2), transparent 70%);
+            top: 20%; left: -100px; z-index: 0;
+        }
+        .floating-clock {
+            position: fixed; font-size: 3rem; opacity: 0.15; z-index: 0;
+            animation: float 10s infinite linear;
+        }
+        @keyframes float {
+            from { transform: translateY(110vh) rotate(0deg); }
+            to { transform: translateY(-20vh) rotate(360deg); }
+        }
+
+        header {
+            width: 100%; max-width: 1000px; padding: 10px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            flex-wrap: wrap; gap: 8px;
+        }
+
+        .stat-group { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+
+        .stat-pill {
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px);
+            padding: 6px 12px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; gap: 5px; font-weight: 800;
+            font-size: 0.8rem;
+        }
+        .stat-val { color: var(--gold); }
+
+        .container {
+            flex: 1; width: 100%; max-width: 800px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; padding: 10px; z-index: 10; gap: 12px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.95); border-radius: 20px; border: 4px solid var(--neon-blue);
+            padding: 15px; width: 100%; color: var(--ink); text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 10px;
+        }
+
+        .formula-hint {
+            background: #f0f9ff; color: var(--neon-blue); padding: 6px 10px; border-radius: 10px;
+            font-size: 0.7rem; font-weight: 800; border: 1.5px solid #bae6fd;
+        }
+
+        .question-box {
+            background: #f8fafc; padding: 10px; border-radius: 15px; border: 2px dashed var(--neon-blue);
+        }
+        .question-text { font-size: 1.1rem; font-weight: 900; line-height: 1.3; color: #334155; }
+
+        .interactive-area {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            font-size: 1.5rem; font-weight: 900; flex-wrap: wrap;
+        }
+        .val-pill { background: #fee2e2; color: var(--neon-pink); padding: 6px 12px; border-radius: 10px; }
+
+        .ans-box {
+            min-width: 90px; height: 60px; background: #fff; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--neon-blue); font-size: 1.8rem; cursor: pointer;
+            border: 4px solid var(--neon-blue); box-shadow: 0 4px 0 var(--neon-blue);
+            font-family: monospace; transition: 0.1s;
+        }
+        .ans-box.active { transform: scale(1.05); border-color: var(--gold); box-shadow: 0 4px 0 var(--gold); color: var(--gold); }
+
+        .unit-label { font-size: 1rem; font-weight: 900; color: #64748b; }
+
+        /* Keypad */
+        .keypad-section { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 8px; }
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .key {
+            height: 50px; background: #f1f5f9; border: none; border-radius: 12px;
+            font-size: 1.2rem; font-weight: 800; color: #475569; cursor: pointer;
+            box-shadow: 0 3px 0 #cbd5e1; transition: 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(3px); box-shadow: 0 1px 0 #cbd5e1; }
+        .key.del { color: var(--neon-pink); }
+        .key.check {
+            grid-column: 1 / -1; background: #22c55e; color: white;
+            font-size: 1.4rem; height: 65px; border-radius: 15px;
+            box-shadow: 0 5px 0 #16a34a; font-weight: 900; margin-top: 5px;
+        }
+
+        /* Overlays */
+        .overlay {
+            position: fixed; inset: 0; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 5000;
+            background: rgba(255, 255, 255, 0.98); color: var(--ink); text-align: center; padding: 20px;
+        }
+        .overlay.error { background: var(--neon-pink); color: white; }
+        .big-icon { font-size: 6rem; margin-bottom: 15px; animation: bounce 1s infinite alternate; }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
+        
+        .big-x { 
+            font-size: 8rem; 
+            font-weight: 950; 
+            font-family: 'Arial Black', sans-serif;
+            text-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+            animation: wrong-impact 0.5s infinite; 
+            line-height: 1;
+        }
+
+        @keyframes wrong-impact {
+            0% { transform: scale(1) translate(0, 0); }
+            10% { transform: scale(1.1) translate(-3px, -2px); }
+            20% { transform: scale(1.1) translate(3px, 2px); }
+            50% { transform: scale(1.05) translate(0, 0); }
+            100% { transform: scale(1) translate(0, 0); }
+        }
+
+        .lang-select {
+            padding: 5px 8px; border-radius: 10px; border: 1.5px solid white;
+            background: white; font-weight: bold; cursor: pointer; color: var(--ink); font-size: 0.75rem;
+        }
+
+        @media (min-width: 768px) {
+            header { padding: 20px; gap: 15px; }
+            .stat-pill { padding: 8px 16px; font-size: 1rem; border-radius: 15px; }
+            .container { padding: 20px; gap: 20px; }
+            .game-card { padding: 30px; border-width: 6px; border-radius: 35px; gap: 20px; }
+            .formula-hint { font-size: 0.9rem; padding: 10px 18px; }
+            .question-box { padding: 20px; }
+            .question-text { font-size: 1.5rem; }
+            .interactive-area { font-size: 2rem; gap: 15px; }
+            .ans-box { min-width: 140px; height: 90px; font-size: 2.5rem; border-radius: 20px; }
+            .key { height: 75px; font-size: 1.6rem; border-radius: 18px; }
+            .key.check { height: 90px; font-size: 2.2rem; }
+            .big-x { font-size: 18rem; }
+            .big-icon { font-size: 10rem; }
+            .lang-select { font-size: 0.9rem; padding: 8px 12px; }
+        }
+
+        @media (max-width: 360px) {
+            .stat-pill { font-size: 0.7rem; padding: 4px 8px; }
+            .question-text { font-size: 1rem; }
+            .ans-box { min-width: 80px; height: 50px; font-size: 1.5rem; }
+            .key { height: 45px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="nebula"></div>
+    <div class="floating-clock" style="left: 10%; animation-delay: 0s;">🕒</div>
+    <div class="floating-clock" style="left: 30%; animation-delay: 3s;">⏰</div>
+    <div class="floating-clock" style="left: 60%; animation-delay: 6s;">⌛</div>
+    <div class="floating-clock" style="left: 85%; animation-delay: 1.5s;">⏱️</div>
+
+    <canvas id="confetti-canvas" style="position:fixed; inset:0; pointer-events:none; z-index:6000;"></canvas>
+
+    <header>
+        <div class="stat-group">
+            <div class="stat-pill">⭐ <span id="lblScore">Score</span>: <span id="valScore" class="stat-val">0</span></div>
+            <div class="stat-pill">🏆 <span id="lblHigh">High</span>: <span id="valHigh" class="stat-val">0</span></div>
+            <div class="stat-pill" style="background: rgba(255,255,255,0.2); border-color: var(--gold);">🆙 <span id="lblLevel">Lvl</span>: <span id="valLevel" class="stat-val">1</span></div>
+        </div>
+        <div style="display: flex; gap: 6px; align-items: center;">
+            <button class="key" style="width: 32px; height: 32px; border-radius: 50%; font-size: 0.9rem; box-shadow: 0 2px 0 #cbd5e1;" onclick="toggleMute()" id="muteBtn">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="setLanguage(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="game-card" id="mainCard">
+            <h1 id="pageTitle" style="font-weight: 900; color: var(--neon-blue); font-size: 1rem;">ምስላሕ ግዘ</h1>
+            <div class="formula-hint" id="hintBox">1 ደቒቓ = 60 ሰከንድ</div>
+            <div class="question-box">
+                <p id="questionText" class="question-text">Loading...</p>
+            </div>
+            <div class="interactive-area" id="interactiveArea">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+
+        <div class="keypad-section">
+            <div class="keypad" id="keypad"></div>
+            <button class="key check" id="btnCheck" onclick="checkAnswer()">ኣረጋግፅ</button>
+        </div>
+    </div>
+
+    <!-- Success Feedback -->
+    <div id="success-overlay" class="overlay">
+        <div class="big-icon">🚀</div>
+        <h2 id="txtWin" style="font-size: 2rem; color: #16a34a;">ንፉዕ!</h2>
+        <p style="font-size: 1rem; color: #64748b;" id="txtWinSub">ልክዕ መልሲ!</p>
+    </div>
+
+    <!-- Error Feedback -->
+    <div id="error-overlay" class="overlay error">
+        <div class="big-x">✕</div>
+        <h2 id="txtFail" style="font-size: 2rem;">ጌጋ!</h2>
+        <p style="font-size: 1rem;" id="txtFailSub">እንደገና ፈትን</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { title: "ምስላሕ ግዘ", check: "ኣረጋግፅ", win: "ንፉዕ!", winsub: "ልክዕ መልሲ!", fail: "ጌጋ!", failsub: "እንደገና ፈትን", score: "ውፅኢት", high: "ዝለዓለ", level: "ደረጃ", q: "ቀይሩ:", and: "ን", units: { d: "መዓልቲ", h: "ሰዓት", m: "ደቒቓ", s: "ሰከንድ" }, hints: ["1 ደቒቓ = 60 ሰከንድ", "1 ሰዓት = 60 ደቒቓ", "1 መዓልቲ = 24 ሰዓት"] },
+            am: { title: "የጊዜ ስሌት", check: "አረጋግጥ", win: "ድንቅ ስራ!", winsub: "ትክክል!", fail: "ስህተት!", failsub: "እንደገና ይሞክሩ", score: "ውጤት", high: "ከፍተኛ", level: "ደረጃ", q: "ቀይሩ:", and: "እና", units: { d: "ቀን", h: "ሰዓት", m: "ደቂቃ", s: "ሰከንድ" }, hints: ["1 ደቂቃ = 60 ሰከንድ", "1 ሰዓት = 60 ደቂቃ", "1 ቀን = 24 ሰዓት"] },
+            en: { title: "Time Master", check: "Confirm", win: "Great!", winsub: "Correct Answer!", fail: "Wrong!", failsub: "Try Again", score: "Score", high: "High", level: "Level", q: "Convert:", and: "and", units: { d: "day(s)", h: "hr(s)", m: "min(s)", s: "sec(s)" }, hints: ["1 min = 60 sec", "1 hr = 60 min", "1 day = 24 hr"] },
+            om: { title: "Saffisa Yeroo", check: "Mirkaneessi", win: "Baay'ee Gaarii!", winsub: "Sirriidha!", fail: "Dogoggora!", failsub: "Irra deebi'i yaali", score: "Qabxii", high: "Olaanaa", level: "Sadarkaa", q: "Gedaali:", and: "fi", units: { d: "guyyaa", h: "sa'aatii", m: "daqiiqaa", s: "sekandii" }, hints: ["1 daq = 60 sek", "1 sa'a = 60 daq", "1 guy = 24 sa'a"] },
+            so: { title: "Xisaabinta Waqtiga", check: "Hubi", win: "Shaqo Fiican!", winsub: "Waa sax!", fail: "Khalad!", failsub: "Markale isku day", score: "Dhibco", high: "Sare", level: "Heerka", q: "Beddel:", and: "iyo", units: { d: "maalmood", h: "saacadood", m: "daqiiqado", s: "ilbiriqsiyo" }, hints: ["1 daq = 60 ilb", "1 saac = 60 daq", "1 maalin = 24 saac"] }
+        };
+
+        let score = 0, lang = 'ti', currentTask = null, busy = false, userVal = "", muted = false;
+        let highScore = parseInt(localStorage.getItem('time_high')) || 0;
+        let particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function toggleMute() {
+            muted = !muted;
+            document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊';
+        }
+
+        function sfx(type) {
+            if (muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            
+            if (type === 'tap') {
+                o.type = 'sine';
+                o.frequency.setValueAtTime(800, n);
+                g.gain.setValueAtTime(0.05, n);
+                o.start();
+                o.stop(n + 0.05);
+            }
+            else if (type === 'win') { 
+                o.type = 'triangle'; 
+                [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1)); 
+                g.gain.setValueAtTime(0.1, n); 
+                o.start(); o.stop(n + 0.5); 
+            }
+            else if (type === 'err') { 
+                o.type = 'sawtooth'; 
+                o.frequency.setValueAtTime(150, n); 
+                o.frequency.exponentialRampToValueAtTime(40, n + 0.3); 
+                g.gain.setValueAtTime(0.1, n); 
+                o.start(); o.stop(n + 0.3); 
+            }
+        }
+
+        function setLanguage(l) {
+            lang = l;
+            localStorage.setItem('time_lang', lang);
+            updateUI();
+        }
+
+        function updateUI() {
+            const t = i18n[lang];
+            document.getElementById('lblScore').innerText = t.score;
+            document.getElementById('lblHigh').innerText = t.high;
+            document.getElementById('lblLevel').innerText = t.level;
+            document.getElementById('txtWin').innerText = t.win;
+            document.getElementById('txtWinSub').innerText = t.winsub;
+            document.getElementById('txtFail').innerText = t.fail;
+            document.getElementById('txtFailSub').innerText = t.failsub;
+            document.getElementById('pageTitle').innerText = t.title;
+            document.getElementById('btnCheck').innerText = t.check;
+            document.getElementById('hintBox').innerText = t.hints.join(" | ");
+            document.getElementById('valHigh').innerText = highScore;
+            if (currentTask) renderTask();
+        }
+
+        function generateTask() {
+            busy = false; userVal = "";
+            const level = Math.floor(score / 200) + 1;
+            document.getElementById('valLevel').innerText = level;
+            
+            let type = '';
+            if (level === 1) {
+                type = Math.random() > 0.5 ? 'm_to_s' : 'h_to_m';
+            } else if (level === 2) {
+                const r = Math.random();
+                if (r < 0.4) type = 'd_to_h';
+                else if (r < 0.7) type = 'h_to_s';
+                else type = 'm_to_s';
+            } else if (level === 3) {
+                type = Math.random() > 0.5 ? 'mixed_m_s' : 'h_to_s';
+            } else if (level === 4) {
+                type = Math.random() > 0.5 ? 'mixed_h_m' : 'mixed_m_s';
+            } else {
+                const r = Math.random();
+                if (r < 0.3) type = 'mixed_d_h';
+                else if (r < 0.6) type = 'mixed_h_m';
+                else type = 'large_h_s';
+            }
+
+            const task = { type };
+            if (type === 'm_to_s') { task.v = Math.floor(Math.random() * (10 * level)) + 2; task.u = 'm'; task.target = 's'; task.ans = task.v * 60; }
+            else if (type === 'h_to_m') { task.v = Math.floor(Math.random() * (5 * level)) + 1; task.u = 'h'; task.target = 'm'; task.ans = task.v * 60; }
+            else if (type === 'd_to_h') { task.v = Math.floor(Math.random() * 4) + 1; task.u = 'd'; task.target = 'h'; task.ans = task.v * 24; }
+            else if (type === 'h_to_s') { task.v = Math.floor(Math.random() * 2) + 1; task.u = 'h'; task.target = 's'; task.ans = task.v * 3600; }
+            else if (type === 'mixed_m_s') { task.v1 = Math.floor(Math.random() * 5) + 1; task.v2 = Math.floor(Math.random() * 59) + 1; task.u1 = 'm'; task.u2 = 's'; task.target = 's'; task.ans = (task.v1 * 60) + task.v2; }
+            else if (type === 'mixed_h_m') { task.v1 = Math.floor(Math.random() * 3) + 1; task.v2 = Math.floor(Math.random() * 59) + 1; task.u1 = 'h'; task.u2 = 'm'; task.target = 'm'; task.ans = (task.v1 * 60) + task.v2; }
+            else if (type === 'mixed_d_h') { task.v1 = Math.floor(Math.random() * 2) + 1; task.v2 = Math.floor(Math.random() * 23) + 1; task.u1 = 'd'; task.u2 = 'h'; task.target = 'h'; task.ans = (task.v1 * 24) + task.v2; }
+            else if (type === 'large_h_s') { task.v = Math.floor(Math.random() * 5) + 3; task.u = 'h'; task.target = 's'; task.ans = task.v * 3600; }
+
+            currentTask = task;
+            renderTask();
+        }
+
+        function renderTask() {
+            const t = i18n[lang];
+            const u = t.units;
+            let displayVal = "";
+
+            if (currentTask.type.startsWith('mixed')) {
+                const conj = t.and;
+                displayVal = `<div class="val-pill">${currentTask.v1}${u[currentTask.u1]} ${conj} ${currentTask.v2}${u[currentTask.u2]}</div>`;
+            } else {
+                displayVal = `<div class="val-pill">${currentTask.v} ${u[currentTask.u]}</div>`;
+            }
+
+            document.getElementById('questionText').innerText = t.q;
+            document.getElementById('interactiveArea').innerHTML = `
+                ${displayVal}
+                <div style="color:var(--neon-blue); font-size:1.1em">➜</div>
+                <div class="ans-box active" id="ansBox">${userVal || '?'}</div>
+                <div class="unit-label">${u[currentTask.target]}</div>
+            `;
+            
+            document.getElementById('valScore').innerText = score;
+            document.getElementById('valLevel').innerText = Math.floor(score / 200) + 1;
+        }
+
+        function press(k) {
+            if (busy) return;
+            sfx('tap');
+            if (k === 'bk') userVal = userVal.slice(0, -1);
+            else if (userVal.length < 8) userVal += k;
+            document.getElementById('ansBox').innerText = userVal || "?";
+        }
+
+        function checkAnswer() {
+            if (busy || userVal === "") return;
+            busy = true;
+            if (parseInt(userVal) === currentTask.ans) {
+                const multiplier = Math.floor(score / 200) + 1;
+                score += (currentTask.type.startsWith('mixed') ? 40 : 25) * multiplier;
+                if (score > highScore) { 
+                    highScore = score; 
+                    localStorage.setItem('time_high', highScore); 
+                    document.getElementById('valHigh').innerText = highScore;
+                }
+                handleWin();
+            } else {
+                handleErr();
+            }
+        }
+
+        function handleWin() {
+            sfx('win'); burst(300);
+            const overlay = document.getElementById('success-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                generateTask();
+            }, 1800);
+        }
+
+        function handleErr() {
+            sfx('err');
+            document.body.classList.add('wrong-bg');
+            document.getElementById('mainCard').style.animation = 'wrong-impact 0.5s';
+            const overlay = document.getElementById('error-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.body.classList.remove('wrong-bg');
+                document.getElementById('mainCard').style.animation = '';
+                userVal = ""; busy = false; renderTask();
+            }, 1800);
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#0ea5e9', '#f43f5e', '#facc15', '#ffffff'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random()*c.width, y: c.height+20, vx: (Math.random()-0.5)*40, vy: (Math.random()-1.2)*65,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 2.5, r: Math.random()*360, rv: (Math.random()-0.5)*20
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => {
+            const kp = document.getElementById('keypad');
+            [1,2,3,4,5,6,7,8,9,0,'00','bk'].forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key'; 
+                if(k === 'bk') { b.innerText = '⌫'; b.classList.add('del'); }
+                else b.innerText = k;
+                b.onclick = () => press(k); 
+                kp.appendChild(b);
+            });
+            setLanguage('ti');
+            generateTask();
+        };
+    </script>
+</body>
+</html>

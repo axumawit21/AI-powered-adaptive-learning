@@ -1,0 +1,637 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Comparing Fractions - Cake Shop Adventure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #FFF8E1;
+            --primary: #FF6F00;
+            --secondary: #D84315;
+            --accent: #FFAB91;
+            --text-dark: #3E2723;
+            --plate-white: #ffffff;
+            --cake-fill: #FF7043;
+            --cake-empty: #F5F5F5;
+            --shadow: rgba(62, 39, 35, 0.15);
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(90deg, rgba(255,171,145,0.05) 50%, transparent 50%),
+                linear-gradient(rgba(255,171,145,0.05) 50%, transparent 50%);
+            background-size: 60px 60px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* --- Header --- */
+        header {
+            width: 100%;
+            padding: 15px 40px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            border-bottom: 5px solid var(--primary);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            position: sticky; top: 0;
+        }
+
+        .header-item-left { display: flex; justify-content: flex-start; }
+        .header-item-right { display: flex; justify-content: flex-end; }
+
+        .grade-badge {
+            background: var(--primary); color: white; width: 55px; height: 55px;
+            border-radius: 15px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.8rem; border: 3px solid white;
+            box-shadow: 0 5px 0 #bf5300; transform: rotate(-5deg);
+        }
+
+        h1 { margin: 0; color: var(--text-dark); font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; text-align: center; }
+
+        /* Custom Dropdown */
+        .custom-select-wrapper { position: relative; display: inline-block; cursor: pointer; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; font-weight: 800; color: var(--primary);
+            height: 48px; background: white; border-radius: 24px;
+            width: 170px; border: 2px solid var(--primary);
+            box-shadow: 0 4px 0 var(--shadow);
+        }
+        .custom-options {
+            position: absolute; top: 115%; right: 0; left: 0;
+            background: white; opacity: 0; visibility: hidden;
+            pointer-events: none; transform: translateY(-10px);
+            transition: all 0.3s ease; display: flex; flex-direction: column;
+            border-radius: 20px; padding: 6px; box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border: 1px solid #eee; z-index: 200;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; pointer-events: all; transform: translateY(0); }
+        .custom-option { padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 600; color: #444; }
+        .custom-option:hover { background: #fff8f1; color: var(--primary); }
+
+        /* --- Main Container --- */
+        .container {
+            flex: 1; width: 100%; max-width: 1100px;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 40px 20px; z-index: 10;
+            justify-content: flex-start;
+            gap: 30px;
+        }
+
+        .score-board { display: flex; gap: 20px; }
+        .score-pill {
+            background: white; padding: 12px 30px; border-radius: 35px;
+            font-weight: 900; color: var(--text-dark);
+            border: 3px solid var(--primary);
+            box-shadow: 0 8px 0 var(--shadow);
+            display: flex; align-items: center; gap: 12px;
+            font-size: 1.4rem;
+        }
+
+        .instruction-banner {
+            background: white; color: var(--text-dark);
+            padding: 15px 50px; border-radius: 40px;
+            font-size: 1.6rem; font-weight: 800;
+            box-shadow: 0 8px 0 var(--shadow);
+            border: 4px solid var(--primary);
+            text-align: center; max-width: 90%;
+        }
+
+        /* --- Cake Comparison Area --- */
+        .comparison-stage {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            width: 100%;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .plate {
+            background: white;
+            width: 320px; height: 320px;
+            border-radius: 50%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            box-shadow: 0 20px 40px var(--shadow), inset 0 0 40px rgba(0,0,0,0.05);
+            border: 12px solid #fdfdfd;
+            position: relative;
+        }
+        .plate.wobble { animation: wobble 0.5s ease-in-out; }
+
+        .cake-svg { width: 80%; height: 80%; transform: rotate(-90deg); filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1)); }
+        .slice { stroke: white; stroke-width: 2; transition: fill 0.4s ease; }
+        .slice.filled { fill: var(--cake-fill); }
+        .slice.empty { fill: var(--cake-empty); }
+
+        .fraction-label {
+            position: absolute; bottom: -20px;
+            background: var(--primary); color: white;
+            padding: 8px 25px; border-radius: 20px;
+            font-size: 2.2rem; font-weight: 900;
+            box-shadow: 0 6px 0 #bf5300;
+        }
+
+        .drop-zone {
+            width: 120px; height: 120px;
+            background: rgba(255, 255, 255, 0.4);
+            border: 5px dashed var(--primary);
+            border-radius: 30px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 4rem; font-weight: 900; color: var(--primary);
+            text-shadow: 2px 2px 0 white;
+        }
+
+        /* --- Symbol Dock --- */
+        .symbol-dock {
+            display: flex; gap: 25px;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 20px 40px; border-radius: 60px;
+            backdrop-filter: blur(5px);
+            border: 3px solid white;
+            box-shadow: 0 10px 30px var(--shadow);
+            margin-top: 20px;
+        }
+
+        .symbol-btn {
+            width: 100px; height: 100px;
+            background: radial-gradient(circle at 30% 30%, #ffd180, #e65100);
+            border-radius: 50%; border: 6px solid white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3.5rem; font-weight: 900; color: white;
+            cursor: pointer; box-shadow: 0 10px 0 #bf360c;
+            position: relative;
+        }
+        /* Cookie chips */
+        .symbol-btn::before { content: '::'; position: absolute; top: 15%; left: 20%; font-size: 1.5rem; opacity: 0.3; }
+        .symbol-btn::after { content: '::'; position: absolute; bottom: 15%; right: 20%; font-size: 1.5rem; opacity: 0.3; }
+
+        .symbol-btn:hover { transform: translateY(-10px) scale(1.1); box-shadow: 0 20px 0 #bf360c; }
+        .symbol-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        /* --- Overlays --- */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(62, 39, 35, 0.9);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(12px); padding: 20px;
+        }
+        .overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+        
+        .modal {
+            background: white; padding: 50px; border-radius: 50px;
+            text-align: center; max-width: 500px; width: 95%;
+            border: 12px solid var(--primary);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        }
+        
+        .modal-icon { font-size: 8rem; display: block; margin-bottom: 25px; }
+        .modal-title { font-size: 3.5rem; font-weight: 900; color: var(--text-dark); margin-bottom: 15px; }
+        .modal-body { font-size: 1.8rem; color: #555; margin-bottom: 40px; font-weight: bold; line-height: 1.4; }
+
+        .btn-modal {
+            background: var(--primary); color: white; border: none;
+            padding: 20px 60px; border-radius: 50px; font-weight: 900;
+            font-size: 1.8rem; cursor: pointer; box-shadow: 0 10px 0 #bf5300;
+        }
+        .btn-modal:active { transform: translateY(6px); box-shadow: none; }
+
+        @keyframes wobble {
+            0%, 100% { transform: rotate(0); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 1100; }
+
+        @media (max-width: 850px) {
+            header { padding: 10px 15px; grid-template-columns: auto 1fr auto; }
+            h1 { font-size: 1.4rem; }
+            .grade-badge { width: 45px; height: 45px; font-size: 1.4rem; }
+            .comparison-stage { gap: 20px; flex-wrap: nowrap; justify-content: space-between; }
+            .plate { width: 150px; height: 150px; border-width: 6px; }
+            .fraction-label { font-size: 1.2rem; padding: 5px 15px; bottom: -12px; }
+            .drop-zone { width: 70px; height: 70px; font-size: 2.2rem; }
+            .symbol-btn { width: 70px; height: 70px; font-size: 2.2rem; border-width: 4px; }
+            .instruction-banner { font-size: 1.1rem; padding: 10px 30px; }
+            .score-pill { padding: 8px 18px; font-size: 1rem; }
+            .modal-title { font-size: 2.2rem; }
+            .modal-body { font-size: 1.2rem; }
+            .btn-modal { font-size: 1.4rem; padding: 15px 40px; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+    <div class="header-item-left"><div class="grade-badge">3</div></div>
+    <h1 id="app-title">Cake Comparison</h1>
+    <div class="header-item-right">
+        <div class="custom-select-wrapper" id="lang-dropdown">
+            <div class="custom-select">
+                <div class="custom-select__trigger">
+                    <span id="current-lang-text">🗺️ ትግርኛ</span>
+                    <span style="font-size:0.6rem">▼</span>
+                </div>
+                <div class="custom-options">
+                    <div class="custom-option" data-value="ti">ትግርኛ</div>
+                    <div class="custom-option" data-value="am">አማርኛ</div>
+                    <div class="custom-option" data-value="en">English</div>
+                    <div class="custom-option" data-value="om">Afan Oromoo</div>
+                    <div class="custom-option" data-value="so">Soomaali</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="score-board">
+        <div class="score-pill">🏆 <span id="lbl-record">Record</span>: <span id="val-high" style="margin-left:8px">0</span></div>
+        <div class="score-pill">⭐ <span id="lbl-score">Score</span>: <span id="val-score" style="margin-left:8px">0</span></div>
+    </div>
+
+    <div class="instruction-banner" id="lbl-instr">ዝዓበየ ቁራፅ ኬክ ዘለዎ ኣየናይ እዩ?</div>
+
+    <div class="comparison-stage">
+        <!-- Plate 1 -->
+        <div class="plate" id="plate-1">
+            <svg class="cake-svg" id="svg-1" viewBox="0 0 100 100"></svg>
+            <div class="fraction-label" id="label-1">1/2</div>
+        </div>
+
+        <!-- Symbol Dropzone -->
+        <div class="drop-zone" id="drop-zone">?</div>
+
+        <!-- Plate 2 -->
+        <div class="plate" id="plate-2">
+            <svg class="cake-svg" id="svg-2" viewBox="0 0 100 100"></svg>
+            <div class="fraction-label" id="label-2">1/4</div>
+        </div>
+    </div>
+
+    <div class="symbol-dock">
+        <div class="symbol-btn" onclick="checkAnswer('<')">&lt;</div>
+        <div class="symbol-btn" onclick="checkAnswer('=')">=</div>
+        <div class="symbol-btn" onclick="checkAnswer('>')">&gt;</div>
+    </div>
+</div>
+
+<!-- Reactions Overlays -->
+<div class="overlay" id="overlay-win">
+    <div class="modal">
+        <span class="modal-icon">🍰✨</span>
+        <div class="modal-title" id="win-title">ትኽክል!</div>
+        <div class="modal-body" id="win-body">ብጣዕሚ ጽቡቕ! ዝዓበየ ቁራፅ ረኺብካዮ።</div>
+        <button class="btn-modal" onclick="nextLevel()" id="btn-next">ቀፃሊ ➡</button>
+    </div>
+</div>
+
+<div class="overlay" id="overlay-fail">
+    <div class="modal" style="border-color: #d32f2f;">
+        <span class="modal-icon">🍽️</span>
+        <div class="modal-title" id="fail-title">ተጋግዩ!</div>
+        <div class="modal-body">
+            <span id="fail-body">እንደገና ፈትን። ኬክ ክንደይ ምዃኑ ርአ።</span><br><br>
+            <span id="lbl-final-score" style="font-weight: 800;">ውፅኢትካ</span>: <span id="final-score-val" style="font-size:4rem; color:#d32f2f; font-weight:900;">0</span>
+        </div>
+        <button class="btn-modal" onclick="restartGame()" id="btn-restart" style="background:#d32f2f; box-shadow: 0 10px 0 #9a0007;">እንደገና ጀምር 🔄</button>
+    </div>
+</div>
+
+<script>
+    const translations = {
+        ti: {
+            title: "ምውድዳር ጉዚታት",
+            instr: "ዝዓበየ ቁራፅ ኬክ ዘለዎ ኣየናይ እዩ?",
+            score: "ነጥቢ", record: "ዝለዓለ",
+            win: "ትኽክል!", winSub: "ብጣዕሚ ጽቡቕ! ዝዓበየ ቁራፅ ረኺብካዮ።",
+            fail: "ተጋግዩ!", failSub: "እንደገና ፈትን። ኬክ ክንደይ ምዃኑ ርአ።", final: "ውፅኢትካ",
+            next: "ቀፃሊ ➡", restart: "እንደገና ጀምር 🔄"
+        },
+        am: {
+            title: "ክፍልፋዮችን ማወዳደር",
+            instr: "ትልቁ የኬክ ክፍል የትኛው ነው?",
+            score: "ውጤት", record: "ከፍተኛ",
+            win: "ትክክል!", winSub: "በጣም ጎበዝ! ትልቁን ክፍል አግኝተሃል።",
+            fail: "ስህተት!", failSub: "እንደገና ይሞክሩ። የኬኩን መጠን ይመልከቱ።", final: "የእርስዎ ውጤት",
+            next: "ቀጣይ ➡", restart: "እንደገና ጀምር 🔄"
+        },
+        en: {
+            title: "Cake Comparison",
+            instr: "Which plate has more cake?",
+            score: "Score", record: "Record",
+            win: "Correct!", winSub: "Yummy! You found the bigger slice.",
+            fail: "Oops!", failSub: "Try again! Look at the sizes closely.", final: "Your Score",
+            next: "Next Level ➡", restart: "Restart Game 🔄"
+        },
+        om: {
+            title: "Firakshinii Walbira Qabuu",
+            instr: "Kutaa keekii isa kamtu caala?",
+            score: "Qabxii", record: "Rikardii",
+            win: "Sirrii!", winSub: "Baay'ee gaariidha! Isa guddaa argatteetta.",
+            fail: "Dogoggora!", failSub: "Irra deebi'ii yaali. Hamma keekichaa ilaali.", final: "Qabxii Keessan",
+            next: "Itti Aanu ➡", restart: "Irra deebi'i 🔄"
+        },
+        so: {
+            title: "Isbarbardhigga Jajabka",
+            instr: "Qaybtee keega ah ayaa weyn?",
+            score: "Dhibco", record: "Rikoodh",
+            win: "Sax!", winSub: "Aad u fiican! Waxaad heshay qaybtii weynayd.",
+            fail: "Khalad!", failSub: "Isku day mar kale. Fiiri cabbirka keega.", final: "Dhibcahaaga",
+            next: "Xiga ➡", restart: "Dib u billow 🔄"
+        }
+    };
+
+    let currentLang = 'ti';
+    let score = 0;
+    let highScore = localStorage.getItem('cakeConvHigh_V1') || 0;
+    let f1 = { n: 1, d: 2 };
+    let f2 = { n: 1, d: 4 };
+
+    // Confetti state
+    let confettiRunning = false;
+    let confettiPieces = [];
+    let confettiAnimationId = null;
+
+    function init() {
+        document.getElementById('val-high').textContent = highScore;
+        updateLanguage();
+        generateProblem();
+    }
+
+    function generateProblem() {
+        const denominators = [2, 3, 4, 5, 6, 8, 10, 12];
+        const d1 = denominators[Math.floor(Math.random() * denominators.length)];
+        const n1 = Math.floor(Math.random() * (d1 - 1)) + 1;
+        
+        let d2 = denominators[Math.floor(Math.random() * denominators.length)];
+        let n2 = Math.floor(Math.random() * (d2 - 1)) + 1;
+        
+        // Avoid identical fractions unless intended for '=' (rarely)
+        if (Math.random() > 0.1 && (n1/d1 === n2/d2)) {
+            n2 = Math.min(d2-1, n2+1);
+        }
+
+        f1 = { n: n1, d: d1 };
+        f2 = { n: n2, d: d2 };
+
+        drawCake('svg-1', f1);
+        drawCake('svg-2', f2);
+        document.getElementById('label-1').textContent = `${n1}/${d1}`;
+        document.getElementById('label-2').textContent = `${n2}/${d2}`;
+        document.getElementById('drop-zone').textContent = '?';
+        document.getElementById('drop-zone').style.color = 'var(--primary)';
+    }
+
+    function drawCake(svgId, frac) {
+        const svg = document.getElementById(svgId);
+        svg.innerHTML = '';
+        const cx = 50, cy = 50, r = 45;
+
+        if (frac.d === 1) {
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", cx); circle.setAttribute("cy", cy); circle.setAttribute("r", r);
+            circle.setAttribute("class", "slice filled");
+            svg.appendChild(circle);
+            return;
+        }
+
+        for (let i = 0; i < frac.d; i++) {
+            const startAngle = (i * 360) / frac.d;
+            const endAngle = ((i + 1) * 360) / frac.d;
+            const x1 = cx + r * Math.cos((Math.PI * startAngle) / 180);
+            const y1 = cy + r * Math.sin((Math.PI * startAngle) / 180);
+            const x2 = cx + r * Math.cos((Math.PI * endAngle) / 180);
+            const y2 = cy + r * Math.sin((Math.PI * endAngle) / 180);
+
+            const pathData = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z`;
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", pathData);
+            path.setAttribute("class", `slice ${i < frac.n ? 'filled' : 'empty'}`);
+            svg.appendChild(path);
+        }
+    }
+
+    function checkAnswer(symbol) {
+        const v1 = f1.n / f1.d;
+        const v2 = f2.n / f2.d;
+        let correct = false;
+
+        if (symbol === '<' && v1 < v2) correct = true;
+        else if (symbol === '>' && v1 > v2) correct = true;
+        else if (symbol === '=' && Math.abs(v1 - v2) < 0.001) correct = true;
+
+        document.getElementById('drop-zone').textContent = symbol;
+
+        if (correct) {
+            score += 20;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('cakeConvHigh_V1', highScore);
+            }
+            updateScoreUI();
+            playSound('win');
+            startConfettiRain();
+            document.getElementById('drop-zone').style.color = '#2e7d32';
+            setTimeout(() => {
+                document.getElementById('overlay-win').classList.add('show');
+            }, 600);
+        } else {
+            playSound('fail');
+            document.getElementById('drop-zone').style.color = '#d32f2f';
+            document.getElementById('plate-1').classList.add('wobble');
+            document.getElementById('plate-2').classList.add('wobble');
+            setTimeout(() => {
+                document.getElementById('plate-1').classList.remove('wobble');
+                document.getElementById('plate-2').classList.remove('wobble');
+                document.getElementById('final-score-val').textContent = score;
+                document.getElementById('overlay-fail').classList.add('show');
+            }, 500);
+        }
+    }
+
+    function nextLevel() {
+        stopConfettiRain();
+        document.getElementById('overlay-win').classList.remove('show');
+        generateProblem();
+    }
+
+    function restartGame() {
+        score = 0;
+        updateScoreUI();
+        stopConfettiRain();
+        document.getElementById('overlay-fail').classList.remove('show');
+        generateProblem();
+    }
+
+    function updateScoreUI() {
+        document.getElementById('val-score').textContent = score;
+        document.getElementById('val-high').textContent = highScore;
+    }
+
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('lbl-instr').textContent = t.instr;
+        document.getElementById('lbl-score').textContent = t.score;
+        document.getElementById('lbl-record').textContent = t.record;
+        document.getElementById('win-title').textContent = t.win;
+        document.getElementById('win-body').textContent = t.winSub;
+        document.getElementById('btn-next').textContent = t.next;
+        document.getElementById('fail-title').textContent = t.fail;
+        document.getElementById('fail-body').textContent = t.failSub;
+        document.getElementById('lbl-final-score').textContent = t.final;
+        document.getElementById('btn-restart').textContent = t.restart;
+    }
+
+    // Dropdown Handling
+    const dropdown = document.getElementById('lang-dropdown');
+    const trigger = dropdown.querySelector('.custom-select__trigger');
+    const options = dropdown.querySelectorAll('.custom-option');
+
+    trigger.addEventListener('click', (e) => {
+        dropdown.querySelector('.custom-select').classList.toggle('open');
+        e.stopPropagation();
+    });
+
+    options.forEach(opt => {
+        opt.addEventListener('click', function(e) {
+            e.stopPropagation();
+            currentLang = this.dataset.value;
+            document.getElementById('current-lang-text').textContent = "🗺️ " + this.textContent;
+            dropdown.querySelector('.custom-select').classList.remove('open');
+            updateLanguage();
+        });
+    });
+
+    window.addEventListener('click', () => dropdown.querySelector('.custom-select').classList.remove('open'));
+
+    function playSound(type) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        if (type === 'win') {
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(523, t); osc.frequency.exponentialRampToValueAtTime(1046, t + 0.1);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+            osc.start(t); osc.stop(t + 0.4);
+        } else {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); osc.frequency.linearRampToValueAtTime(80, t + 0.4);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.4);
+            osc.start(t); osc.stop(t + 0.4);
+        }
+    }
+
+    function resizeConfettiCanvas() {
+        const canvas = document.getElementById('confetti-canvas');
+        if (!canvas) return;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    function startConfettiRain() {
+        if (confettiRunning) return;
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        resizeConfettiCanvas();
+        confettiRunning = true;
+        confettiPieces = [];
+
+        const colors = ['#ff6f00', '#ffb300', '#ff7043', '#ab47bc', '#29b6f6', '#66bb6a'];
+
+        function addConfettiRow() {
+            const count = 40;
+            for (let i = 0; i < count; i++) {
+                confettiPieces.push({
+                    x: Math.random() * canvas.width,
+                    y: -10 - Math.random() * 40,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: 2 + Math.random() * 3,
+                    size: 4 + Math.random() * 6,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * Math.PI * 2,
+                    vr: (Math.random() - 0.5) * 0.2
+                });
+            }
+        }
+
+        function loop() {
+            if (!confettiRunning) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (Math.random() < 0.35) {
+                addConfettiRow();
+            }
+
+            const gravity = 0.18;
+            const wind = 0.03;
+
+            confettiPieces.forEach(p => {
+                p.vy += gravity;
+                p.vx += (Math.random() - 0.5) * wind;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.rotation += p.vr;
+            });
+
+            confettiPieces = confettiPieces.filter(p => p.y < canvas.height + 50);
+            confettiPieces.forEach(p => {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                ctx.restore();
+            });
+
+            confettiAnimationId = requestAnimationFrame(loop);
+        }
+
+        loop();
+    }
+
+    function stopConfettiRain() {
+        confettiRunning = false;
+        if (confettiAnimationId) {
+            cancelAnimationFrame(confettiAnimationId);
+            confettiAnimationId = null;
+        }
+        const canvas = document.getElementById('confetti-canvas');
+        if (canvas && canvas.getContext) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        confettiPieces = [];
+    }
+
+    window.addEventListener('resize', () => {
+        resizeConfettiCanvas();
+    });
+
+    window.onload = init;
+</script>
+</body>
+</html>

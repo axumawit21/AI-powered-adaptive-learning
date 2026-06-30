@@ -1,0 +1,726 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ordering Low to High - Balloon Ascend</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sky-top: #00b4d8;
+            --sky-bottom: #90e0ef;
+            --grass: #2d6a4f;
+            --balloon-red: #ef476f;
+            --balloon-blue: #118ab2;
+            --balloon-yellow: #ffd166;
+            --balloon-green: #06d6a0;
+            --text-dark: #003049;
+            --secondary: #f72585;
+            --primary: #00b4d8;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-bottom) 70%, #d8f3dc 70%, var(--grass) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* --- Header --- */
+        header {
+            width: 100%;
+            padding: 20px 40px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            border-bottom: 4px solid var(--text-dark);
+            position: sticky;
+            top: 0;
+        }
+
+        .header-item-left { display: flex; justify-content: flex-start; }
+        .header-item-right { display: flex; justify-content: flex-end; }
+
+        .grade-badge {
+            background: var(--secondary); color: white; width: 60px; height: 60px;
+            border-radius: 15px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 2rem; border: 3px solid white;
+            box-shadow: 0 5px 0 #9d0208; transform: rotate(-5deg);
+        }
+
+        h1 { margin: 0; color: var(--text-dark); font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; text-align: center; }
+
+        /* Custom Dropdown */
+        .custom-select-wrapper { position: relative; display: inline-block; cursor: pointer; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; font-weight: 800; color: var(--text-dark);
+            height: 48px; background: white; border-radius: 24px;
+            width: 180px; border: 2px solid var(--text-dark);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+        }
+        .custom-options {
+            position: absolute; top: 115%; right: 0; left: 0;
+            background: white; opacity: 0; visibility: hidden;
+            pointer-events: none; transform: translateY(-10px);
+            transition: all 0.3s ease; display: flex; flex-direction: column;
+            border-radius: 20px; padding: 6px; box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: 1px solid #eee; z-index: 200;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; pointer-events: all; transform: translateY(0); }
+        .custom-option { padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 600; color: #444; }
+        .custom-option:hover { background: #f0f9ff; color: var(--secondary); }
+
+        /* --- Game Area --- */
+        .container {
+            flex: 1; width: 100%; max-width: 1200px;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px; z-index: 10;
+            justify-content: flex-start;
+            gap: 40px;
+            min-height: 85vh;
+        }
+
+        .score-board { display: flex; gap: 30px; }
+        .score-pill {
+            background: white; padding: 12px 30px; border-radius: 35px;
+            font-weight: 900; color: var(--text-dark);
+            border: 3px solid var(--text-dark);
+            box-shadow: 0 8px 0 rgba(0,0,0,0.1);
+            display: flex; align-items: center; gap: 12px;
+            font-size: 1.4rem;
+        }
+
+        .instruction {
+            font-size: 1.8rem; font-weight: 800; color: white;
+            background: rgba(0,0,0,0.3); padding: 15px 50px;
+            border-radius: 60px; text-align: center;
+            border: 3px dashed white;
+            max-width: 90%;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        /* --- Balloons --- */
+        .sky-area {
+            display: flex; gap: 30px; justify-content: center;
+            width: 100%; height: 250px; padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .source-wrapper { width: 120px; height: 180px; display: flex; justify-content: center; }
+
+        .balloon-wrapper {
+            position: relative; width: 110px; height: 160px;
+            cursor: pointer; z-index: 10;
+            animation: drift 4s ease-in-out infinite alternate;
+        }
+        .balloon-wrapper:active { animation: none; transform: scale(1.1); z-index: 100; }
+
+        .balloon-top {
+            width: 110px; height: 130px;
+            background: radial-gradient(circle at 30% 30%, #fff, var(--balloon-red));
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            border: 4px solid var(--text-dark);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; font-weight: 900; color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .balloon-top::after {
+            content: ''; position: absolute; bottom: -8px; left: 50%;
+            width: 12px; height: 10px; background: inherit;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+            transform: translateX(-50%);
+        }
+
+        .basket {
+            position: absolute; bottom: 0; left: 50%;
+            width: 35px; height: 25px;
+            background: #9c6644; border: 3px solid #5d4037;
+            border-radius: 4px; transform: translateX(-50%);
+        }
+        .strings {
+            position: absolute; bottom: 25px; left: 50%;
+            width: 50px; height: 20px; transform: translateX(-50%);
+        }
+        .strings::before, .strings::after {
+            content: ''; position: absolute; top: 0; width: 2px; height: 25px; background: #666;
+        }
+        .strings::before { left: 10px; transform: rotate(15deg); }
+        .strings::after { right: 10px; transform: rotate(-15deg); }
+
+        @keyframes drift { from { transform: translateY(0); } to { transform: translateY(-20px); } }
+
+        /* Placed state */
+        .balloon-wrapper.placed { animation: none; width: 110px; height: 130px; }
+        .balloon-wrapper.placed .basket, .balloon-wrapper.placed .strings { opacity: 0; pointer-events: none; }
+        .balloon-wrapper.placed .balloon-top { transform: scale(1.1); }
+
+        /* --- Slots --- */
+        .ground-area {
+            display: flex; gap: 30px; justify-content: center;
+            width: 100%; margin-bottom: 40px; flex-wrap: wrap;
+        }
+
+        .slot {
+            width: 130px; height: 150px;
+            background: rgba(0,0,0,0.15);
+            border: 4px dashed rgba(255,255,255,0.7);
+            border-radius: 25px;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; margin-bottom: 45px;
+        }
+        .slot.hover { background: rgba(255,255,255,0.3); border-style: solid; transform: scale(1.1); }
+        .slot::before {
+            content: attr(data-rank);
+            position: absolute; bottom: -45px;
+            background: white; color: var(--text-dark);
+            padding: 5px 25px; border-radius: 12px; font-weight: 900;
+            font-size: 1.2rem; box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+        }
+
+        .arrow {
+            position: absolute; right: -25px; top: 50%; transform: translateY(-50%);
+            font-size: 2.5rem; color: white; opacity: 0.6;
+        }
+        .slot:last-child .arrow { display: none; }
+
+        .btn-check {
+            background: var(--balloon-green); color: white; border: none;
+            padding: 22px 80px; border-radius: 50px; font-size: 2.2rem;
+            font-weight: 900; cursor: pointer; box-shadow: 0 10px 0 #047857;
+            margin-bottom: 40px;
+        }
+        .btn-check:active { transform: translateY(4px); box-shadow: none; }
+
+        /* --- Overlays --- */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0, 48, 73, 0.92);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(10px); padding: 20px;
+        }
+        .overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+        
+        .modal {
+            background: white; padding: 50px; border-radius: 50px;
+            text-align: center; max-width: 500px; width: 95%;
+            border: 12px solid var(--primary);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        }
+        
+        .modal-icon { font-size: 8rem; display: block; margin-bottom: 25px; }
+        .modal-title { font-size: 3rem; font-weight: 900; color: var(--text-dark); margin-bottom: 15px; }
+        .modal-body { font-size: 1.6rem; color: #555; margin-bottom: 40px; font-weight: bold; }
+
+        .btn-modal {
+            background: var(--primary); color: white; border: none;
+            padding: 20px 60px; border-radius: 50px; font-weight: 900;
+            font-size: 1.6rem; cursor: pointer; box-shadow: 0 10px 0 #023e8a;
+        }
+        .btn-modal:active { transform: translateY(4px); box-shadow: none; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 1100; }
+
+        @media (max-width: 850px) {
+            header { padding: 10px 15px; grid-template-columns: auto 1fr auto; }
+            h1 { font-size: 1.2rem; }
+            .grade-badge { width: 45px; height: 45px; font-size: 1.4rem; }
+            .custom-select__trigger { width: 140px; height: 40px; padding: 0 15px; font-size: 0.9rem; }
+            
+            .score-board { gap: 10px; width: 100%; justify-content: center; }
+            .score-pill { padding: 8px 15px; font-size: 0.9rem; gap: 6px; }
+
+            .container { gap: 20px; padding: 10px; }
+            .sky-area { height: auto; gap: 15px; }
+            .source-wrapper { width: 80px; height: 130px; }
+            .balloon-wrapper { width: 80px; height: 110px; }
+            .balloon-top { width: 80px; height: 95px; font-size: 1.8rem; }
+            .basket { width: 25px; height: 18px; }
+            .strings { height: 15px; bottom: 18px; }
+            
+            .ground-area { gap: 15px; margin-bottom: 40px; }
+            .slot { width: 85px; height: 100px; margin-bottom: 40px; }
+            .slot::before { bottom: -35px; font-size: 0.9rem; padding: 3px 15px; }
+
+            .btn-check { font-size: 1.5rem; padding: 15px 50px; }
+            .instruction { font-size: 1.1rem; padding: 10px 20px; width: 95%; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+    <div class="header-item-left">
+        <div class="grade-badge">3</div>
+    </div>
+    
+    <h1 id="app-title">Balloon Ascend</h1>
+    
+    <div class="header-item-right">
+        <div class="custom-select-wrapper" id="lang-dropdown">
+            <div class="custom-select">
+                <div class="custom-select__trigger">
+                    <span id="current-lang-text">🗺️ ትግርኛ</span>
+                    <span style="font-size:0.8rem">▼</span>
+                </div>
+                <div class="custom-options">
+                    <div class="custom-option" data-value="ti">ትግርኛ</div>
+                    <div class="custom-option" data-value="am">አማርኛ</div>
+                    <div class="custom-option" data-value="en">English</div>
+                    <div class="custom-option" data-value="om">Afan Oromoo</div>
+                    <div class="custom-option" data-value="so">Soomaali</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="score-board">
+        <div class="score-pill high">🏅 <span id="lbl-record">Record</span>: <span id="val-high" style="margin-left:5px">0</span></div>
+        <div class="score-pill curr">⭐ <span id="lbl-score">Score</span>: <span id="val-score" style="margin-left:5px">0</span></div>
+    </div>
+
+    <div class="instruction" id="lbl-instr">ካብ ዝነኣሰ ናብ ዝዓበየ ኣሰድዎም!</div>
+
+    <div class="sky-area" id="source-area">
+        <!-- Balloons injected here -->
+    </div>
+
+    <div class="ground-area" id="slots-area">
+        <!-- Slots injected here -->
+    </div>
+
+    <button class="btn-check" id="btn-check" onclick="checkOrder()">ፈትሽ (Check) ✔️</button>
+</div>
+
+<!-- Reactions Overlays -->
+<div class="overlay" id="overlay-win">
+    <div class="modal">
+        <span class="modal-icon">🎈🌈</span>
+        <div class="modal-title" id="win-title">ትኽክል!</div>
+        <div class="modal-body" id="win-body">ብጣዕሚ ጽቡቕ! ቀፅል</div>
+        <button class="btn-modal" onclick="nextLevel()" id="btn-next">ቀፅል</button>
+    </div>
+</div>
+
+<div class="overlay" id="overlay-fail">
+    <div class="modal" style="border-color: #f43f5e;">
+        <span class="modal-icon">☁️</span>
+        <div class="modal-title" id="fail-title">እንደገና ፈትን!</div>
+        <div class="modal-body">
+            <span id="fail-body">ጸወታ ተወዲኡ።</span><br><br>
+            <span id="lbl-final-score" style="font-weight: 800;">ውፅኢትካ</span>: <span id="final-score-val" style="font-size:4rem; color:#f43f5e; font-weight:900;">0</span>
+        </div>
+        <button class="btn-modal" onclick="restartGame()" id="btn-restart" style="background:#f43f5e; box-shadow: 0 10px 0 #9d0208;">እንደገና ጀምር 🔄</button>
+    </div>
+</div>
+
+<script>
+    const translations = {
+        ti: {
+            title: "ካብ ዝነኣሰ ናብ ዝዓበየ",
+            instr: "ካብ ዝነኣሰ ናብ ዝዓበየ ስርዕዎም!",
+            score: "ነጥቢ", record: "ዝለዓለ ነጥቢ", check: "ፈትሽ ✔️",
+            win: "ትኽክል!", winSub: "ብጣዕሚ ጽቡቕ! ቀፅል",
+            fail: "እንደገና ፈትን!", failSub: "ጸወታ ተወዲኡ።", final: "ውፅኢትካ",
+            next: "ቀፅል", restart: "እንደገና ጀምር 🔄", rank: ["1ይ", "2ይ", "3ይ", "4ይ"]
+        },
+        am: {
+            title: "ከትንሽ ወደ ትልቅ",
+            instr: "ከትንሽ ወደ ትልቅ በቅደም ተከተል አስቀምጡ!",
+            score: "ውጤት", record: "ከፍተኛ", check: "ፈትሽ ✔️",
+            win: "ትክክል!", winSub: "በጣም ጎበዝ! ቀጥል",
+            fail: "እንደገና ሞክር!", failSub: "ጨዋታው ተጠናቋል።", final: "የእርስዎ ውጤት",
+            next: "ቀጣይ ➡", restart: "እንደገና ጀምር 🔄", rank: ["1ኛ", "2ኛ", "3ኛ", "4ኛ"]
+        },
+        en: {
+            title: "Balloon Ascend",
+            instr: "Order from Lowest to Highest!",
+            score: "Score", record: "Record", check: "Check ✔️",
+            win: "Correct!", winSub: "Safe flight! Keep it up",
+            fail: "Try Again!", failSub: "Game Over.", final: "Your Score",
+            next: "Next Level ➡", restart: "Restart Game 🔄", rank: ["1st", "2nd", "3rd", "4th"]
+        },
+        om: {
+            title: "Xiqqa irraa Gadi",
+            instr: "Xiqqa irraa gara guddaatti hiriirsi!",
+            score: "Qabxii", record: "Rikardii", check: "Mirkaneessi ✔️",
+            win: "Sirrii!", winSub: "Baay'ee gaariidha! Itti fufi",
+            fail: "Irra deebi'ii!", failSub: "Tapha dhumate.", final: "Qabxii Keessan",
+            next: "Itti Aanu ➡", restart: "Irra deebi'i 🔄", rank: ["1ffaa", "2ffaa", "3ffaa", "4ffaa"]
+        },
+        so: {
+            title: "Laga Yar ilaa Weyn",
+            instr: "U kala horaysii kan ugu yar ilaa kan ugu weyn!",
+            score: "Dhibco", record: "Rikoodh", check: "Hubi ✔️",
+            win: "Sax!", winSub: "Shaqo fiican! Horay u soco",
+            fail: "Isku day mar kale!", failSub: "Ciyaartu way dhammaatay.", final: "Dhibcahaaga",
+            next: "Xiga ➡", restart: "Dib u billow 🔄", rank: ["1aad", "2aad", "3aad", "4aad"]
+        }
+    };
+
+    let currentLang = 'ti';
+    let score = 0;
+    let highScore = localStorage.getItem('balloonAscendHigh_V1') || 0;
+    let numbers = [];
+    let slots = [];
+    let sourceWrappers = [];
+
+    function init() {
+        document.getElementById('val-high').textContent = highScore;
+        updateLanguage();
+        generateProblem();
+    }
+
+    function generateProblem() {
+        const slotsArea = document.getElementById('slots-area');
+        const sourceArea = document.getElementById('source-area');
+        slotsArea.innerHTML = '';
+        sourceArea.innerHTML = '';
+        slots = [];
+        sourceWrappers = [];
+
+        // Generate 4 unique random numbers
+        numbers = [];
+        while(numbers.length < 4) {
+            let r = Math.floor(Math.random() * 99) + 1;
+            if(!numbers.includes(r)) numbers.push(r);
+        }
+
+        // Create Slots
+        for(let i=0; i<4; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'slot';
+            slot.dataset.index = i;
+            slot.setAttribute('data-rank', translations[currentLang].rank[i]);
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            arrow.textContent = '➡';
+            slot.appendChild(arrow);
+            
+            slotsArea.appendChild(slot);
+            slots.push(slot);
+        }
+
+        // Create Source Wrappers & Balloons
+        numbers.forEach((n, idx) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'source-wrapper';
+            
+            const b = document.createElement('div');
+            b.className = 'balloon-wrapper';
+            b.dataset.val = n;
+            
+            b.innerHTML = `
+                <div class="balloon-top" style="background: radial-gradient(circle at 30% 30%, #fff, ${getRandomColor()});">
+                    ${n}
+                </div>
+                <div class="strings"></div>
+                <div class="basket"></div>
+            `;
+            wrap.appendChild(b);
+            sourceArea.appendChild(wrap);
+            sourceWrappers.push(wrap);
+            makeDraggable(b);
+        });
+    }
+
+    function handleBalloonClick(el) {
+        if (el.classList.contains('placed')) {
+            returnToSource(el);
+            playSound('pop');
+        } else {
+            const firstEmptySlot = slots.find(s => s.querySelectorAll('.balloon-wrapper').length === 0);
+            if (firstEmptySlot) {
+                firstEmptySlot.appendChild(el);
+                el.classList.add('placed');
+                playSound('pop');
+            }
+        }
+    }
+
+    function getRandomColor() {
+        return ['#ef476f', '#118ab2', '#06d6a0', '#ffd166', '#f72585', '#7209b7'][Math.floor(Math.random()*6)];
+    }
+
+    function makeDraggable(el) {
+        let pointerDown = false;
+        let isDragging = false;
+        let startX, startY;
+        let clone = null;
+
+        const startDrag = (touch) => {
+            const rect = el.getBoundingClientRect();
+            clone = el.cloneNode(true);
+            clone.style.position = 'fixed';
+            clone.style.width = rect.width + 'px';
+            clone.style.height = rect.height + 'px';
+            clone.style.left = rect.left + 'px';
+            clone.style.top = rect.top + 'px';
+            clone.style.pointerEvents = 'none';
+            clone.style.zIndex = '1000';
+            clone.classList.remove('placed'); 
+            document.body.appendChild(clone);
+            el.style.opacity = '0.2';
+            isDragging = true;
+        };
+
+        const onStart = (e) => {
+            const touch = e.touches ? e.touches[0] : e;
+            startX = touch.clientX;
+            startY = touch.clientY;
+            pointerDown = true;
+            isDragging = false;
+        };
+
+        const onMove = (e) => {
+            if (!pointerDown) return;
+            const touch = e.touches ? e.touches[0] : e;
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+
+            // Start drag only after a small movement threshold
+            if (!isDragging && Math.sqrt(dx*dx + dy*dy) > 6) {
+                e.preventDefault();
+                startDrag(touch);
+            }
+
+            if (!isDragging) return;
+
+            clone.style.left = (touch.clientX - clone.offsetWidth/2) + 'px';
+            clone.style.top = (touch.clientY - clone.offsetHeight/2) + 'px';
+            
+            slots.forEach(s => {
+                const r = s.getBoundingClientRect();
+                if(touch.clientX > r.left && touch.clientX < r.right && touch.clientY > r.top && touch.clientY < r.bottom) {
+                    s.classList.add('hover');
+                } else {
+                    s.classList.remove('hover');
+                }
+            });
+        };
+
+        const onEnd = (e) => {
+            if (!pointerDown) return;
+            pointerDown = false;
+            const touch = e.changedTouches ? e.changedTouches[0] : e;
+
+            // If we never started dragging, treat as simple tap/click
+            if (!isDragging) {
+                handleBalloonClick(el);
+                return;
+            }
+
+            let targetSlot = null;
+            slots.forEach(s => {
+                const r = s.getBoundingClientRect();
+                if(touch.clientX > r.left && touch.clientX < r.right && touch.clientY > r.top && touch.clientY < r.bottom) {
+                    targetSlot = s;
+                }
+                s.classList.remove('hover');
+            });
+
+            if (targetSlot) {
+                const existing = targetSlot.querySelector('.balloon-wrapper');
+                if (existing) returnToSource(existing);
+                targetSlot.appendChild(el);
+                el.classList.add('placed');
+                playSound('pop');
+            } else {
+                returnToSource(el);
+            }
+
+            el.style.opacity = '1';
+            if(clone) clone.remove();
+            isDragging = false;
+        };
+
+        el.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            onStart(e);
+        });
+        el.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            onStart(e);
+        }, {passive: false});
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('touchmove', onMove, {passive: false});
+        window.addEventListener('mouseup', onEnd);
+        window.addEventListener('touchend', onEnd);
+    }
+
+    function returnToSource(el) {
+        el.classList.remove('placed');
+        const emptyWrap = sourceWrappers.find(w => w.children.length === 0);
+        if(emptyWrap) emptyWrap.appendChild(el);
+    }
+
+    function checkOrder() {
+        const userVals = [];
+        let complete = true;
+        slots.forEach(s => {
+            const b = s.querySelector('.balloon-wrapper');
+            if(b) userVals.push(parseInt(b.dataset.val));
+            else complete = false;
+        });
+
+        if(!complete) return;
+
+        const sorted = [...userVals].sort((a,b) => a - b);
+        const correct = userVals.every((v, i) => v === sorted[i]);
+
+        if (correct) {
+            score += 25;
+            if(score > highScore) {
+                highScore = score;
+                localStorage.setItem('balloonAscendHigh_V1', highScore);
+            }
+            updateScoreUI();
+            showWin();
+        } else {
+            showFail();
+        }
+    }
+
+    function showWin() {
+        triggerConfetti();
+        playSound('win');
+        document.getElementById('overlay-win').classList.add('show');
+    }
+
+    function showFail() {
+        playSound('fail');
+        document.getElementById('final-score-val').textContent = score;
+        document.getElementById('overlay-fail').classList.add('show');
+    }
+
+    function nextLevel() {
+        document.getElementById('overlay-win').classList.remove('show');
+        generateProblem();
+    }
+
+    function restartGame() {
+        score = 0;
+        updateScoreUI();
+        document.getElementById('overlay-fail').classList.remove('show');
+        generateProblem();
+    }
+
+    function updateScoreUI() {
+        document.getElementById('val-score').textContent = score;
+        document.getElementById('val-high').textContent = highScore;
+    }
+
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('lbl-instr').textContent = t.instr;
+        document.getElementById('lbl-score').textContent = t.score;
+        document.getElementById('lbl-record').textContent = t.record;
+        document.getElementById('btn-check').textContent = t.check;
+        document.getElementById('win-title').textContent = t.win;
+        document.getElementById('win-body').textContent = t.winSub;
+        document.getElementById('fail-title').textContent = t.fail;
+        document.getElementById('fail-body').textContent = t.failSub;
+        document.getElementById('lbl-final-score').textContent = t.final;
+        document.getElementById('btn-restart').textContent = t.restart;
+        document.getElementById('btn-next').textContent = t.next;
+    }
+
+    // Dropdown Handling
+    const dropdown = document.getElementById('lang-dropdown');
+    const trigger = dropdown.querySelector('.custom-select__trigger');
+    const options = dropdown.querySelectorAll('.custom-option');
+
+    trigger.addEventListener('click', (e) => {
+        dropdown.querySelector('.custom-select').classList.toggle('open');
+        e.stopPropagation();
+    });
+
+    options.forEach(opt => {
+        opt.addEventListener('click', function(e) {
+            e.stopPropagation();
+            currentLang = this.dataset.value;
+            document.getElementById('current-lang-text').textContent = "🗺️ " + this.textContent;
+            dropdown.querySelector('.custom-select').classList.remove('open');
+            updateLanguage();
+            document.querySelectorAll('.slot').forEach((s,i) => s.setAttribute('data-rank', translations[currentLang].rank[i]));
+        });
+    });
+
+    window.addEventListener('click', () => dropdown.querySelector('.custom-select').classList.remove('open'));
+
+    // Audio
+    function playSound(type) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        if (type === 'win') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(523, t); osc.frequency.exponentialRampToValueAtTime(1046, t + 0.1);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+            osc.start(t); osc.stop(t + 0.5);
+        } else if (type === 'fail') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); osc.frequency.linearRampToValueAtTime(80, t + 0.4);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.4);
+            osc.start(t); osc.stop(t + 0.4);
+        } else {
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(400, t); osc.frequency.linearRampToValueAtTime(200, t + 0.1);
+            gain.gain.setValueAtTime(0.05, t); gain.gain.linearRampToValueAtTime(0, t + 0.1);
+            osc.start(t); osc.stop(t + 0.1);
+        }
+    }
+
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const pieces = [];
+        for(let i=0; i<100; i++) {
+            pieces.push({
+                x: canvas.width / 2, y: canvas.height / 2,
+                vx: (Math.random() - 0.5) * 30, vy: (Math.random() - 0.5) * 30 - 10,
+                color: `hsl(${Math.random()*360}, 100%, 50%)`, size: Math.random() * 12 + 6
+            });
+        }
+        function anim() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            let alive = false;
+            pieces.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.8;
+                if (p.y < canvas.height) {
+                    ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
+                    alive = true;
+                }
+            });
+            if (alive) requestAnimationFrame(anim);
+        }
+        anim();
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>

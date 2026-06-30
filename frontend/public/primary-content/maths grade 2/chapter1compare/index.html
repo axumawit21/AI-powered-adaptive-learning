@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Number Fun! | Compare & Play</title>
+    
+    <style>
+      /* --- CSS Variables & Reset --- */
+      :root {
+        --fun-blue: #4ECDC4;
+        --fun-yellow: #FFE66D;
+        --fun-red: #FF6B6B;
+        --fun-green: #1A535C;
+        --fun-white: #F7FFF7;
+        --font-display: 'Fredoka', 'Comic Sans MS', cursive;
+        --font-body: 'Fredoka', 'Arial Rounded MT Bold', sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        user-select: none; /* Prevent text selection during game */
+      }
+
+      body {
+        margin: 0;
+        background-color: var(--fun-blue);
+        font-family: var(--font-body);
+        color: var(--fun-green);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+      }
+
+      #confetti-canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 2000;
+      }
+
+      button {
+        font-family: var(--font-display);
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      button:active {
+        transform: scale(0.95);
+      }
+
+      /* --- Utility-like Classes --- */
+      .container {
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 1rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      .hidden { display: none !important; }
+
+      /* --- Animations --- */
+      @keyframes bounce-slow {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+      }
+      @keyframes wiggle {
+        0%, 100% { transform: rotate(-3deg); }
+        50% { transform: rotate(3deg); }
+      }
+      @keyframes pop {
+        0% { transform: scale(0.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+
+      .animate-pop { animation: pop 0.4s ease-out forwards; }
+      .animate-wiggle { animation: wiggle 1s ease-in-out infinite; }
+      .animate-bounce { animation: bounce-slow 3s infinite; }
+
+      /* --- Background Blobs --- */
+      .blob {
+        position: absolute;
+        border-radius: 50%;
+        mix-blend-mode: overlay;
+        opacity: 0.5;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .blob-1 { top: 2rem; left: 2rem; width: 8rem; height: 8rem; background: var(--fun-yellow); }
+      .blob-2 { bottom: 5rem; right: 2rem; width: 10rem; height: 10rem; background: var(--fun-red); animation-delay: 0.7s; }
+
+      /* --- Navigation --- */
+      nav {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255,255,255,0.3);
+        padding: 0.75rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        gap: 10px;
+      }
+
+      .nav-left, .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .nav-btn {
+        background: white;
+        color: var(--fun-green);
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        border: 2px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .nav-btn:hover { transform: scale(1.05); border-color: var(--fun-yellow); }
+      
+      .nav-btn.back {
+        background: var(--fun-red);
+        color: white;
+      }
+      .nav-btn.back:hover { border-color: white; }
+
+      .streak-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: var(--fun-yellow);
+        color: var(--fun-green);
+        padding: 0.4rem 0.8rem;
+        border-radius: 1rem;
+        font-family: var(--font-display);
+        box-shadow: 0 3px 0 rgba(0,0,0,0.15);
+        border: 2px solid var(--fun-green);
+        font-size: 0.9rem;
+        white-space: nowrap;
+      }
+
+      select.lang-select {
+        background: white;
+        color: var(--fun-green);
+        font-weight: bold;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.75rem;
+        border: 2px solid rgba(26, 83, 92, 0.2);
+        font-size: 0.9rem;
+        cursor: pointer;
+        outline: none;
+      }
+      select.lang-select:focus { border-color: var(--fun-yellow); }
+
+      /* --- Home Screen --- */
+      .home-title {
+        font-family: var(--font-display);
+        font-size: 3rem;
+        color: var(--fun-white);
+        text-shadow: 0 5px 5px rgba(0,0,0,0.2);
+        margin-bottom: 0.5rem;
+        text-align: center;
+      }
+      @media (min-width: 768px) { .home-title { font-size: 5rem; } }
+
+      .home-icon {
+        font-size: 4rem;
+        color: var(--fun-yellow);
+        margin-bottom: 2rem;
+        text-align: center;
+        display: block;
+      }
+      @media (min-width: 768px) { .home-icon { font-size: 5rem; } }
+
+      .btn-play {
+        background: var(--fun-yellow);
+        color: var(--fun-green);
+        font-size: 1.5rem;
+        padding: 1rem 3rem;
+        border-radius: 1.5rem;
+        box-shadow: 0 10px 0 var(--fun-green);
+        border: 4px solid var(--fun-green);
+      }
+      .btn-play:hover { transform: translateY(5px); box-shadow: 0 5px 0 var(--fun-green); }
+      .btn-play:active { transform: translateY(10px); box-shadow: none; }
+
+      /* --- Game Screen --- */
+      .game-card {
+        background: white;
+        border-radius: 2rem;
+        padding: 1rem;
+        width: 100%;
+        max-width: 800px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        border: 8px solid rgba(255, 230, 109, 0.5);
+        text-align: center;
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      @media (min-width: 768px) { .game-card { padding: 3rem; border-radius: 3rem; } }
+
+      .instruction {
+        font-family: var(--font-display);
+        color: var(--fun-green);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 1.5rem;
+        font-size: 1.8rem;
+        font-weight: 700;
+        width: 100%;
+      }
+
+      .game-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        width: 100%;
+        min-height: 250px;
+        justify-content: center;
+      }
+      @media (min-width: 768px) { 
+        .game-area { flex-direction: row; justify-content: center; gap: 3rem; margin-bottom: 2rem; } 
+      }
+
+      .number-box {
+        width: 6rem;
+        height: 6rem;
+        border-radius: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-family: var(--font-display);
+        font-size: 2.5rem;
+        box-shadow: 0 8px 0 rgba(0,0,0,0.2);
+        transition: transform 0.2s;
+        flex-shrink: 0;
+      }
+      .number-box:hover { transform: scale(1.05); }
+      @media (min-width: 768px) { 
+        .number-box { width: 11rem; height: 11rem; font-size: 5rem; } 
+      }
+      .bg-red { background: var(--fun-red); transform: rotate(-3deg); }
+      .bg-blue { background: var(--fun-blue); transform: rotate(3deg); }
+
+      .controls {
+        display: flex;
+        gap: 0.75rem;
+      }
+      @media (min-width: 768px) { .controls { flex-direction: column; gap: 1rem; } }
+
+      .op-btn {
+        width: 3.5rem;
+        height: 3.5rem;
+        background: var(--fun-yellow);
+        border-radius: 1rem;
+        color: var(--fun-green);
+        font-size: 1.8rem;
+        font-weight: 900; /* Force bold for operators */
+        box-shadow: 0 5px 0 var(--fun-green);
+        border: 2px solid rgba(26,83,92, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .op-btn:hover { transform: translateY(2px); box-shadow: 0 3px 0 var(--fun-green); }
+      .op-btn:active { transform: translateY(5px); box-shadow: none; }
+      @media (min-width: 768px) { 
+        .op-btn { width: 6rem; height: 6rem; font-size: 3.5rem; } 
+      }
+
+      /* Result Feedback */
+      .result-container {
+        width: 100%;
+        max-width: 12rem; /* Reduced to avoid overlaying numbers on mobile */
+        aspect-ratio: 4/3;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        border: 4px solid var(--fun-yellow);
+        background: #f9f9f9;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        margin: 0 auto;
+      }
+      @media (min-width: 768px) { 
+        .result-container { max-width: 20rem; }
+      }
+
+      .result-emoji {
+        font-size: 4rem;
+        line-height: 1;
+      }
+      @media (min-width: 768px) { 
+        .result-emoji { font-size: 8rem; } 
+      }
+
+      .status-icon {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        font-size: 1.5rem;
+        background: rgba(255,255,255,0.8);
+        border-radius: 50%;
+        padding: 0.2rem;
+      }
+      @media (min-width: 768px) { 
+        .status-icon { font-size: 2.5rem; top: 0.5rem; right: 0.5rem; }
+      }
+
+      .feedback-area {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 0.5rem;
+      }
+
+      .feedback-title {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      @media (min-width: 768px) { .feedback-title { font-size: 2.2rem; } }
+      .text-correct { color: var(--fun-green); }
+      .text-wrong { color: var(--fun-red); }
+
+      .action-btn {
+        font-size: 1.1rem;
+        padding: 0.8rem 2rem;
+        border-radius: 999px;
+        color: white;
+        transition: transform 0.1s;
+        width: 100%;
+        max-width: 260px;
+      }
+      @media (min-width: 768px) { .action-btn { font-size: 1.5rem; padding: 1.2rem 3rem; max-width: 350px; } }
+      .btn-next {
+        background: var(--fun-green);
+        box-shadow: 0 6px 0 #0f3a40;
+      }
+      .btn-try {
+        background: var(--fun-red);
+        box-shadow: 0 6px 0 #b43232;
+      }
+      .action-btn:hover { transform: translateY(2px); }
+      .action-btn:active { transform: translateY(6px); box-shadow: none !important; }
+
+      /* --- Floating Menu --- */
+      .floating-menu {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        z-index: 100;
+      }
+
+      .sound-btn {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+        border: 2px solid var(--fun-green);
+      }
+      .sound-on { background: white; color: var(--fun-green); }
+      .sound-off { background: #e5e7eb; color: #9ca3af; }
+
+      @media (max-width: 600px) {
+        .instruction { font-size: 1.4rem; margin-bottom: 1rem; }
+        .number-box { width: 5.5rem; height: 5.5rem; font-size: 2.2rem; }
+        .op-btn { width: 3.2rem; height: 3.2rem; font-size: 1.6rem; }
+        .game-card { border-width: 4px; padding-bottom: 2rem; }
+        nav { padding: 0.5rem; }
+        .nav-btn span { display: none; }
+        .streak-badge span:last-child { font-size: 0.8rem; }
+      }
+
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Nav -->
+    <nav>
+      <div class="nav-left">
+        <button id="btn-home" class="nav-btn">🏡 <span id="txt-home">Home</span></button>
+        <button id="btn-back" class="nav-btn back">⬅️ <span id="txt-back">Back</span></button>
+      </div>
+      <div class="nav-right">
+        <div id="streak-badge" class="streak-badge hidden">
+          <span>🔥</span>
+          <span id="txt-streak">Score: 0</span>
+        </div>
+        <select id="lang-select" class="lang-select">
+          <option value="ti" selected>ትግርኛ</option>
+          <option value="am">አማርኛ</option>
+          <option value="en">English</option>
+          <option value="om">Afan Oromoo</option>
+          <option value="so">Somali</option>
+        </select>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+      <div class="blob blob-1 animate-bounce"></div>
+      <div class="blob blob-2 animate-bounce"></div>
+
+      <!-- Home Screen -->
+      <div id="screen-home" class="animate-pop" style="text-align: center; z-index: 1;">
+        <h1 id="home-title" class="home-title">Number Fun!</h1>
+        <div class="home-icon animate-wiggle">1️⃣ 🆚 2️⃣</div>
+        <button id="btn-start" class="btn-play">Let's Play! ▶️</button>
+      </div>
+
+      <!-- Game Screen -->
+      <div id="screen-game" class="game-card hidden">
+        <h2 id="instructions" class="instruction">Which number is bigger?</h2>
+
+        <div class="game-area">
+          <!-- Number 1 -->
+          <div id="num1" class="number-box bg-red">0</div>
+
+          <!-- Center Controls / Result -->
+          <div id="center-area" style="display: flex; justify-content: center; width: auto; min-width: 5rem;">
+            
+            <!-- Controls (Buttons) -->
+            <div id="controls" class="controls">
+              <button class="op-btn" onclick="app.checkAnswer('>')">&gt;</button>
+              <button class="op-btn" onclick="app.checkAnswer('=')">=</button>
+              <button class="op-btn" onclick="app.checkAnswer('<')">&lt;</button>
+            </div>
+
+            <!-- Result (Emoji) -->
+            <div id="result" class="result-container hidden animate-pop">
+              <div id="result-emoji" class="result-emoji">🎉</div>
+              <div id="status-icon" class="status-icon"></div>
+            </div>
+
+          </div>
+
+          <!-- Number 2 -->
+          <div id="num2" class="number-box bg-blue">0</div>
+        </div>
+
+        <!-- Feedback Text & Next Button -->
+        <div id="feedback-area" class="feedback-area hidden animate-pop">
+          <h3 id="feedback-text" class="feedback-title">Awesome!</h3>
+          <button id="btn-action" class="action-btn">Next ➡️</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Floating Menu -->
+    <div class="floating-menu">
+      <button id="btn-sound" class="sound-btn sound-on">🔊</button>
+    </div>
+
+    <script>
+      // --- Data ---
+      const TRANSLATIONS = {
+        en: { title: "Number Fun!", play: "Let's Play!", home: "Home", streak: "Score", score: "Score", instructions: "Which number is bigger?", correct: "Awesome!", wrong: "Oops!", next: "Next Round", back: "Back", selectLang: "Language", tryAgain: "Try Again" },
+        am: { title: "የቁጥር ጨዋታ", play: "እንጫወት!", home: "መነሻ", streak: "ውጤት", score: "ውጤት", instructions: "የቱ ቁጥር ይበልጣል?", correct: "አሪፍ ነው!", wrong: "አይደለም!", next: "ቀጣይ", back: "ተመለስ", selectLang: "ቋንቋ", tryAgain: "እንደገና ሞክር" },
+        ti: { title: "ናይ ቁጽሪ ጸወታ", play: "ንጻወት!", home: "ገዛ", streak: "ነጥቢ", score: "ውጽኢት", instructions: "ኣየናይ ቁጽሪ ይዓቢ?", correct: " ብጣዕሚ ጽቡቕ!", wrong: "ጌጋ!", next: "ቀጻሊ", back: "ተመለስ", selectLang: "ቋንቋ", tryAgain: "እንደገና ፈትን" },
+        om: { title: "Tapha Lakkoofsaa", play: "Haataphannu!", home: "Man'ee", streak: "Walitti Fufiinsa", score: "Qabxii", instructions: "Lakkoofsa kamtu caala?", correct: "Baay'ee Gaarii!", wrong: "Dogoggora!", next: "Itti Aansu", back: "Duuba", selectLang: "Afaan", tryAgain: "Irra deebi'ii yaali" },
+        so: { title: "Ciyaarta Tirada", play: "Aan Ciyaarno!", home: "Hoyga", streak: "Xiriir", score: "Dhibcaha", instructions: "Lambarkeebaa weyn?", correct: "Aad u Fiican!", wrong: "Khalad!", next: "Ku Xiga", back: "Dib u noqo", selectLang: "Luqadda", tryAgain: "Isku day mar kale" }
+      };
+
+      const CORRECT_EMOJIS = ["🎉", "🥳", "🌟", "✅", "👍", "🔥", "💯", "🏆"];
+      const WRONG_EMOJIS = ["😢", "🤔", "💡", "🔄", "⚠️", "❌", "😅", "📚"];
+
+      // --- Confetti Logic ---
+      let particles = [];
+      const confettiColors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ffffff', '#ff5f7e'];
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+
+      function fireConfetti(count = 100) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        for(let i=0; i<count; i++) {
+          particles.push({
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            vx: (Math.random() - 0.5) * 30,
+            vy: (Math.random() - 0.8) * 35,
+            size: Math.random() * 10 + 5,
+            color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+            life: 1.0,
+            rotation: Math.random() * 360,
+            rVel: (Math.random() - 0.5) * 15
+          });
+        }
+        if(!window.confettiActive) {
+          window.confettiActive = true;
+          animateConfetti();
+        }
+      }
+
+      function animateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          if (p.life > 0) {
+            alive = true;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.7; // gravity
+            p.vx *= 0.98;
+            p.life -= 0.012;
+            p.rotation += p.rVel;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation * Math.PI / 180);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life;
+            ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+            ctx.restore();
+          } else {
+            particles.splice(i, 1);
+          }
+        }
+        if(alive) requestAnimationFrame(animateConfetti);
+        else window.confettiActive = false;
+      }
+
+      // --- Sound Logic ---
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      function playTone(type) {
+        if (app.state.muted) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'correct') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.linearRampToValueAtTime(0, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(150, now);
+          gain.gain.setValueAtTime(0.05, now);
+          gain.gain.linearRampToValueAtTime(0, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        }
+      }
+
+      // --- App Logic ---
+      const app = {
+        state: {
+          lang: 'ti',
+          screen: 'home',
+          streak: 0,
+          muted: false,
+          num1: 0,
+          num2: 0,
+          gameStatus: 'playing'
+        },
+
+        init() {
+          this.bindEvents();
+          this.updateText();
+          this.render();
+        },
+
+        bindEvents() {
+          document.getElementById('lang-select').onchange = (e) => {
+            this.state.lang = e.target.value;
+            this.updateText();
+          };
+          document.getElementById('btn-start').onclick = () => {
+            this.state.screen = 'game';
+            this.generateNumbers();
+            this.render();
+          };
+          document.getElementById('btn-home').onclick = () => {
+            this.state.screen = 'home';
+            this.render();
+          };
+          document.getElementById('btn-back').onclick = () => {
+            if (this.state.screen === 'game') {
+              this.state.screen = 'home';
+              this.render();
+            } else {
+              window.history.back();
+            }
+          };
+          document.getElementById('btn-sound').onclick = () => {
+            this.state.muted = !this.state.muted;
+            this.render();
+          };
+          document.getElementById('btn-action').onclick = () => {
+            if (this.state.gameStatus === 'correct') {
+              this.generateNumbers();
+            } else {
+              this.resetRound();
+            }
+            this.render();
+          };
+        },
+
+        updateText() {
+          const t = TRANSLATIONS[this.state.lang];
+          document.title = t.title;
+          document.getElementById('txt-home').textContent = t.home;
+          document.getElementById('txt-back').textContent = t.back;
+          document.getElementById('home-title').textContent = t.title;
+          document.getElementById('btn-start').innerHTML = t.play + ' ▶️';
+          document.getElementById('instructions').textContent = t.instructions;
+          document.getElementById('txt-streak').textContent = t.streak + ': ' + this.state.streak;
+          
+          if(this.state.gameStatus !== 'playing') {
+             const isCorrect = this.state.gameStatus === 'correct';
+             document.getElementById('feedback-text').textContent = isCorrect ? t.correct : t.wrong;
+             document.getElementById('btn-action').innerHTML = isCorrect ? (t.next + ' ➡️') : ('🔄 ' + t.tryAgain);
+          }
+        },
+
+        generateNumbers() {
+          this.state.num1 = Math.floor(Math.random() * 20) + 1;
+          let n2 = Math.floor(Math.random() * 20) + 1;
+          while (n2 === this.state.num1 && Math.random() > 0.2) {
+            n2 = Math.floor(Math.random() * 20) + 1;
+          }
+          this.state.num2 = n2;
+          this.resetRound();
+        },
+
+        resetRound() {
+          this.state.gameStatus = 'playing';
+          this.render();
+        },
+
+        checkAnswer(operator) {
+          const { num1, num2 } = this.state;
+          let isCorrect = false;
+          if (operator === '>' && num1 > num2) isCorrect = true;
+          if (operator === '<' && num1 < num2) isCorrect = true;
+          if (operator === '=' && num1 === num2) isCorrect = true;
+
+          this.state.gameStatus = isCorrect ? 'correct' : 'wrong';
+          
+          if (isCorrect) {
+            this.state.streak++;
+            playTone('correct');
+            fireConfetti(120);
+          } else {
+            this.state.streak = 0;
+            playTone('wrong');
+          }
+          
+          this.updateText();
+          this.render();
+        },
+
+        render() {
+          const { screen, muted, num1, num2, gameStatus, streak } = this.state;
+          
+          if (screen === 'home') {
+            document.getElementById('screen-home').classList.remove('hidden');
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('streak-badge').classList.add('hidden');
+            document.getElementById('btn-home').classList.remove('hidden');
+          } else {
+            document.getElementById('screen-home').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            document.getElementById('streak-badge').classList.remove('hidden');
+            document.getElementById('btn-home').classList.add('hidden');
+          }
+
+          const soundBtn = document.getElementById('btn-sound');
+          soundBtn.textContent = muted ? '🔇' : '🔊';
+          soundBtn.className = muted ? 'sound-btn sound-off' : 'sound-btn sound-on';
+
+          if (screen === 'game') {
+             document.getElementById('num1').textContent = num1;
+             document.getElementById('num2').textContent = num2;
+             document.getElementById('txt-streak').textContent = TRANSLATIONS[this.state.lang].streak + ': ' + streak;
+
+             if (gameStatus === 'playing') {
+                document.getElementById('controls').classList.remove('hidden');
+                document.getElementById('result').classList.add('hidden');
+                document.getElementById('feedback-area').classList.add('hidden');
+             } else {
+                document.getElementById('controls').classList.add('hidden');
+                const resultDiv = document.getElementById('result');
+                resultDiv.classList.remove('hidden');
+                
+                const emojis = gameStatus === 'correct' ? CORRECT_EMOJIS : WRONG_EMOJIS;
+                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                document.getElementById('result-emoji').textContent = randomEmoji;
+
+                document.getElementById('status-icon').textContent = gameStatus === 'correct' ? '✅' : '❌';
+
+                const feedbackArea = document.getElementById('feedback-area');
+                feedbackArea.classList.remove('hidden');
+                const feedbackText = document.getElementById('feedback-text');
+                const actionBtn = document.getElementById('btn-action');
+
+                feedbackText.className = 'feedback-title ' + (gameStatus === 'correct' ? 'text-correct' : 'text-wrong');
+                actionBtn.className = 'action-btn ' + (gameStatus === 'correct' ? 'btn-next' : 'btn-try');
+                
+                this.updateText();
+             }
+          }
+        }
+      };
+
+      app.init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Deep Sea Division Explorer | ምምቃል 1-10</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --grad-ocean: linear-gradient(135deg, #00D2FF 0%, #3a7bd5 100%);
+            --grad-coral: linear-gradient(135deg, #f953c6 0%, #b91d73 100%);
+            --grad-pearl: linear-gradient(135deg, #ffffff 0%, #e0f2fe 100%);
+            --grad-seafoam: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --grad-night: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            --bg-deep: #0F172A;
+            --text: #F1F5F9;
+            --glass: rgba(255, 255, 255, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0; padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--bg-deep);
+            background-image: 
+                radial-gradient(at 0% 0%, #1E293B 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #0C4A6E 0px, transparent 50%),
+                radial-gradient(at 50% 100%, #1e1b4b 0px, transparent 50%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            color: var(--text);
+        }
+
+        #confetti-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 2000;
+        }
+
+        header {
+            width: 100%; max-width: 1000px; padding: 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+
+        .lang-select {
+            padding: 12px 24px; border-radius: 25px; border: none;
+            font-family: inherit; font-weight: 800; cursor: pointer; outline: none;
+            background: var(--grad-coral); color: white; 
+            box-shadow: 0 10px 20px rgba(185, 29, 115, 0.3);
+            transition: transform 0.2s;
+        }
+        .lang-select:active { transform: scale(0.95); }
+
+        .score-pill {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            padding: 12px 30px; border-radius: 50px;
+            font-weight: 800; font-size: 1.6rem; color: #38BDF8;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 900px;
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 20px; gap: 25px; z-index: 10;
+        }
+
+        .game-card {
+            background: var(--glass);
+            backdrop-filter: blur(35px);
+            border-radius: 50px; padding: 50px 30px;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.5); 
+            border: 4px solid rgba(255,255,255,0.15);
+            text-align: center;
+            animation: swimUp 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex; flex-direction: column; gap: 40px;
+            position: relative;
+        }
+
+        @keyframes swimUp { from { transform: translateY(80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .problem-display {
+            font-size: 5.5rem; font-weight: 900; color: #FFF;
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+            text-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+
+        .ans-placeholder {
+            min-width: 140px; height: 110px; background: rgba(0,0,0,0.3);
+            border: 6px dashed #38BDF8; border-radius: 30px;
+            display: flex; align-items: center; justify-content: center;
+            color: #38BDF8; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .ans-placeholder.active { 
+            border-style: solid; border-color: #7DD3FC; 
+            background: rgba(56, 189, 248, 0.15); 
+            box-shadow: 0 0 60px rgba(56, 189, 248, 0.5);
+            transform: scale(1.05);
+            color: white;
+        }
+
+        /* Visual Aid */
+        .visual-aid {
+            width: 100%; min-height: 160px; max-height: 280px;
+            background: rgba(0,0,0,0.25); border-radius: 40px;
+            padding: 25px; display: flex; flex-wrap: wrap;
+            justify-content: center; align-content: center; gap: 20px;
+            border: 2px solid rgba(255,255,255,0.08);
+            overflow-y: auto;
+        }
+
+        .group-box {
+            display: grid; padding: 12px; border-radius: 20px;
+            background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.08);
+            animation: breathe 5s infinite ease-in-out;
+            align-items: center; justify-items: center;
+            min-width: 50px; min-height: 50px;
+        }
+        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); opacity: 0.9; } }
+
+        .sea-item {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: var(--grad-ocean); box-shadow: 0 0 15px rgba(0, 210, 255, 0.6);
+        }
+        .pearl {
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--grad-pearl); box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+        }
+
+        /* Interaction */
+        .interaction-panel {
+            width: 100%; max-width: 550px; margin: 0 auto;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .key {
+            height: 80px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 22px; font-size: 2.5rem; font-weight: 800; color: #FFF; cursor: pointer;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.4); transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 4px 0 rgba(0,0,0,0.4); }
+        .key.del { background: rgba(225, 29, 72, 0.15); color: #FDA4AF; border-color: rgba(225, 29, 72, 0.4); }
+        .key.hint { background: rgba(56, 189, 248, 0.15); color: #7DD3FC; border-color: rgba(56, 189, 248, 0.4); }
+
+        .check-btn {
+            padding: 22px; border-radius: 30px; border: none;
+            background: var(--grad-seafoam); color: white;
+            font-size: 2.2rem; font-weight: 900; cursor: pointer;
+            box-shadow: 0 10px 40px rgba(56, 239, 125, 0.4);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+        .check-btn:active { transform: translateY(6px); box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4); }
+
+        #success-msg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 5rem; font-weight: 900; color: #38EF7D;
+            text-shadow: 0 10px 50px rgba(56, 239, 125, 0.7);
+            opacity: 0; pointer-events: none; z-index: 50;
+        }
+        .show-success { animation: successPop 1.5s forwards; }
+        @keyframes successPop {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            25% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+            100% { opacity: 0; transform: translate(-50%, -120%) scale(1); }
+        }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-15px); } 75% { transform: translateX(15px); } }
+        .shake { animation: shake 0.4s; }
+
+        @media (max-width: 600px) {
+            .problem-display { font-size: 3.2rem; }
+            .ans-placeholder { min-width: 90px; height: 80px; font-size: 3rem; }
+            .key { height: 65px; font-size: 1.8rem; }
+            .check-btn { font-size: 1.8rem; padding: 15px; }
+            .game-card { padding: 40px 15px; }
+            .sea-item { width: 18px; height: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+
+    <header>
+        <button class="lang-select" id="langBtn" onclick="toggleLang()">ትግርኛ</button>
+        <div class="score-pill">🐚 <span id="scoreVal">0</span></div>
+    </header>
+
+    <div class="container">
+        <div class="game-card" id="gameCard">
+            <div id="success-msg">ንኡድ!</div>
+            <div class="problem-display">
+                <span id="n1">0</span>
+                <span style="color: #38BDF8">÷</span>
+                <span id="n2">0</span>
+                <span>=</span>
+                <div class="ans-placeholder active" id="ansBox">?</div>
+            </div>
+
+            <div class="visual-aid" id="visualAid">
+                <!-- Visualized groups injected here -->
+            </div>
+        </div>
+
+        <div class="interaction-panel">
+            <div class="keypad">
+                <button class="key" onclick="press(1)">1</button>
+                <button class="key" onclick="press(2)">2</button>
+                <button class="key" onclick="press(3)">3</button>
+                <button class="key del" onclick="press('bk')">⌫</button>
+                <button class="key" onclick="press(4)">4</button>
+                <button class="key" onclick="press(5)">5</button>
+                <button class="key" onclick="press(6)">6</button>
+                <button class="key hint" onclick="press('hint')">💡</button>
+                <button class="key" onclick="press(7)">7</button>
+                <button class="key" onclick="press(8)">8</button>
+                <button class="key" onclick="press(9)">9</button>
+                <button class="key" onclick="press(0)">0</button>
+            </div>
+            <button class="check-btn" id="btnCheck" onclick="check()">ፈትሽ</button>
+        </div>
+    </div>
+
+    <script>
+        const i18n = { 
+            ti: { check: "ፈትሽ", win: "ጎበዝ!" }, 
+            am: { check: "አረጋግጥ", win: "ድንቅ!" }, 
+            en: { check: "Check", win: "Great!" }, 
+            om: { check: "Mirkaneessi", win: "Sirrii!" }, 
+            so: { check: "Hubi", win: "Sax!" } 
+        };
+        
+        const divisors = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let score = 0, currentProb = {}, userAns = "", lang = 'ti', particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const osc = aCtx.createOscillator(), gain = aCtx.createGain(), now = aCtx.currentTime;
+            osc.connect(gain); gain.connect(aCtx.destination);
+            if(type === 'tap') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
+            } else if(type === 'win') {
+                osc.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => osc.frequency.setValueAtTime(f, now + i * 0.1));
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.6);
+                osc.start(); osc.stop(now + 0.6);
+            } else {
+                osc.type = 'sawtooth'; osc.frequency.value = 150;
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(); osc.stop(now + 0.3);
+            }
+        }
+
+        function generate() {
+            const divisor = divisors[Math.floor(Math.random() * divisors.length)];
+            const quotient = Math.floor(Math.random() * 10) + 1;
+            const dividend = divisor * quotient;
+            
+            currentProb = { dividend, divisor, ans: quotient };
+            userAns = "";
+            
+            document.getElementById('n1').innerText = dividend;
+            document.getElementById('n2').innerText = divisor;
+            document.getElementById('ansBox').innerText = "?";
+            document.getElementById('btnCheck').innerText = i18n[lang].check;
+            document.getElementById('success-msg').classList.remove('show-success');
+
+            const aid = document.getElementById('visualAid');
+            aid.innerHTML = '';
+            
+            // Logic for columns based on divisor for best aesthetics
+            let cols = divisor;
+            if (divisor === 4) cols = 2;
+            if (divisor === 6) cols = 3;
+            if (divisor === 8) cols = 4;
+            if (divisor === 9) cols = 3;
+            if (divisor === 10) cols = 5;
+
+            for(let i=0; i < quotient; i++) {
+                const group = document.createElement('div');
+                group.className = 'group-box';
+                group.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+                group.style.animationDelay = (i * 0.08) + 's';
+                
+                for(let j=0; j < divisor; j++) {
+                    const b = document.createElement('div');
+                    b.className = divisor > 6 ? 'pearl' : 'sea-item';
+                    group.appendChild(b);
+                }
+                aid.appendChild(group);
+            }
+        }
+
+        function press(k) {
+            sfx('tap');
+            if(k === 'bk') userAns = userAns.slice(0, -1);
+            else if(k === 'hint') {
+                document.getElementById('visualAid').style.background = 'rgba(56, 189, 248, 0.15)';
+                setTimeout(() => document.getElementById('visualAid').style.background = '', 400);
+            } else {
+                if(userAns.length < 3) userAns += k;
+            }
+            document.getElementById('ansBox').innerText = userAns || "?";
+        }
+
+        function check() {
+            if(userAns === "") return;
+            if(parseInt(userAns) === currentProb.ans) {
+                score += 10;
+                document.getElementById('scoreVal').innerText = score;
+                sfx('win'); 
+                burst(500); // MASSIVE BUBBLE CONFETTI
+                
+                const msg = document.getElementById('success-msg');
+                msg.innerText = i18n[lang].win;
+                msg.classList.add('show-success');
+
+                setTimeout(generate, 2000);
+            } else {
+                sfx('err');
+                document.getElementById('gameCard').classList.add('shake');
+                setTimeout(() => document.getElementById('gameCard').classList.remove('shake'), 500);
+                userAns = "";
+                document.getElementById('ansBox').innerText = "?";
+            }
+        }
+
+        function toggleLang() {
+            const ks = Object.keys(i18n);
+            lang = ks[(ks.indexOf(lang) + 1) % ks.length];
+            document.getElementById('langBtn').innerText = lang === 'ti' ? 'ትግርኛ' : lang.toUpperCase();
+            document.getElementById('btnCheck').innerText = i18n[lang].check;
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#00D2FF', '#3a7bd5', '#7DD3FC', '#E0F2FE', '#38EF7D', '#FFF', '#10B981'];
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x: Math.random() * c.width,
+                    y: c.height + 20,
+                    vx: (Math.random() - 0.5) * 40,
+                    vy: (Math.random() - 0.9) * 55,
+                    s: Math.random() * 12 + 6,
+                    c: colors[Math.floor(Math.random() * colors.length)],
+                    l: 1.8,
+                    r: Math.random() * 360,
+                    rv: (Math.random() - 0.5) * 15
+                });
+            }
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; 
+                    if(p.l > 0){ 
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.vx *= 0.99; p.l-=0.01; p.r+=p.rv; 
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180); 
+                        x.fillStyle=p.c; x.globalAlpha = Math.min(p.l, 1.0);
+                        x.beginPath(); x.arc(0, 0, p.s/2, 0, Math.PI*2); x.fill();
+                        x.restore(); 
+                    } else {
+                        particles.splice(i,1); 
+                    }
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = generate;
+    </script>
+</body>
+</html>

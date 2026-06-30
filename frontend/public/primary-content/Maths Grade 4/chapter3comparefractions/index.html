@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fraction Navigator | ምውድዳር ጉዚታት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f2fe;
+            --neon-purple: #a855f7;
+            --neon-pink: #ec4899;
+            --success: #10b981;
+            --danger: #ef4444;
+            --amber: #f59e0b;
+            --deep-bg: #0f172a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        @keyframes bgFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: linear-gradient(-45deg, #23a6d5, #23d5ab, #ee7752, #e73c7e);
+            background-size: 400% 400%;
+            animation: bgFlow 15s ease infinite;
+            min-height: 100vh;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            transition: background-color 0.2s;
+        }
+
+        .bubble-decor {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatBubble 20s infinite linear;
+        }
+        @keyframes floatBubble {
+            from { transform: translateY(110vh) scale(1); }
+            to { transform: translateY(-20vh) scale(1.5); opacity: 0; }
+        }
+
+        #error-flash {
+            position: fixed; inset: 0; background: var(--danger); opacity: 0;
+            pointer-events: none; z-index: 9500; transition: opacity 0.1s;
+        }
+        body.error-active #error-flash { opacity: 0.5; }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+        header {
+            width: 100%; max-width: 1000px; padding: 15px 25px;
+            display: flex; flex-direction: column; align-items: center; z-index: 100;
+            gap: 10px;
+        }
+
+        .stats-top {
+            display: flex; width: 100%; justify-content: center; gap: 10px; margin-bottom: 5px;
+            position: sticky; top: 0; padding: 10px 0;
+        }
+
+        .pill {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            padding: 10px 20px; border-radius: 50px; font-weight: 800; font-size: 1.1rem;
+            display: flex; align-items: center; gap: 8px; border: 2px solid var(--neon-blue);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            color: #1e293b;
+            transition: transform 0.3s;
+        }
+        .pill-high { border-color: var(--amber); color: #d97706; }
+        .pill-score { border-color: var(--neon-blue); color: #0284c7; }
+        .pill-lvl { border-color: var(--neon-purple); color: #7e22ce; }
+
+        .header-controls { display: flex; gap: 10px; align-items: center; margin-top: 5px; }
+        .btn-round {
+            width: 50px; height: 50px; border-radius: 50%; border: none;
+            background: white; color: #1e293b; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .lang-select {
+            padding: 10px 20px; border-radius: 20px; border: 2px solid #fff;
+            background: white; color: #1e293b; font: inherit; font-weight: 700;
+            cursor: pointer; outline: none; box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 850px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 15px; gap: 20px; z-index: 10;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(25px);
+            border-radius: 60px; padding: 40px 30px; width: 100%;
+            border: 10px solid #fff;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+            text-align: center; position: relative;
+            transition: transform 0.3s ease;
+            color: #1e293b;
+        }
+        
+        .shake { animation: shakeAnim 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shakeAnim {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        .quest-text { font-size: 1.8rem; font-weight: 800; color: #334155; margin-bottom: 30px; }
+
+        /* Comparison Mode UI */
+        .comp-display { display: flex; align-items: center; justify-content: center; gap: 30px; flex-wrap: nowrap; margin-bottom: 30px; }
+        .frac-v-unit { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 160px; flex-shrink: 0; }
+        .frac-box { font-size: 3rem; font-weight: 900; display: flex; flex-direction: column; align-items: center; line-height: 1; color: #1e293b; }
+        .frac-line { width: 70px; height: 8px; background: #334155; margin: 8px 0; border-radius: 4px; }
+        .shape-preview { width: 140px; height: 140px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1)); }
+        
+        .op-slot {
+            width: 100px; height: 100px; background: #f8fafc; border: 5px dashed #cbd5e1;
+            border-radius: 30px; display: flex; align-items: center; justify-content: center;
+            font-size: 4rem; font-weight: 900; color: var(--neon-blue); transition: 0.3s; flex-shrink: 0;
+        }
+        .op-slot.filled { border-style: solid; border-color: var(--neon-blue); background: #fff; box-shadow: 0 0 30px rgba(0, 242, 254, 0.2); }
+
+        .op-grid { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
+        .op-btn {
+            width: 85px; height: 85px; background: white; border: 2px solid #eee;
+            border-radius: 25px; color: #1e293b; font-size: 3rem; font-weight: 900; cursor: pointer;
+            transition: 0.2s; box-shadow: 0 8px 0 #ddd;
+        }
+        .op-btn:hover { border-color: var(--neon-blue); transform: translateY(-3px); }
+        .op-btn:active { transform: translateY(6px); box-shadow: none; }
+
+        /* Ordering Mode UI */
+        .order-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; width: 100%; margin-top: 20px; }
+        .order-card {
+            background: #fff; border: 4px solid #f1f5f9; border-radius: 30px;
+            padding: 20px; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+        .order-card:hover { transform: translateY(-8px); border-color: var(--neon-purple); }
+        .order-card.selected { 
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink)); 
+            border-color: #fff; transform: scale(1.05); box-shadow: 0 15px 30px rgba(236, 72, 153, 0.3);
+            color: white;
+        }
+        .order-card.selected .frac-line { background: white; }
+        .order-card .rank-badge {
+            width: 35px; height: 35px; border-radius: 50%; background: rgba(255,255,255,0.3);
+            display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; border: 2px solid #fff;
+        }
+
+        #wrong-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9600; pointer-events: none;
+        }
+        #wrong-overlay span { font-size: clamp(10rem, 45vw, 25rem); color: #fff; text-shadow: 0 0 50px rgba(0,0,0,0.5); font-weight: 900; animation: popX 0.4s forwards; }
+        @keyframes popX { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1.1); opacity: 1; } }
+
+        #success-overlay {
+            position: fixed; inset: 0; background: rgba(255, 255, 255, 0.98);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 9990; text-align: center;
+            backdrop-filter: blur(15px);
+        }
+        .success-icon { font-size: 10rem; margin-bottom: 20px; animation: bounceIn 0.8s; }
+        @keyframes bounceIn { from { transform: scale(0.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        @media (max-width: 600px) {
+            .quest-text { font-size: 1.4rem; margin-bottom: 20px; }
+            .comp-display { gap: 12px; }
+            .frac-v-unit { width: 100px; gap: 8px; }
+            .frac-box { font-size: 1.8rem; }
+            .frac-line { width: 45px; height: 5px; }
+            .shape-preview { width: 80px; height: 80px; }
+            .op-slot { width: 65px; height: 65px; font-size: 2.5rem; border-width: 4px; }
+            .op-btn { width: 65px; height: 65px; font-size: 2rem; border-radius: 18px; }
+            .game-card { padding: 30px 10px; border-radius: 40px; border-width: 6px; }
+            .pill { padding: 6px 12px; font-size: 0.85rem; flex: 1; justify-content: center; }
+            .stats-top { gap: 5px; }
+            .order-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .order-card { padding: 15px 10px; }
+            .order-card .frac-box { font-size: 1.6rem; }
+        }
+
+        @media (max-width: 360px) {
+            .comp-display { gap: 6px; }
+            .frac-v-unit { width: 85px; }
+            .shape-preview { width: 70px; height: 70px; }
+            .op-slot { width: 55px; height: 55px; font-size: 2rem; }
+            .op-btn { width: 55px; height: 55px; font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="error-flash"></div>
+    <canvas id="confetti-canvas"></canvas>
+    <div id="wrong-overlay"><span>❌</span></div>
+
+    <header>
+        <div class="stats-top">
+            <div class="pill pill-lvl">🆙 <span id="lblLvl">Level</span>: <span id="valLvl">1</span></div>
+            <div class="pill pill-high">👑 <span id="lblHigh">High</span>: <span id="valHigh">0</span></div>
+            <div class="pill pill-score">⭐ <span id="lblScore">Score</span>: <span id="valScore">0</span></div>
+        </div>
+        <div class="header-controls">
+            <button class="btn-round" id="btnMute" onclick="toggleMute()">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="game-card" id="gameCard">
+            <div class="quest-text" id="txtQuest">ነዞም ጉዚታት ኣወዳድሮም</div>
+            
+            <div id="modeCompare" class="comp-display">
+                <div class="frac-v-unit">
+                    <div id="svgA" class="shape-preview"></div>
+                    <div class="frac-box">
+                        <span id="numA">1</span>
+                        <div class="frac-line"></div>
+                        <span id="denA">4</span>
+                    </div>
+                </div>
+                
+                <div class="op-slot" id="opBox">?</div>
+
+                <div class="frac-v-unit">
+                    <div id="svgB" class="shape-preview"></div>
+                    <div class="frac-box">
+                        <span id="numB">3</span>
+                        <div class="frac-line"></div>
+                        <span id="denB">4</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="modeOrder" style="display: none;">
+                <div class="order-grid" id="orderGrid">
+                    <!-- Cards injected here -->
+                </div>
+            </div>
+
+            <div class="op-grid" id="compBtns">
+                <button class="op-btn" onclick="checkCompare('<')">&lt;</button>
+                <button class="op-btn" onclick="checkCompare('=')">=</button>
+                <button class="op-btn" onclick="checkCompare('>')">&gt;</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-overlay">
+        <div class="success-icon" id="successEmoji">🚀</div>
+        <h2 id="successTitle" style="font-size: 3.5rem; color: var(--success);">ብጣዕሚ ጎበዝ!</h2>
+        <p id="successSub" style="font-size: 2rem; color: #64748b; margin-top: 15px;">ብትኽክል ተመሊሱ!</p>
+    </div>
+
+    <script>
+        // Bubble generator
+        function createBubbles() {
+            for(let i=0; i<15; i++) {
+                const b = document.createElement('div');
+                b.className = 'bubble-decor';
+                const size = Math.random() * 80 + 20;
+                b.style.width = size + 'px';
+                b.style.height = size + 'px';
+                b.style.left = Math.random() * 100 + 'vw';
+                b.style.bottom = '-100px';
+                b.style.animationDelay = Math.random() * 15 + 's';
+                b.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                document.body.appendChild(b);
+            }
+        }
+        createBubbles();
+
+        const i18n = {
+            ti: { compare: "ነዞም ጉዚታት ኣወዳድሮም", asc: "ካብ ዝነኣሰ ናብ ዛዓበየ ስራዕ", desc: "ካብ ዛዓበየ ናብ ዝነኣሰ ስራዕ", win: "ብጣዕሚ ጎበዝ!", winsub: "ብትኽክል ተመሊሱ!", score: "ነጥቢ", high: "ዝለዓለ", level: "ደረጃ" },
+            am: { compare: "ክፍልፋዮቹን አወዳድር", asc: "ከትንሽ ወደ ትልቅ ደርድር", desc: "ከትልቅ ወደ ትንሽ ደርድር", win: "ድንቅ ስራ!", winsub: "በትክክል መልሰዋል!", score: "ነጥብ", high: "ከፍተኛ", level: "ደረጃ" },
+            en: { compare: "Compare the fractions", asc: "Order from smallest to largest", desc: "Order from largest to smallest", win: "Great Job!", winsub: "You answered correctly!", score: "Score", high: "High", level: "Level" },
+            om: { compare: "Firaakshinii wal-dorgomsiisi", asc: "Xiqqaarraa gara guddaatti hiriirsi", desc: "Guddaarraa gara xiqqaatti hiriirsi", win: "Hojii Gaarii!", winsub: "Sirriitti deebisteetta!", score: "Qabxii", high: "Olaanaa", level: "Sadarkaa" },
+            so: { compare: "Is barbar dhig jajabka", asc: "U kala horeey midka ugu yar ilaa kan ugu weyn", desc: "U kala horeey midka ugu weyn ilaa kan ugu yar", win: "Shaqo Fiican!", winsub: "Si sax ah ayaad u jawaabtay!", score: "Dhibco", high: "Sare", level: "Heerka" }
+        };
+
+        let state = {
+            lang: 'ti', score: 0, level: 1,
+            highScore: parseInt(localStorage.getItem('fraction_navigator_high')) || 0,
+            mode: 'compare', 
+            currentQ: null,
+            userOrder: [],
+            busy: false, muted: false,
+            particles: []
+        };
+
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSfx(type) {
+            if (state.muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(600, n); o.frequency.exponentialRampToValueAtTime(300, n + 0.1);
+                g.gain.setValueAtTime(0.05, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.6);
+                o.start(); o.stop(n + 0.6);
+            } else {
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.linearRampToValueAtTime(50, n + 0.3);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.3);
+                o.start(); o.stop(n + 0.3);
+            }
+        }
+
+        function generate() {
+            state.busy = false;
+            state.level = Math.floor(state.score / 50) + 1;
+            
+            const r = Math.random();
+            if (r < 0.4) state.mode = 'compare';
+            else if (r < 0.7) state.mode = 'asc';
+            else state.mode = 'desc';
+
+            const count = (state.mode === 'compare') ? 2 : (state.level < 3 ? 3 : 4);
+            const allDens = [2, 3, 4, 5, 6, 8, 10, 12];
+            const levelLimit = state.level + 2;
+            const activePool = allDens.filter((d, idx) => idx < levelLimit && d > count);
+            const den = activePool.length > 0 ? activePool[Math.floor(Math.random() * activePool.length)] : 6;
+            
+            if (state.mode === 'compare') {
+                const n1 = Math.floor(Math.random() * (den - 1)) + 1;
+                const n2 = Math.random() > 0.8 ? n1 : (Math.floor(Math.random() * (den - 1)) + 1);
+                state.currentQ = { n1, n2, den, ans: n1 > n2 ? '>' : (n1 < n2 ? '<' : '=') };
+                document.getElementById('modeCompare').style.display = 'flex';
+                document.getElementById('modeOrder').style.display = 'none';
+                document.getElementById('compBtns').style.display = 'flex';
+                document.getElementById('numA').innerText = n1;
+                document.getElementById('denA').innerText = den;
+                document.getElementById('numB').innerText = n2;
+                document.getElementById('denB').innerText = den;
+                document.getElementById('opBox').innerText = "?";
+                document.getElementById('opBox').classList.remove('filled');
+                renderShape('svgA', n1, den);
+                renderShape('svgB', n2, den);
+            } else {
+                let nums = [];
+                const possibleNums = Array.from({length: den - 1}, (_, i) => i + 1);
+                possibleNums.sort(() => Math.random() - 0.5);
+                nums = possibleNums.slice(0, count);
+
+                const sorted = [...nums].sort((a,b) => state.mode === 'asc' ? a - b : b - a);
+                state.currentQ = { nums, den, sorted };
+                state.userOrder = [];
+                document.getElementById('modeCompare').style.display = 'none';
+                document.getElementById('modeOrder').style.display = 'block';
+                document.getElementById('compBtns').style.display = 'none';
+                renderOrderGrid();
+            }
+            updateUI();
+        }
+
+        function renderShape(id, n, d) {
+            const el = document.getElementById(id);
+            const isCircle = d <= 8;
+            let html = `<svg viewBox="0 0 100 100" style="width:100%;height:100%;">`;
+            if (isCircle) {
+                for (let i = 0; i < d; i++) {
+                    const start = (i * 360) / d - 90;
+                    const end = ((i + 1) * 360) / d - 90;
+                    const x1 = 50 + 45 * Math.cos(Math.PI * start / 180);
+                    const y1 = 50 + 45 * Math.sin(Math.PI * start / 180);
+                    const x2 = 50 + 45 * Math.cos(Math.PI * end / 180);
+                    const y2 = 50 + 45 * Math.sin(Math.PI * end / 180);
+                    const active = i < n ? '#3b82f6' : '#f1f5f9';
+                    const stroke = i < n ? '#1d4ed8' : '#cbd5e1';
+                    html += `<path d="M 50 50 L ${x1} ${y1} A 45 45 0 0 1 ${x2} ${y2} Z" fill="${active}" stroke="${stroke}" stroke-width="2"/>`;
+                }
+            } else {
+                const w = 90 / d;
+                for (let i = 0; i < d; i++) {
+                    const active = i < n ? '#3b82f6' : '#f1f5f9';
+                    const stroke = i < n ? '#1d4ed8' : '#cbd5e1';
+                    html += `<rect x="${5 + i * w}" y="25" width="${w}" height="50" fill="${active}" stroke="${stroke}" stroke-width="2" rx="2"/>`;
+                }
+            }
+            html += `</svg>`;
+            el.innerHTML = html;
+        }
+
+        function renderOrderGrid() {
+            const grid = document.getElementById('orderGrid');
+            grid.innerHTML = '';
+            state.currentQ.nums.forEach(n => {
+                const idx = state.userOrder.indexOf(n);
+                const card = document.createElement('div');
+                card.className = `order-card ${idx > -1 ? 'selected' : ''}`;
+                card.innerHTML = `
+                    <div class="frac-box">
+                        <span>${n}</span>
+                        <div class="frac-line"></div>
+                        <span>${state.currentQ.den}</span>
+                    </div>
+                    ${idx > -1 ? `<div class="rank-badge">${idx + 1}</div>` : ''}
+                `;
+                card.onclick = () => selectOrder(n);
+                grid.appendChild(card);
+            });
+        }
+
+        function selectOrder(n) {
+            if (state.busy) return;
+            playSfx('tap');
+            const i = state.userOrder.indexOf(n);
+            if (i > -1) state.userOrder.splice(i, 1);
+            else state.userOrder.push(n);
+            renderOrderGrid();
+            
+            if (state.userOrder.length === state.currentQ.nums.length) {
+                const correct = state.userOrder.every((val, idx) => val === state.currentQ.sorted[idx]);
+                if (correct) handleSuccess();
+                else handleError();
+            }
+        }
+
+        function checkCompare(op) {
+            if (state.busy) return;
+            const opBox = document.getElementById('opBox');
+            opBox.innerText = op;
+            opBox.classList.add('filled');
+            if (op === state.currentQ.ans) handleSuccess();
+            else handleError();
+        }
+
+        function handleSuccess() {
+            state.busy = true;
+            state.score += 10;
+            if (state.score > state.highScore) {
+                state.highScore = state.score;
+                localStorage.setItem('fraction_navigator_high', state.highScore);
+            }
+            playSfx('win');
+            burst(300);
+            
+            const overlay = document.getElementById('success-overlay');
+            const t = i18n[state.lang];
+            document.getElementById('successTitle').innerText = t.win;
+            document.getElementById('successSub').innerText = t.winsub;
+            overlay.style.display = 'flex';
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                generate();
+            }, 2500);
+        }
+
+        function handleError() {
+            playSfx('err');
+            document.body.classList.add('error-active');
+            document.getElementById('wrong-overlay').style.display = 'flex';
+            document.getElementById('gameCard').classList.add('shake');
+            
+            setTimeout(() => {
+                document.body.classList.remove('error-active');
+                document.getElementById('wrong-overlay').style.display = 'none';
+                document.getElementById('gameCard').classList.remove('shake');
+                if (state.mode === 'compare') {
+                    document.getElementById('opBox').innerText = "?";
+                    document.getElementById('opBox').classList.remove('filled');
+                } else {
+                    state.userOrder = [];
+                    renderOrderGrid();
+                }
+            }, 800);
+        }
+
+        function updateUI() {
+            const t = i18n[state.lang];
+            document.getElementById('txtQuest').innerText = t[state.mode] || t.compare;
+            document.getElementById('valScore').innerText = state.score;
+            document.getElementById('valHigh').innerText = state.highScore;
+            document.getElementById('valLvl').innerText = state.level;
+            document.getElementById('lblHigh').innerText = t.high;
+            document.getElementById('lblScore').innerText = t.score;
+            document.getElementById('lblLvl').innerText = t.level;
+        }
+
+        function changeLang(l) { state.lang = l; updateUI(); }
+        function toggleMute() { state.muted = !state.muted; document.getElementById('btnMute').innerText = state.muted ? '🔇' : '🔊'; }
+
+        function burst(count) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            if (c.width !== window.innerWidth) { c.width = window.innerWidth; c.height = window.innerHeight; }
+            const colors = ['#00f2fe', '#a855f7', '#ec4899', '#ffffff', '#10b981', '#fb923c'];
+            for(let i=0; i<count; i++) state.particles.push({
+                x: Math.random() * c.width, y: c.height + 20, vx: (Math.random()-0.5)*40, vy: (Math.random()-0.8)*60,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*25
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=state.particles.length-1; i>=0; i--){
+                    const p=state.particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.vx *= 0.985; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else state.particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => { generate(); };
+    </script>
+</body>
+</html>

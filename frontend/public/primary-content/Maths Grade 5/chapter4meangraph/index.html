@@ -1,0 +1,1106 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mean from Graph - ማእከላይ ካብ ግራፍ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700;900&family=Noto+Sans+Ethiopic:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF595E;
+            --secondary: #1982C4;
+            --green: #8AC926;
+            --yellow: #FFCA3A;
+            --purple: #6A4C93;
+            --bg: #F0F4F8;
+            --card-bg: #ffffff;
+            --text: #2d3748;
+        }
+
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Comic Neue', 'Noto Sans Ethiopic', sans-serif;
+            background-color: #E0F7FA;
+            /* Fun background pattern */
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 202, 58, 0.2) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 89, 94, 0.2) 0%, transparent 20%),
+                radial-gradient(#cbd5e0 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 20px 20px;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 12% 18%, rgba(255, 202, 58, 0.18), transparent 42%),
+                radial-gradient(circle at 88% 15%, rgba(25, 130, 196, 0.16), transparent 45%),
+                radial-gradient(circle at 18% 86%, rgba(138, 201, 38, 0.18), transparent 46%),
+                radial-gradient(circle at 85% 86%, rgba(106, 76, 147, 0.18), transparent 48%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* --- Header --- */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 6px solid var(--purple);
+            border-radius: 0 0 20px 20px;
+        }
+
+        .grade-badge {
+            background: var(--purple);
+            color: white;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.4rem;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            border: 3px solid white;
+        }
+
+        h1 {
+            color: var(--purple);
+            font-size: 1.8rem;
+            font-weight: 900;
+            margin: 0 10px;
+            text-align: center;
+            text-shadow: 2px 2px 0px white;
+        }
+
+        /* Custom Select */
+        .custom-select-wrapper { position: relative; z-index: 200; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; font-weight: 800; color: var(--text);
+            height: 45px; background: #fff; cursor: pointer;
+            border: 3px solid #e2e8f0; border-radius: 25px;
+            width: 150px; font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .custom-select__trigger:hover { border-color: var(--secondary); }
+        
+        .custom-options {
+            position: absolute; top: 120%; left: 0; right: 0;
+            background: #fff; border: 3px solid #e2e8f0; border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            opacity: 0; visibility: hidden; transform: translateY(-10px);
+            padding: 5px; display: flex; flex-direction: column; gap: 5px;
+            transition: all 0.2s;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; transform: translateY(0); }
+        .custom-option { padding: 8px 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+        .custom-option:hover { background: var(--bg); color: var(--purple); }
+
+        /* --- Container --- */
+        .container {
+            max-width: 1200px; /* Increased Size for Desktop */
+            margin: 30px auto;
+            padding: 0 30px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* Score Board */
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .score-pill {
+            background: white;
+            padding: 10px 30px;
+            border-radius: 30px;
+            font-weight: 900;
+            font-size: 1.3rem;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.05);
+            display: flex; align-items: center; gap: 10px;
+            border: 3px solid transparent;
+        }
+        .score-pill.high { border-color: var(--yellow); color: #B7791F; background: #FFFBEB; }
+        .score-pill.current { border-color: var(--green); color: #2F855A; background: #F0FFF4; }
+        
+        .score-label { font-size: 0.9rem; color: #718096; font-weight: 700; text-transform: uppercase; margin-right: 5px; }
+
+        /* Graph Card */
+        .card {
+            background: white;
+            border-radius: 40px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+            border: 6px solid white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 40px;
+            background: linear-gradient(135deg, rgba(255, 202, 58, 0.10), rgba(25, 130, 196, 0.10), rgba(106, 76, 147, 0.10));
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
+        .card > * { position: relative; z-index: 1; }
+
+        .instruction {
+            background: #E9D8FD;
+            color: var(--purple);
+            padding: 15px 30px;
+            border-radius: 20px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.4rem;
+            border: 3px dashed #D6BCFA;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* --- The Graph --- */
+        .graph-area {
+            width: 100%;
+            height: 400px; /* Taller */
+            background: linear-gradient(to bottom, #F7FAFC, #EDF2F7);
+            border-radius: 25px;
+            border-bottom: 5px solid #4A5568;
+            border-left: 5px solid #4A5568;
+            position: relative;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding: 0 30px;
+            overflow: visible; /* Allow labels to pop out */
+        }
+
+        /* Y-Axis Grid */
+        .grid-line {
+            position: absolute;
+            left: 0; width: 100%;
+            border-top: 2px dashed #CBD5E0;
+            pointer-events: none;
+        }
+        .grid-label {
+            position: absolute;
+            left: -40px; top: -12px;
+            font-size: 1.1rem; font-weight: 900; color: #718096;
+            width: 30px; text-align: right;
+        }
+
+        /* Bars */
+        .bar {
+            width: 80px;
+            background: linear-gradient(180deg, var(--primary) 0%, #FF8FA3 100%);
+            border-radius: 15px 15px 0 0;
+            position: relative;
+            transition: height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            box-shadow: 5px 0 15px rgba(255, 89, 94, 0.3);
+            border: 2px solid white;
+            border-bottom: none;
+        }
+        .bar::after {
+            content: attr(data-val);
+            position: absolute; top: -40px;
+            font-weight: 900; color: var(--text);
+            font-size: 1.5rem;
+            background: white;
+            padding: 2px 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .bar-label {
+            position: absolute; bottom: -60px;
+            font-size: 2.5rem;
+            transition: transform 0.2s;
+        }
+        .bar:hover .bar-label { transform: scale(1.2); }
+
+        /* Draggable Mean Line */
+        .mean-slider {
+            position: absolute;
+            left: -5px; width: calc(100% + 10px); height: 8px;
+            background: var(--purple);
+            top: 50%; /* Default */
+            cursor: ns-resize;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(106, 76, 147, 0.5);
+            touch-action: none;
+            border-radius: 4px;
+        }
+        .mean-slider::before {
+            content: 'Mean?';
+            position: absolute; right: 15px; top: -40px;
+            background: var(--purple); color: white;
+            padding: 5px 15px; border-radius: 12px;
+            font-weight: 900; font-size: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .mean-slider::after {
+            content: '↕';
+            position: absolute; right: -25px; top: -20px;
+            width: 45px; height: 45px;
+            background: var(--purple);
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 1.5rem;
+        }
+
+        /* --- Input Area --- */
+        .calc-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(237, 242, 247, 0.9));
+            padding: 30px;
+            border-radius: 30px;
+            width: 100%;
+            border: 3px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 14px 35px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calc-panel::after {
+            content: "";
+            position: absolute;
+            inset: -30% -10% auto -10%;
+            height: 70%;
+            background: radial-gradient(circle at 40% 40%, rgba(255, 202, 58, 0.22), transparent 55%);
+            transform: rotate(-6deg);
+            pointer-events: none;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 0 #E2E8F0;
+        }
+
+        .input-group:hover { transform: translateY(-3px); }
+        .input-label { font-size: 1rem; font-weight: 900; color: #718096; margin-bottom: 8px; text-transform: uppercase; }
+        
+        input[type="number"] {
+            width: 100px; height: 60px;
+            border: 3px solid #CBD5E0;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 900;
+            outline: none;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+        input:focus { border-color: var(--secondary); transform: scale(1.05); }
+        .input-mean { border-color: var(--purple) !important; color: var(--purple) !important; }
+
+        .btn-check {
+            background: var(--green);
+            color: white; border: none;
+            padding: 20px 60px;
+            border-radius: 50px;
+            font-size: 1.5rem; font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #047857;
+            transition: all 0.1s;
+            margin-top: 10px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .btn-check:active { transform: translateY(4px); box-shadow: none; }
+        .btn-check:hover { background: #059669; }
+
+        /* Feedback Overlay */
+        .feedback-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95);
+            border-radius: 30px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            animation: fadeIn 0.3s;
+        }
+        .feedback-overlay.show { display: flex; }
+
+        .fb-icon { font-size: 6rem; margin-bottom: 10px; animation: popIn 0.5s; }
+        .fb-text { font-size: 2.5rem; font-weight: 900; color: var(--text); margin-bottom: 10px; }
+        .fb-sub { font-size: 1.5rem; color: #718096; margin-bottom: 30px; font-weight: bold; }
+
+        .reward-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: rgba(255, 202, 58, 0.22);
+            border: 3px solid rgba(255, 202, 58, 0.65);
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+
+        .reward-badge .emoji { font-size: 1.8rem; }
+
+        .reward-stats {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 18px;
+        }
+
+        .pill {
+            background: white;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-weight: 900;
+            border: 2px solid #E2E8F0;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.06);
+        }
+
+        .pill.green { border-color: rgba(138, 201, 38, 0.5); }
+        .pill.purple { border-color: rgba(106, 76, 147, 0.5); }
+        .pill.yellow { border-color: rgba(255, 202, 58, 0.6); }
+        
+        .btn-next, .btn-restart {
+            background: var(--secondary); color: white; border: none;
+            padding: 15px 50px; border-radius: 40px;
+            font-size: 1.4rem; font-weight: 900; cursor: pointer;
+            box-shadow: 0 6px 0 #1d4ed8;
+            transition: all 0.2s;
+        }
+        .btn-restart { background: var(--purple); box-shadow: 0 6px 0 #553c9a; }
+        .btn-next:hover, .btn-restart:hover { transform: scale(1.05); }
+        .btn-next:active, .btn-restart:active { transform: translateY(4px); box-shadow: none; }
+
+        @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        #confetti-canvas.show { opacity: 1; }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            .container { padding: 0 10px; margin: 10px auto; }
+            .card { padding: 15px; border-width: 3px; border-radius: 20px; }
+            .graph-area { height: 250px; padding: 0 10px; }
+            .bar { width: 40px; }
+            .bar-label { font-size: 1.8rem; bottom: -45px; }
+            
+            .calc-panel { flex-direction: column; padding: 15px; gap: 15px; }
+            .input-group { width: 100%; flex-direction: row; justify-content: space-between; padding: 10px; }
+            .input-label { margin: 0; }
+            input[type="number"] { height: 50px; font-size: 1.4rem; }
+            
+            .score-pill { padding: 5px 15px; font-size: 1rem; }
+            h1 { font-size: 1.2rem; }
+            
+            .btn-check { width: 100%; font-size: 1.3rem; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="grade-badge">5</div>
+    <h1>Mean Graph</h1>
+    <div class="custom-select-wrapper">
+        <div class="custom-select">
+            <div class="custom-select__trigger">
+                <span id="current-lang-label">🗺️ ትግርኛ</span>
+                <div style="font-size:0.8rem">▼</div>
+            </div>
+            <div class="custom-options">
+                <span class="custom-option selected" data-value="ti">ትግርኛ</span>
+                <span class="custom-option" data-value="am">አማርኛ</span>
+                <span class="custom-option" data-value="en">English</span>
+                <span class="custom-option" data-value="om">Afan Oromoo</span>
+                <span class="custom-option" data-value="so">Soomaali</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    
+    <div class="score-board">
+        <div class="score-pill high">
+            <span class="score-label" id="lbl-record">Record</span>
+            <span id="high-score">0</span>
+        </div>
+        <div class="score-pill current">
+            <span class="score-label" id="lbl-score">Score</span>
+            <span id="score">0</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="instruction" id="instruction">
+            Calculate the mean and drag the purple line to show it!
+        </div>
+
+        <div class="graph-area" id="graph-container">
+            <!-- Grid Lines -->
+            <div id="grid-layer"></div>
+            
+            <!-- Bars will be injected here -->
+            <div id="bars-container" style="display:flex; width:100%; justify-content:space-around; align-items:flex-end; height:100%;"></div>
+
+            <!-- Draggable Line -->
+            <div class="mean-slider" id="mean-slider"></div>
+        </div>
+
+        <div class="calc-panel">
+            <div class="input-group">
+                <label class="input-label" id="lbl-sum">Total Sum</label>
+                <input type="number" id="in-sum" placeholder="?">
+            </div>
+            <div class="input-group">
+                <label class="input-label" id="lbl-count">Count</label>
+                <input type="number" id="in-count" placeholder="?">
+            </div>
+            <div class="input-group">
+                <label class="input-label" id="lbl-mean">Mean</label>
+                <input type="number" id="in-mean" class="input-mean" placeholder="?">
+            </div>
+            <button class="btn-check" onclick="checkAnswer()" id="btn-check">Check ✔️</button>
+        </div>
+
+        <!-- Feedback / Game Over Overlay -->
+        <div class="feedback-overlay" id="feedback">
+            <div class="fb-icon" id="fb-icon">🎉</div>
+            <div class="fb-text" id="fb-text">Correct!</div>
+            <div class="reward-badge" id="reward-badge" style="display:none;">
+                <span class="emoji" id="reward-emoji">🏅</span>
+                <span id="reward-name">Math Star</span>
+            </div>
+            <div class="reward-stats" id="reward-stats" style="display:none;">
+                <div class="pill yellow">+<span id="reward-points">0</span> pts</div>
+                <div class="pill green">Score: <span id="reward-score">0</span></div>
+                <div class="pill purple">Streak: <span id="reward-streak">0</span></div>
+                <div class="pill purple">Level: <span id="reward-level">1</span></div>
+            </div>
+            <div class="fb-sub" id="fb-sub"></div>
+            
+            <button class="btn-next" onclick="nextLevel()" id="btn-next" style="display:none;">Next Level ➡</button>
+            <button class="btn-restart" onclick="restartGame()" id="btn-restart" style="display:none;">Play Again 🔄</button>
+        </div>
+    </div>
+
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+    // --- Audio Engine ---
+    const AudioEngine = {
+        ctx: null,
+        init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+        playTone(freq, type, duration) {
+            this.init();
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+        },
+        playSuccess() { 
+            this.playTone(600, 'sine', 0.1); 
+            setTimeout(() => this.playTone(800, 'sine', 0.2), 100);
+        },
+        playError() { 
+            this.playTone(150, 'sawtooth', 0.3); 
+            setTimeout(() => this.playTone(100, 'sawtooth', 0.4), 200);
+        },
+        playPop() {
+            this.playTone(400, 'sine', 0.05);
+        },
+        playGameOver() {
+            this.playTone(300, 'sawtooth', 0.4);
+            setTimeout(() => this.playTone(200, 'sawtooth', 0.6), 400);
+        }
+    };
+
+    // --- Translations ---
+    const translations = {
+        ti: {
+            title: "ማእከላይ ካብ ግራፍ",
+            inst: "ድምርን ማእከላይን ድለዩ፣ ነቲ ፐርፕል መስመር ድማ ናብ ማእከላይ ስሓብዎ!",
+            lblSum: "ድምር",
+            lblCount: "ብዝሒ",
+            lblMean: "ማእከላይ",
+            check: "ፈትሽ ✔️",
+            next: "ቀፃሊ ➡",
+            restart: "እንደገና ጀምር 🔄",
+            correct: "ትኽክል!",
+            wrong: "ተጋግዩ!",
+            gameover: "ጸወታ ተወዲኡ!",
+            finalScore: "ውፅኢትኩም: ",
+            lblScore: "ነጥቢ",
+            lblRecord: "ክብረ ወሰን",
+            items: ['🍎', '🍌', '🍊', '🍇']
+        },
+        am: {
+            title: "አማካይ ከግራፍ",
+            inst: "ድምር እና አማካይ ያግኙ፣ ሐምራዊውን መስመር ወደ አማካይ ይጎትቱ!",
+            lblSum: "ድምር",
+            lblCount: "ብዛት",
+            lblMean: "አማካይ",
+            check: "ፈትሽ ✔️",
+            next: "ቀጣይ ➡",
+            restart: "እንደገና ይሞክሩ 🔄",
+            correct: "ትክክል!",
+            wrong: "ስህተት!",
+            gameover: "ጨዋታው አብቅቷል!",
+            finalScore: "የእርስዎ ውጤት: ",
+            lblScore: "ውጤት",
+            lblRecord: "ከፍተኛ",
+            items: ['🍎', '🍌', '🍊', '🍇']
+        },
+        en: {
+            title: "Mean from Graph",
+            inst: "Calculate Mean and drag the purple line to show it!",
+            lblSum: "Total Sum",
+            lblCount: "Count",
+            lblMean: "Mean",
+            check: "Check ✔️",
+            next: "Next ➡",
+            restart: "Play Again 🔄",
+            correct: "Correct!",
+            wrong: "Incorrect!",
+            gameover: "Game Over!",
+            finalScore: "Your Score: ",
+            lblScore: "Score",
+            lblRecord: "Record",
+            items: ['🍎', '🍌', '🍊', '🍇']
+        },
+        om: {
+            title: "Giddu-galeessa Giraafii irraa",
+            inst: "Ida'ama fi Giddu-galeessa shallagi, sarara diimaa sirreessi!",
+            lblSum: "Ida'ama Waliigalaa",
+            lblCount: "Baay'ina",
+            lblMean: "Giddu-galeessa",
+            check: "Mirkaneessi ✔️",
+            next: "Itti Aanu ➡",
+            restart: "Irra Deebi'ii 🔄",
+            correct: "Sirrii!",
+            wrong: "Dogoggora!",
+            gameover: "Tapha Dhumate!",
+            finalScore: "Qabxii Keessan: ",
+            lblScore: "Qabxii",
+            lblRecord: "Rikardii",
+            items: ['🍎', '🍌', '🍊', '🍇']
+        },
+        so: {
+            title: "Celcelis ka Jaantuska",
+            inst: "Xisaabi Wadarta iyo Celceliska, jiid xariiqda guduudan!",
+            lblSum: "Wadarta Guud",
+            lblCount: "Tirada",
+            lblMean: "Celcelis",
+            check: "Hubi ✔️",
+            next: "Xiga ➡",
+            restart: "Dib u billow 🔄",
+            correct: "Sax!",
+            wrong: "Qaldan!",
+            gameover: "Ciyaartu way dhamaatay!",
+            finalScore: "Dhibcahaaga: ",
+            lblScore: "Dhibco",
+            lblRecord: "Rikoodh",
+            items: ['🍎', '🍌', '🍊', '🍇']
+        }
+    };
+
+    let currentLang = 'ti';
+    let score = 0;
+    let highScore = localStorage.getItem('meanGraphHighScore') || 0;
+    let streak = 0;
+    let level = 1;
+
+    const rewardPool = [
+        { emoji: '🏅', name: 'Mean Master', msg: 'Perfect mean thinking!' },
+        { emoji: '🧠', name: 'Smart Calculator', msg: 'Great calculation power!' },
+        { emoji: '🚀', name: 'Level Up', msg: 'You are getting faster!' },
+        { emoji: '🌟', name: 'Graph Genius', msg: 'Awesome graph skills!' },
+        { emoji: '🎯', name: 'Accurate!', msg: 'So close and so correct!' }
+    ];
+    
+    // Game Data
+    let currentData = [];
+    let correctSum = 0;
+    let correctCount = 0;
+    let correctMean = 0;
+    let sliderValue = 0; // Visual Y value (0-100) relative to max height
+
+    const MAX_VAL = 10;
+    const GRAPH_HEIGHT = 350;
+
+    // --- Core Logic ---
+
+    function init() {
+        document.getElementById('high-score').textContent = highScore;
+        updateLanguage();
+        generateLevel();
+        setupDrag();
+    }
+
+    function generateLevel() {
+        // Reset Visuals
+        const overlay = document.getElementById('feedback');
+        overlay.classList.remove('show');
+        document.getElementById('btn-next').style.display = 'none';
+        document.getElementById('btn-restart').style.display = 'none';
+        document.getElementById('fb-sub').textContent = '';
+
+        const rb = document.getElementById('reward-badge');
+        const rs = document.getElementById('reward-stats');
+        if (rb) rb.style.display = 'none';
+        if (rs) rs.style.display = 'none';
+        
+        // Reset Inputs
+        document.getElementById('in-sum').value = '';
+        document.getElementById('in-count').value = '';
+        document.getElementById('in-mean').value = '';
+        document.getElementById('in-sum').style.borderColor = "#CBD5E0";
+        document.getElementById('in-count').style.borderColor = "#CBD5E0";
+        document.getElementById('in-mean').style.borderColor = "#CBD5E0";
+
+        // Logic: Generate 3 or 4 bars where sum is divisible by count
+        correctCount = Math.random() > 0.5 ? 3 : 4;
+        correctMean = Math.floor(Math.random() * 5) + 3; // Mean between 3 and 7
+        correctSum = correctCount * correctMean;
+
+        // Distribute sum into parts
+        currentData = [];
+        let remaining = correctSum;
+        for(let i=0; i<correctCount-1; i++) {
+            let val = Math.floor(Math.random() * (correctMean + 2)) + 1;
+            // Prevent going too high or low leaving impossible remainder
+            if (val > MAX_VAL) val = MAX_VAL;
+            currentData.push(val);
+            remaining -= val;
+        }
+        // Adjust last one
+        if (remaining <= 0 || remaining > MAX_VAL) {
+            generateLevel(); // Retry if bad numbers
+            return;
+        }
+        currentData.push(remaining);
+
+        renderGraph();
+    }
+
+    function renderGraph() {
+        const container = document.getElementById('bars-container');
+        const gridLayer = document.getElementById('grid-layer');
+        container.innerHTML = '';
+        gridLayer.innerHTML = '';
+
+        // Draw Grid Lines (0 to 10)
+        for(let i=1; i<=MAX_VAL; i++) {
+            const line = document.createElement('div');
+            line.className = 'grid-line';
+            const pct = (i / MAX_VAL) * 100;
+            line.style.bottom = `${pct}%`;
+            line.innerHTML = `<span class="grid-label">${i}</span>`;
+            gridLayer.appendChild(line);
+        }
+
+        // Draw Bars
+        const t = translations[currentLang];
+        // Shuffle items emoji for variety
+        const emojis = [...t.items].sort(() => 0.5 - Math.random());
+
+        currentData.forEach((val, idx) => {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.id = `bar-${idx}`;
+            // Initial Height
+            const pct = (val / MAX_VAL) * 100;
+            bar.style.height = `${pct}%`;
+            bar.setAttribute('data-val', val);
+            
+            // Label
+            const label = document.createElement('div');
+            label.className = 'bar-label';
+            label.textContent = emojis[idx % emojis.length];
+            bar.appendChild(label);
+
+            container.appendChild(bar);
+        });
+
+        // Reset Slider Position
+        const slider = document.getElementById('mean-slider');
+        slider.style.top = '90%'; // Start low
+        slider.style.backgroundColor = 'var(--purple)';
+        sliderValue = 1; // Approx
+    }
+
+    function setupDrag() {
+        const slider = document.getElementById('mean-slider');
+        const container = document.getElementById('graph-container');
+
+        const onMove = (clientY) => {
+            const rect = container.getBoundingClientRect();
+            let y = clientY - rect.top;
+            
+            // Clamp
+            if (y < 0) y = 0;
+            if (y > rect.height) y = rect.height;
+
+            slider.style.top = y + 'px';
+            
+            // Calculate Value based on position (inverted Y)
+            const ratio = 1 - (y / rect.height);
+            sliderValue = ratio * MAX_VAL;
+        };
+
+        // Mouse
+        slider.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const moveHandler = (ev) => onMove(ev.clientY);
+            const upHandler = () => {
+                window.removeEventListener('mousemove', moveHandler);
+                window.removeEventListener('mouseup', upHandler);
+                AudioEngine.playPop();
+            };
+            window.addEventListener('mousemove', moveHandler);
+            window.addEventListener('mouseup', upHandler);
+        });
+
+        // Touch
+        slider.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const moveHandler = (ev) => onMove(ev.touches[0].clientY);
+            const upHandler = () => {
+                window.removeEventListener('touchmove', moveHandler);
+                window.removeEventListener('touchend', upHandler);
+                AudioEngine.playPop();
+            };
+            window.addEventListener('touchmove', moveHandler, {passive:false});
+            window.addEventListener('touchend', upHandler);
+        });
+    }
+
+    function checkAnswer() {
+        const uSum = parseInt(document.getElementById('in-sum').value);
+        const uCount = parseInt(document.getElementById('in-count').value);
+        const uMean = parseInt(document.getElementById('in-mean').value);
+
+        // Validation tolerance for slider (within 0.6 unit)
+        const sliderValid = Math.abs(sliderValue - correctMean) < 0.6;
+
+        let allCorrect = true;
+
+        // Check Inputs
+        if (uSum !== correctSum) { 
+            document.getElementById('in-sum').style.borderColor = "var(--primary)"; 
+            allCorrect = false; 
+        } else {
+            document.getElementById('in-sum').style.borderColor = "var(--green)";
+        }
+
+        if (uCount !== correctCount) {
+            document.getElementById('in-count').style.borderColor = "var(--primary)";
+            allCorrect = false;
+        } else {
+            document.getElementById('in-count').style.borderColor = "var(--green)";
+        }
+
+        if (uMean !== correctMean) {
+            document.getElementById('in-mean').style.borderColor = "var(--primary)";
+            allCorrect = false;
+        } else {
+            document.getElementById('in-mean').style.borderColor = "var(--green)";
+        }
+
+        // Check Slider
+        const slider = document.getElementById('mean-slider');
+        if (!sliderValid) {
+            slider.style.backgroundColor = "var(--primary)"; // Warning color
+            allCorrect = false;
+        } else {
+            slider.style.backgroundColor = "var(--green)";
+            // Snap to exact line
+            const exactTop = (1 - (correctMean/MAX_VAL)) * 100;
+            slider.style.top = `${exactTop}%`;
+        }
+
+        const t = translations[currentLang];
+        const fbIcon = document.getElementById('fb-icon');
+        const fbText = document.getElementById('fb-text');
+        const fbSub = document.getElementById('fb-sub');
+        const btnNext = document.getElementById('btn-next');
+        const btnRestart = document.getElementById('btn-restart');
+
+        const rewardBadge = document.getElementById('reward-badge');
+        const rewardStats = document.getElementById('reward-stats');
+
+        if (allCorrect) {
+            // Correct Logic
+            streak += 1;
+            const base = 20;
+            const bonus = Math.min(20, (streak - 1) * 5);
+            const earned = base + bonus;
+
+            score += earned;
+            level = 1 + Math.floor(score / 100);
+            if(score > highScore) {
+                highScore = score;
+                localStorage.setItem('meanGraphHighScore', highScore);
+            }
+            document.getElementById('score').textContent = score;
+            document.getElementById('high-score').textContent = highScore;
+            
+            AudioEngine.playSuccess();
+            triggerConfetti();
+            animateLeveling(); // Visual Reward
+            
+            fbIcon.textContent = '🎉';
+            fbText.textContent = t.correct;
+            fbText.style.color = "var(--green)";
+
+            const r = rewardPool[Math.floor(Math.random() * rewardPool.length)];
+            document.getElementById('reward-emoji').textContent = r.emoji;
+            document.getElementById('reward-name').textContent = r.name;
+            document.getElementById('reward-points').textContent = String(earned);
+            document.getElementById('reward-score').textContent = String(score);
+            document.getElementById('reward-streak').textContent = String(streak);
+            document.getElementById('reward-level').textContent = String(level);
+
+            if (rewardBadge) rewardBadge.style.display = 'inline-flex';
+            if (rewardStats) rewardStats.style.display = 'flex';
+
+            fbSub.textContent = r.msg;
+            
+            btnNext.style.display = 'block';
+            btnRestart.style.display = 'none';
+            
+            setTimeout(() => {
+                document.getElementById('feedback').classList.add('show');
+            }, 1000); 
+
+        } else {
+            // Wrong -> Game Over Logic
+            AudioEngine.playError();
+            AudioEngine.playGameOver();
+
+            streak = 0;
+            
+            fbIcon.textContent = '❌';
+            fbText.textContent = t.gameover;
+            fbText.style.color = "var(--primary)";
+            fbSub.textContent = t.finalScore + score;
+
+            if (rewardBadge) rewardBadge.style.display = 'none';
+            if (rewardStats) rewardStats.style.display = 'none';
+            
+            btnNext.style.display = 'none';
+            btnRestart.style.display = 'block';
+            
+            document.getElementById('feedback').classList.add('show');
+        }
+    }
+
+    function restartGame() {
+        score = 0;
+        streak = 0;
+        level = 1;
+        document.getElementById('score').textContent = score;
+        generateLevel();
+    }
+
+    function animateLeveling() {
+        // Make all bars height = mean height
+        const bars = document.querySelectorAll('.bar');
+        const meanPct = (correctMean / MAX_VAL) * 100;
+        
+        bars.forEach(bar => {
+            bar.style.height = `${meanPct}%`;
+            bar.setAttribute('data-val', correctMean); // visual update
+            bar.style.background = "var(--green)"; // Success color
+        });
+    }
+
+    function nextLevel() {
+        generateLevel();
+    }
+
+    // --- Language ---
+    const selectWrapper = document.querySelector('.custom-select-wrapper');
+    const selectCustom = document.querySelector('.custom-select');
+    const options = document.querySelectorAll('.custom-option');
+
+    selectWrapper.addEventListener('click', (e) => {
+        selectCustom.classList.toggle('open');
+        e.stopPropagation();
+    });
+
+    options.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!this.classList.contains('selected')) {
+                const prev = this.parentNode.querySelector('.custom-option.selected');
+                if(prev) prev.classList.remove('selected');
+                this.classList.add('selected');
+                
+                const label = this.textContent;
+                const value = this.getAttribute('data-value');
+                document.getElementById('current-lang-label').textContent = "🗺️ " + label;
+                selectCustom.classList.remove('open');
+                
+                currentLang = value;
+                updateLanguage();
+            }
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (!selectCustom.contains(e.target)) selectCustom.classList.remove('open');
+    });
+
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.querySelector('h1').textContent = t.title;
+        document.getElementById('instruction').textContent = t.inst;
+        document.getElementById('lbl-sum').textContent = t.lblSum;
+        document.getElementById('lbl-count').textContent = t.lblCount;
+        document.getElementById('lbl-mean').textContent = t.lblMean;
+        document.getElementById('btn-check').textContent = t.check;
+        document.getElementById('btn-next').textContent = t.next;
+        document.getElementById('btn-restart').textContent = t.restart;
+        
+        document.getElementById('lbl-score').textContent = t.lblScore;
+        document.getElementById('lbl-record').textContent = t.lblRecord;
+    }
+
+    // --- Confetti ---
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.classList.add('show');
+
+        const dpr = window.devicePixelRatio || 1;
+        const resize = () => {
+            canvas.width = Math.floor(window.innerWidth * dpr);
+            canvas.height = Math.floor(window.innerHeight * dpr);
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        };
+        resize();
+
+        const colors = ['#FF595E', '#1982C4', '#8AC926', '#FFCA3A', '#6A4C93'];
+        const pieces = Array.from({ length: 140 }, () => ({
+            x: Math.random() * window.innerWidth,
+            y: -Math.random() * window.innerHeight,
+            vx: (Math.random() - 0.5) * 2.2,
+            vy: Math.random() * 2.5 + 3.2,
+            r: Math.random() * 7 + 4,
+            rot: Math.random() * Math.PI,
+            vr: (Math.random() - 0.5) * 0.25,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            shape: Math.random() < 0.5 ? 'rect' : 'circle'
+        }));
+
+        const start = performance.now();
+        const durationMs = 2600;
+
+        function anim(t) {
+            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            for (const p of pieces) {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.rot += p.vr;
+                p.vy += 0.02;
+
+                if (p.y > window.innerHeight + 30) {
+                    p.y = -20;
+                    p.x = Math.random() * window.innerWidth;
+                    p.vy = Math.random() * 2.5 + 3.2;
+                }
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rot);
+                ctx.fillStyle = p.color;
+                if (p.shape === 'circle') {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.r * 0.45, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * 0.7);
+                }
+                ctx.restore();
+            }
+
+            if (t - start < durationMs) {
+                requestAnimationFrame(anim);
+            } else {
+                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                canvas.classList.remove('show');
+            }
+        }
+
+        requestAnimationFrame(anim);
+    }
+
+    // Init
+    window.onload = init;
+
+</script>
+</body>
+</html>

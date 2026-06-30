@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Even & Odd</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #ec4899;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --error: #ef4444;
+            --surface: rgba(255, 255, 255, 0.9);
+            --text-main: #1f2937;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(-45deg, #FF6B6B, #4ECDC4, #ffe66d, #1a535c);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Corner Controls --- */
+        .corner-ctrl {
+            position: fixed;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .top-left { top: 20px; left: 20px; }
+        .top-right { top: 20px; right: 20px; }
+        .bottom-right { bottom: 20px; right: 20px; }
+
+        .icon-btn {
+            background: var(--surface);
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .icon-btn:active { transform: scale(0.9); }
+        .icon-btn.hidden { display: none !important; }
+
+        /* Navigation Groups */
+        .nav-group {
+            display: flex;
+            gap: 10px;
+        }
+        .nav-group.hidden { display: none; }
+
+        /* Language Select */
+        select.lang-select {
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: none;
+            background: var(--surface);
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* Bottom Right Pill */
+        .status-pill {
+            background: var(--surface);
+            padding: 8px 15px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-family: 'Fredoka', sans-serif;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* --- Main Cards --- */
+        .view-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none; /* Disabled when hidden */
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        .view-container.active {
+            pointer-events: all;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 20px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 2.5rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Game Elements */
+        .number-circle {
+            width: 160px;
+            height: 160px;
+            background: white;
+            border-radius: 50%;
+            margin: 0 auto 2rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 5rem;
+            color: var(--primary);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .number-circle.pop { transform: scale(1.1); }
+
+        .btn-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .btn-container.hidden { display: none; }
+
+        .game-btn {
+            flex: 1;
+            padding: 1.2rem;
+            border: none;
+            border-radius: 20px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.4rem;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        .game-btn:active {
+            transform: translateY(6px);
+            box-shadow: none;
+        }
+        .game-btn.hidden { display: none; }
+
+        .btn-primary { background: var(--primary); }
+        .btn-secondary { background: var(--secondary); }
+        .btn-retry { background: #f59e0b; width: 100%; }
+        
+        .btn-play {
+            background: #10b981;
+            font-size: 2rem;
+            width: 100%;
+            padding: 1.5rem;
+        }
+
+        .feedback {
+            height: 2rem;
+            font-weight: 800;
+            font-size: 1.5rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+        }
+        .feedback.visible { opacity: 1; transform: translateY(0); }
+        .feedback.correct { color: var(--success); }
+        .feedback.wrong { color: var(--error); }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Top Left: Navigation -->
+    <div class="corner-ctrl top-left">
+        <!-- Home Screen Nav: Back & Home -->
+        <div id="nav-home-screen" class="nav-group">
+            <button id="btn-global-back" class="icon-btn" title="Back">⬅️</button>
+            <button id="btn-global-home" class="icon-btn" title="Home">🏠</button>
+        </div>
+        
+        <!-- Game Screen Nav: Only Back -->
+        <div id="nav-game-screen" class="nav-group hidden">
+            <button id="btn-game-back" class="icon-btn" title="Back">⬅️</button>
+        </div>
+    </div>
+
+    <!-- Top Right: Language -->
+    <div class="corner-ctrl top-right">
+        <select id="lang-select" class="lang-select">
+            <option value="ti" selected>🇪🇷 ትግርኛ</option>
+            <option value="am">🇪🇹 አማርኛ</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="om">🌳 Afan Oromo</option>
+            <option value="so">🇸🇴 Somali</option>
+        </select>
+    </div>
+
+    <!-- Bottom Right: Streak & Sound -->
+    <div class="corner-ctrl bottom-right">
+        <div class="status-pill">
+            <span id="streak-display">🔥 0</span>
+            <div style="width: 1px; height: 20px; background: #ddd;"></div>
+            <span id="btn-sound" style="cursor: pointer;">🔊</span>
+        </div>
+    </div>
+
+    <!-- VIEW: HOME -->
+    <div id="view-home" class="view-container active">
+        <div class="card">
+            <h1 id="txt-title">Number Fun</h1>
+            <p id="txt-subtitle" class="subtitle">Learn Even & Odd Numbers!</p>
+            <button id="btn-start" class="game-btn btn-play">Play ▶️</button>
+        </div>
+    </div>
+
+    <!-- VIEW: GAME -->
+    <div id="view-game" class="view-container">
+        <div class="card">
+            <h1 id="txt-instruction">Even or Odd?</h1>
+            <div id="number-display" class="number-circle">?</div>
+            
+            <!-- Choice Buttons -->
+            <div id="choice-buttons" class="btn-container">
+                <button id="btn-even" class="game-btn btn-primary">Even</button>
+                <button id="btn-odd" class="game-btn btn-secondary">Odd</button>
+            </div>
+
+            <!-- Try Again Button (Initially Hidden) -->
+            <div class="btn-container">
+                <button id="btn-try-again" class="game-btn btn-retry hidden">Try Again 🔄</button>
+            </div>
+
+            <div id="feedback" class="feedback">Good Job!</div>
+        </div>
+    </div>
+
+    <script>
+        /* --- Translation Data --- */
+        const TRANSLATIONS = {
+            en: {
+                title: "Number Fun",
+                subtitle: "Learn Even & Odd Numbers!",
+                play: "Play ▶️",
+                instruction: "Even or Odd?",
+                even: "Even",
+                odd: "Odd",
+                correct: "Awesome!",
+                wrong: "Oops!",
+                tryAgain: "Try Again 🔄",
+                streak: "Streak"
+            },
+            am: {
+                title: "የቁጥር ጨዋታ",
+                subtitle: "ሙሉ እና ጎደሎ ቁጥሮችን ይማሩ!",
+                play: "ተጫወት ▶️",
+                instruction: "ሙሉ ወይስ ጎደሎ?",
+                even: "ሙሉ",
+                odd: "ጎደሎ",
+                correct: "አሪፍ ነው!",
+                wrong: "ተሳስቷል!",
+                tryAgain: "እንደገና ሞክር 🔄",
+                streak: "ተከታታይ"
+            },
+            ti: {
+                title: "ናይ ቁጽሪ ጸወታ",
+                subtitle: "ሙሉእ እና ጎደሎ ቁጽርታት ይመሃሩ!",
+                play: "ተጻወት ▶️",
+                instruction: "ሙሉእ ወይስ ጎደሎ?",
+                even: "ሙሉእ",
+                odd: "ጎደሎ",
+                correct: "ጽቡቕ!",
+                wrong: "ጌጋ!",
+                tryAgain: "እንደገና ፈትን 🔄",
+                streak: "ተኸታታሊ"
+            },
+            om: {
+                title: "Tapha Lakkoofsaa",
+                subtitle: "Hiriyaa fi Kophxe Baradhu!",
+                play: "Taphadhu ▶️",
+                instruction: "Hiriyaa moo Kophxe?",
+                even: "Hiriyaa",
+                odd: "Kophxe",
+                correct: "Baay'ee Gaarii!",
+                wrong: "Dogoggora!",
+                tryAgain: "Irra deebi'ii yaali 🔄",
+                streak: "Walitti"
+            },
+            so: {
+                title: "Ciyaarta Tirada",
+                subtitle: "Baro Dhaban iyo Kisi!",
+                play: "Ciyaar ▶️",
+                instruction: "Dhaban mise Kisi?",
+                even: "Dhaban",
+                odd: "Kisi",
+                correct: "Wanaagsan!",
+                wrong: "Khalad!",
+                tryAgain: "Isku day mar kale 🔄",
+                streak: "Xiriir"
+            }
+        };
+
+        /* --- Sound Engine --- */
+        const SoundEngine = {
+            ctx: null,
+            muted: false,
+            init() {
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+            },
+            playTone(freq, type, duration, startTime = 0) {
+                if (this.muted || !this.ctx) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                const now = this.ctx.currentTime + startTime;
+                osc.start(now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+                osc.stop(now + duration);
+            },
+            playCorrect() {
+                this.playTone(600, 'sine', 0.1, 0);
+                this.playTone(800, 'sine', 0.1, 0.1);
+                this.playTone(1000, 'triangle', 0.3, 0.2);
+            },
+            playWrong() {
+                this.playTone(300, 'sawtooth', 0.2, 0);
+                this.playTone(200, 'sawtooth', 0.3, 0.2);
+            },
+            toggleMute() { this.muted = !this.muted; return this.muted; }
+        };
+
+        /* --- Confetti Engine --- */
+        const Confetti = {
+            canvas: document.getElementById('confetti-canvas'),
+            ctx: document.getElementById('confetti-canvas').getContext('2d'),
+            particles: [],
+            resize() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; },
+            burst() {
+                const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#FFFFFF'];
+                for (let i = 0; i < 40; i++) {
+                    this.particles.push({
+                        x: window.innerWidth / 2, y: window.innerHeight / 2,
+                        vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 1) * 20,
+                        size: Math.random() * 10 + 2, color: colors[Math.floor(Math.random() * colors.length)],
+                        life: 1
+                    });
+                }
+                if (this.particles.length <= 40) this.animate();
+            },
+            animate() {
+                if (this.particles.length === 0) return;
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    let p = this.particles[i];
+                    p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life -= 0.02;
+                    this.ctx.globalAlpha = p.life;
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.fillRect(p.x, p.y, p.size, p.size);
+                    if (p.life <= 0) this.particles.splice(i, 1);
+                }
+                requestAnimationFrame(() => this.animate());
+            }
+        };
+
+        /* --- Game Logic --- */
+        const App = {
+            lang: 'ti',
+            streak: 0,
+            currentNum: 0,
+            view: 'home',
+
+            init() {
+                SoundEngine.init();
+                window.addEventListener('resize', () => Confetti.resize());
+                Confetti.resize();
+
+                // Elements
+                this.dom = {
+                    homeView: document.getElementById('view-home'),
+                    gameView: document.getElementById('view-game'),
+                    
+                    // Nav Groups
+                    navHomeScreen: document.getElementById('nav-home-screen'),
+                    navGameScreen: document.getElementById('nav-game-screen'),
+                    
+                    // Buttons
+                    btnStart: document.getElementById('btn-start'),
+                    btnGlobalBack: document.getElementById('btn-global-back'),
+                    btnGlobalHome: document.getElementById('btn-global-home'),
+                    btnGameBack: document.getElementById('btn-game-back'),
+                    
+                    langSelect: document.getElementById('lang-select'),
+                    btnSound: document.getElementById('btn-sound'),
+                    streak: document.getElementById('streak-display'),
+                    
+                    // Game specific
+                    numDisplay: document.getElementById('number-display'),
+                    choiceButtons: document.getElementById('choice-buttons'),
+                    btnEven: document.getElementById('btn-even'),
+                    btnOdd: document.getElementById('btn-odd'),
+                    btnTryAgain: document.getElementById('btn-try-again'),
+                    feedback: document.getElementById('feedback'),
+                    
+                    // Text
+                    txtTitle: document.getElementById('txt-title'),
+                    txtSubtitle: document.getElementById('txt-subtitle'),
+                    txtInst: document.getElementById('txt-instruction')
+                };
+
+                // Listeners
+                this.dom.btnStart.addEventListener('click', () => this.setView('game'));
+                
+                // Nav Listeners
+                this.dom.btnGlobalBack.addEventListener('click', () => window.history.back());
+                this.dom.btnGlobalHome.addEventListener('click', () => window.location.reload());
+                this.dom.btnGameBack.addEventListener('click', () => this.setView('home'));
+
+                this.dom.langSelect.addEventListener('change', (e) => this.setLang(e.target.value));
+                this.dom.btnSound.addEventListener('click', () => {
+                    const m = SoundEngine.toggleMute();
+                    this.dom.btnSound.textContent = m ? '🔇' : '🔊';
+                });
+                
+                this.dom.btnEven.addEventListener('click', () => this.check(true));
+                this.dom.btnOdd.addEventListener('click', () => this.check(false));
+                this.dom.btnTryAgain.addEventListener('click', () => this.retry());
+
+                this.setLang('ti');
+            },
+
+            setView(view) {
+                this.view = view;
+                if (view === 'home') {
+                    this.dom.homeView.classList.add('active');
+                    this.dom.gameView.classList.remove('active');
+                    
+                    this.dom.navHomeScreen.classList.remove('hidden');
+                    this.dom.navGameScreen.classList.add('hidden');
+
+                    this.streak = 0; // Reset streak on exit
+                    this.updateStreak();
+                } else {
+                    this.dom.homeView.classList.remove('active');
+                    this.dom.gameView.classList.add('active');
+                    
+                    this.dom.navHomeScreen.classList.add('hidden');
+                    this.dom.navGameScreen.classList.remove('hidden');
+
+                    this.nextRound();
+                }
+            },
+
+            setLang(lang) {
+                this.lang = lang;
+                const t = TRANSLATIONS[lang];
+                this.dom.txtTitle.textContent = t.title;
+                this.dom.txtSubtitle.textContent = t.subtitle;
+                this.dom.btnStart.textContent = t.play;
+                this.dom.txtInst.textContent = t.instruction;
+                this.dom.btnEven.textContent = t.even;
+                this.dom.btnOdd.textContent = t.odd;
+                this.dom.btnTryAgain.textContent = t.tryAgain;
+                this.updateStreak();
+            },
+
+            nextRound() {
+                // Reset UI state for new round
+                this.dom.choiceButtons.classList.remove('hidden');
+                this.dom.btnTryAgain.classList.add('hidden');
+                this.dom.feedback.classList.remove('visible');
+
+                this.currentNum = Math.floor(Math.random() * 100) + 1;
+                this.dom.numDisplay.textContent = this.currentNum;
+                
+                // Animation
+                this.dom.numDisplay.classList.remove('pop');
+                void this.dom.numDisplay.offsetWidth;
+                this.dom.numDisplay.classList.add('pop');
+            },
+
+            retry() {
+                // Restore buttons for a second chance on the same number
+                this.dom.choiceButtons.classList.remove('hidden');
+                this.dom.btnTryAgain.classList.add('hidden');
+                this.dom.feedback.classList.remove('visible');
+            },
+
+            check(isEvenSelection) {
+                const isNumEven = this.currentNum % 2 === 0;
+                const correct = isEvenSelection === isNumEven;
+
+                if (correct) {
+                    this.streak++;
+                    SoundEngine.playCorrect();
+                    Confetti.burst();
+                    this.showFeedback(TRANSLATIONS[this.lang].correct, 'correct');
+                    this.updateStreak();
+                    // Move to next round automatically if correct
+                    setTimeout(() => this.nextRound(), 1000);
+                } else {
+                    this.streak = 0;
+                    this.updateStreak();
+                    SoundEngine.playWrong();
+                    this.showFeedback(TRANSLATIONS[this.lang].wrong, 'wrong');
+                    
+                    // Wrong answer logic: Show Try Again
+                    this.dom.choiceButtons.classList.add('hidden');
+                    this.dom.btnTryAgain.classList.remove('hidden');
+                }
+            },
+
+            updateStreak() {
+                this.dom.streak.textContent = `🔥 ${this.streak}`;
+            },
+
+            showFeedback(msg, type) {
+                this.dom.feedback.textContent = msg;
+                this.dom.feedback.className = `feedback visible ${type}`;
+                // We don't auto-hide feedback on wrong answer until they click try again
+                if (type === 'correct') {
+                     setTimeout(() => this.dom.feedback.classList.remove('visible'), 1000);
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => App.init());
+    </script>
+</body>
+</html>

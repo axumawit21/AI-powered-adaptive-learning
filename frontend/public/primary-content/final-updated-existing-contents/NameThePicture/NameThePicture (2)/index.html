@@ -1,0 +1,1231 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Name The Picture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    .correct {
+      animation: pulse 0.5s ease-in-out;
+      background-color: #e7f0ff !important;
+    }
+    
+    .wrong {
+      animation: shake 0.3s ease-in-out;
+      background-color: #ffebee !important;
+    }
+    
+    :root {
+      --primary-color: #4361ee;
+      --secondary-color: #3a0ca3;
+      --accent-color: #4cc9f0;
+      --success-color: #4caf50;
+      --error-color: #f72585;
+      --light-color: #f8f9fa;
+      --dark-color: #212529;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #77d320, #1783b6);
+      font-family: 'Nunito', sans-serif;
+      color: var(--dark-color);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.35);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+    }
+
+    #header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #header h1 {
+      font-family: 'Fredoka One', cursive;
+      font-size: 2.5rem;
+      margin: 0;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .score-container {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 15px;
+      border-radius: 50px;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    .lang-select {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    #langSelect {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 20px;
+      padding: 6px 28px 6px 12px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #1f2937;
+      box-shadow: var(--shadow);
+      background-image: linear-gradient(135deg, transparent 60%, rgba(0,0,0,0.15) 60%), linear-gradient(45deg, rgba(0,0,0,0.15) 40%, transparent 40%);
+      background-repeat: no-repeat;
+      background-position: right 10px center, right 4px center;
+      background-size: 8px 8px, 8px 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.08s ease;
+    }
+
+    #langSelect:hover {
+      background: rgba(255,255,255,0.98);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+    }
+
+    #langSelect:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.35);
+    }
+
+    #langSelect:active {
+      transform: translateY(1px);
+    }
+
+    @media (max-width: 900px) {
+      .lang-select {
+        position: relative;
+        left: auto;
+        top: auto;
+        transform: none;
+        margin-bottom: 10px;
+      }
+    }
+
+    .game-area {
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 10px;
+      align-items: flex-start;
+      height: 100%;
+      align-content: flex-start;
+    }
+
+    #picture {
+      grid-column: 1;
+      grid-row: 1;
+      position: relative;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .image-container {
+      width: 100%;
+      max-width: 400px;
+      background: white;
+      border-radius: 15px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 5px solid white;
+      margin: 0 auto;
+      line-height: 0; /* Removes space below image */
+    }
+    
+    .image-container img {
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    #pic {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      transition: var(--transition);
+    }
+
+    #pic:hover {
+      transform: scale(1.05);
+    }
+
+    .right-column {
+      grid-column: 2;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: 100%;
+    }
+    
+    .keyboardCon {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      width: 100%;
+      margin-top: 0;
+      padding: 8px;
+    }
+
+    .input-group {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 0;
+    }
+
+    #textField {
+      width: 100%;
+      padding: 15px 20px;
+      font-size: 1.2rem;
+      border: 3px solid #e9ecef;
+      border-radius: 50px;
+      outline: none;
+      transition: var(--transition);
+      text-align: center;
+      font-weight: bold;
+      color: var(--dark-color);
+      appearance: textfield; /* Standard property */
+      -moz-appearance: textfield; /* Firefox */
+    }
+    
+    /* Hide number input arrows in Chrome, Safari, Edge, Opera */
+    #textField::-webkit-outer-spin-button,
+    #textField::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    #textField:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+    }
+
+    #textField::placeholder {
+      color: #adb5bd;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+      box-shadow: var(--shadow);
+    }
+
+    .btn i {
+      font-size: 1.1rem;
+    }
+
+    .btn-clear {
+      background-color: #e9ecef;
+      color: var(--dark-color);
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal.show {
+      display: flex;
+      opacity: 1;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .modal-content {
+      background: linear-gradient(145deg, #ffffff, #f8f9fa);
+      padding: 0;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 450px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+      transform: translateY(20px);
+      opacity: 0;
+      animation: modalSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s forwards;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    @keyframes modalSlideIn {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Celebration styles */
+    .celebration {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #f00;
+      opacity: 0;
+      animation: confetti 5s ease-in-out infinite;
+    }
+
+    .confetti:nth-child(1) { left: 10%; animation-delay: 0s; background: #4361ee; }
+    .confetti:nth-child(2) { left: 20%; animation-delay: 0.5s; background: #3a0ca3; }
+    .confetti:nth-child(3) { left: 30%; animation-delay: 1s; background: #4cc9f0; }
+    .confetti:nth-child(4) { left: 40%; animation-delay: 1.5s; background: #4895ef; }
+    .confetti:nth-child(5) { left: 50%; animation-delay: 0.2s; background: #4361ee; }
+    .confetti:nth-child(6) { left: 60%; animation-delay: 0.7s; background: #3a0ca3; }
+    .confetti:nth-child(7) { left: 70%; animation-delay: 1.2s; background: #4cc9f0; }
+    .confetti:nth-child(8) { left: 80%; animation-delay: 1.7s; background: #4895ef; }
+    .confetti:nth-child(9) { left: 90%; animation-delay: 0.4s; background: #4361ee; }
+    .confetti:nth-child(10) { left: 100%; animation-delay: 0.9s; background: #3a0ca3; }
+
+    @keyframes confetti {
+      0% {
+        transform: translateY(-100%) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    .modal-body {
+      position: relative;
+      z-index: 2;
+      padding: 2.5rem 2rem 2rem;
+      background: white;
+      border-radius: 20px;
+    }
+
+    .trophy {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      animation: bounce 2s infinite;
+      display: inline-block;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-15px); }
+      60% { transform: translateY(-7px); }
+    }
+
+    .modal h2 {
+      color: #2c3e50;
+      margin: 0 0 0.5rem 0;
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .congrats {
+      color: #666;
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+
+    .score-display {
+      background: rgba(67, 97, 238, 0.1);
+      border-radius: 15px;
+      padding: 1.5rem 1rem;
+      margin: 1.5rem 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .score-label {
+      font-size: 1.1rem;
+      color: #555;
+      margin-bottom: 0.5rem;
+    }
+
+    .score-value {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #4361ee;
+      line-height: 1;
+      text-shadow: 0 2px 4px rgba(67, 97, 238, 0.2);
+    }
+
+    .encouragement {
+      margin: 2rem 0 1.5rem;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .encouragement p {
+      margin: 0.5rem 0;
+    }
+
+    .modal-buttons {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .modal-btn {
+      background: linear-gradient(135deg, #4361ee, #3a0ca3);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(58, 12, 163, 0.2);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      min-width: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .modal-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(58, 12, 163, 0.3);
+    }
+
+    .modal-btn:active {
+      transform: translateY(1px);
+    }
+
+    .modal-btn i {
+      font-size: 1.1em;
+    }
+
+    .btn-clear:hover {
+      background-color: #dee2e6;
+      transform: translateY(-2px);
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+    }
+
+    .btn-submit:hover {
+      filter: brightness(1.05);
+      transform: translateY(-2px);
+    }
+
+    .keyboardCon {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 14px;
+      max-width: 800px;
+      margin: 0 auto;
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
+    
+    @media (min-width: 768px) {
+      .keyboardCon {
+        max-height: 140px;
+        flex-direction: column;
+        flex-wrap: wrap;
+        align-content: center;
+        gap: 5px 10px;
+      }
+    }
+
+    .key {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(180deg, #ffffff, #f4f6fa);
+      border-radius: 10px;
+      border: 1px solid #e9eef5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      user-select: none;
+      flex-shrink: 0;
+      color: #1f2937;
+    }
+
+    .key:hover {
+      background: #9cbcec;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    }
+
+    .key:active {
+      transform: translateY(1px);
+    }
+
+    .key.special {
+      width: 80px;
+      background: linear-gradient(180deg, #ffffff, #f4f6fa);
+      font-size: 0.95rem;
+      border: 1px solid #e9eef5;
+    }
+
+    .key.icon {
+      width: 80px;
+      background: linear-gradient(180deg, #ffffff, #f4f6fa);
+      font-weight: 700;
+      border: 1px solid #e9eef5;
+    }
+
+    @media (max-width: 900px) {
+      .game-area {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        gap: 10px;
+        padding: 8px;
+      }
+      
+      #picture {
+        grid-row: 1;
+      }
+      
+      .right-column {
+        grid-column: 1;
+        grid-row: 2;
+      }
+      
+      .keyboardCon {
+        grid-column: 1;
+        grid-row: 3;
+      }
+      
+      .image-container {
+        max-width: 300px;
+        margin: 0 auto;
+      }
+      
+      .container {
+        padding: 15px;
+        margin: 10px;
+      }
+
+      #header h1 {
+        font-size: 1.8rem;
+        padding-right: 100px;
+      }
+
+      .score-container {
+        position: relative;
+        right: auto;
+        top: auto;
+        transform: none;
+        display: inline-block;
+        margin-top: 10px;
+      }
+
+      .key {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .game-area {
+        padding: 5px;
+        gap: 8px;
+      }
+      
+      #header h1 {
+        font-size: 1.5rem;
+        padding-right: 0;
+        text-align: center;
+      }
+
+      .image-container {
+        width: 100%;
+        max-width: 250px;
+        aspect-ratio: 1/1;
+      }
+
+      .keyboardCon {
+        gap: 5px;
+        padding: 10px;
+      }
+
+      .key {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+        border-radius: 8px;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .container {
+        padding-bottom: 60px;
+      }
+      
+      .score-container {
+        margin: 10px 0 20px 0;
+        text-align: center;
+        position: relative;
+        z-index: 10;
+      }
+      
+      .score {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #fff;
+        background-color: #3498db;
+        padding: 8px 16px;
+        border-radius: 24px;
+        display: inline-block;
+        box-shadow: 0 2px 5px rgba(12, 189, 12, 0.2);
+        border: 2px solid #2980b9;
+      }
+      
+      .score span#score {
+        font-size: 1.5rem;
+        color: #f1c40f;
+        margin-left: 5px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal">
+      <div class="modal-content">
+        <div class="celebration">
+          <div class="confetti"></div>
+          <div class="confetti"></div>
+          <div class="confetti"></div>
+          <div class="confetti"></div>
+          <div class="confetti"></div>
+          <div class="confetti"></div>
+          <div class="confetti"></div>
+          <div class="confetti"></div>
+          <div class="confetti"></div>
+          <div class="confetti"></div>
+        </div>
+        <div class="modal-body">
+          <div class="trophy">🏆</div>
+          <h2 id="modalTitle">Amazing! You Did It! 🎉</h2>
+          <p class="congrats" id="modalCongrats">Congratulations on completing all the words!</p>
+          
+          <div class="score-display">
+            <div class="score-label" id="finalScoreLabel">Your Final Score:</div>
+            <div class="score-value" id="finalScore">0</div>
+          </div>
+          
+          <div class="encouragement">
+            <p id="enc1">You're a spelling superstar! ✨</p>
+            <p id="enc2">Ready for another round?</p>
+          </div>
+          
+          <div class="modal-buttons">
+            <button id="restartBtn" class="modal-btn play-again">
+              <i class="fas fa-redo"></i> <span id="playAgainLabel">Play Again</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="header">
+      <div class="lang-select">
+        <select id="langSelect">
+          <option value="en">English</option>
+          <option value="am">አማርኛ</option>
+          <option value="ti">ትግርኛ</option>
+          <option value="om">Afan Oromo</option>
+          <option value="so">Soomaali</option>
+        </select>
+      </div>
+      <h1 id="headerTitle">Name The Picture</h1>
+      <div class="score-container">
+        <div class="score"><span id="scoreLabel">Score:</span> <span id="score">0</span></div>
+      </div>
+    </div>
+    <div class="game-area">
+      <div id="picture">
+        <div class="image-container">
+          <img id="pic" src="" alt="Guess the word" />
+        </div>
+      </div>
+      <div class="right-column">
+        <div class="input-group">
+          <input type="text" id="textField" placeholder="Type the word here..." autofocus />
+          <div class="button-group">
+            <button class="btn btn-clear" id="clear">
+              <i class="fas fa-eraser"></i> <span id="clearLabel">Clear</span>
+            </button>
+            <button class="btn btn-submit" id="ok" title="Submit (Enter)">
+              <i class="fas fa-check"></i> <span id="submitLabel">Submit</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="keyboardCon"></div>
+    </div>
+  </div>
+  <audio src="" id="submitSound" autoplay></audio>
+  
+  <script>
+    // Global variables
+    var i = 0;
+    var arrOfStr2 = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
+    var arrOfStr = ["CHOCOLATE", "DONUTE", "HEART"];
+    var currentIndex = 0; // Track current word index
+    var score = 0;
+    var scoreElement = null;
+    var textInput = null;
+    var isCaps = true;
+    var currentLang = localStorage.getItem('lang') || 'en';
+    var translations = {
+      en: {
+        appTitle: 'Name The Picture',
+        scoreLabel: 'Score:',
+        clearLabel: 'Clear',
+        submitLabel: 'Submit',
+        placeholderTypeHere: 'Type the word here...',
+        placeholderEmpty: 'Please enter a word',
+        placeholderCorrect: 'Correct!',
+        placeholderTryAgain: 'Try Again',
+        modalTitle: 'Amazing! You Did It! 🎉',
+        modalCongrats: 'Congratulations on completing all the words!',
+        finalScoreLabel: 'Your Final Score:',
+        enc1: "You're a spelling superstar! ✨",
+        enc2: 'Ready for another round?',
+        playAgain: 'Play Again'
+      },
+      am: {
+        appTitle: 'ስዕሉን ሰይም',
+        scoreLabel: 'ነጥብ:',
+        clearLabel: 'አጥፋ',
+        submitLabel: 'አስገባ',
+        placeholderTypeHere: 'ቃሉን እዚህ ጻፍ...',
+        placeholderEmpty: 'እባክዎ ቃል ያስገቡ',
+        placeholderCorrect: 'ትክክል!',
+        placeholderTryAgain: 'እንደገና ሞክር',
+        modalTitle: 'በጣም ጥሩ! አሸናፊ ሆነህ! 🎉',
+        modalCongrats: 'ሁሉንም ቃላት ጨርሰሃል! ',
+        finalScoreLabel: 'የመጨረሻ ነጥብዎ:',
+        enc1: 'የፊደል አለቃ ነህ! ✨',
+        enc2: 'ሌላ ዙር ዝግጁ ነህ? ',
+        playAgain: 'እንደገና ይጫወቱ'
+      },
+      ti: {
+        appTitle: 'ስእሊ ሰይም',
+        scoreLabel: 'ነጥቢ:',
+        clearLabel: 'ሰርዝ',
+        submitLabel: 'መልስ',
+        placeholderTypeHere: 'ንቃል ኣብዚ ጽሓፍ...',
+        placeholderEmpty: 'ቃል ኣእትው ኣብዚ',
+        placeholderCorrect: 'ትክክል!',
+        placeholderTryAgain: 'ድጋሜ ፈትን',
+        modalTitle: 'ጎበዝ! ተኣምርካ! 🎉',
+        modalCongrats: 'ኩሉ ቃላት ተዛዚሙ! ',
+        finalScoreLabel: 'መወዳእታ ነጥቢኻ:',
+        enc1: 'ናይ ፊደል ጀንበር ኢኻ! ✨',
+        enc2: 'ካሊእ ዙር ዝግጁ ዲኻ?',
+        playAgain: 'ደጊምካ ተጨወት'
+      },
+      om: {
+        appTitle: 'Suuraa Maqaa',
+        scoreLabel: "Bu'aa:",
+        clearLabel: 'Haqi',
+        submitLabel: 'Galchi',
+        placeholderTypeHere: 'Jecha asitti barreessi...',
+        placeholderEmpty: 'Maaloo jecha galchi',
+        placeholderCorrect: 'Sirrii!',
+        placeholderTryAgain: "Irra deebi'i",
+        modalTitle: 'Bareedduu! Milkaa\'eetta! 🎉',
+        modalCongrats: 'Jecha mara xumurte!',
+        finalScoreLabel: "Bu'aa Ijoo:",
+        enc1: 'Ati dandeettii qubee qabda! ✨',
+        enc2: 'Gara marsaa itti aanutti qophooftee?',
+        playAgain: "Irra deebi'ii taphadhu"
+      },
+      so: {
+        appTitle: 'Magaca Sawirka',
+        scoreLabel: 'Dhibco:',
+        clearLabel: 'Tirtir',
+        submitLabel: 'Gudbi',
+        placeholderTypeHere: 'Ereyga halkan ku qor...',
+        placeholderEmpty: 'Fadlan geli erey',
+        placeholderCorrect: 'Saxan!',
+        placeholderTryAgain: 'Mar kale isku day',
+        modalTitle: 'Aad u fiican! Waad guuleysatay! 🎉',
+        modalCongrats: 'Dhammaystirtay dhammaan erayada!',
+        finalScoreLabel: 'Dhibcaha Ugu Dambeeya:',
+        enc1: 'Waa khabiir higgaad! ✨',
+        enc2: 'Diyaar ma u tahay wareeg kale?',
+        playAgain: 'Ciyaar mar kale'
+      }
+    };
+
+    function t(key) {
+      var lang = translations[currentLang] || translations['en'];
+      return lang[key] || translations['en'][key] || key;
+    }
+
+    function applyTranslations() {
+      var el;
+      el = document.getElementById('headerTitle'); if (el) el.textContent = t('appTitle');
+      el = document.getElementById('scoreLabel'); if (el) el.textContent = t('scoreLabel');
+      el = document.getElementById('clearLabel'); if (el) el.textContent = t('clearLabel');
+      el = document.getElementById('submitLabel'); if (el) el.textContent = t('submitLabel');
+      el = document.getElementById('modalTitle'); if (el) el.textContent = t('modalTitle');
+      el = document.getElementById('modalCongrats'); if (el) el.textContent = t('modalCongrats');
+      el = document.getElementById('finalScoreLabel'); if (el) el.textContent = t('finalScoreLabel');
+      el = document.getElementById('enc1'); if (el) el.textContent = t('enc1');
+      el = document.getElementById('enc2'); if (el) el.textContent = t('enc2');
+      el = document.getElementById('playAgainLabel'); if (el) el.textContent = t('playAgain');
+      if (textInput) { textInput.placeholder = t('placeholderTypeHere'); }
+      var langSel = document.getElementById('langSelect');
+      if (langSel) { langSel.value = currentLang; }
+      var titleEl = document.querySelector('title'); if (titleEl) titleEl.textContent = t('appTitle');
+    }
+    
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get DOM elements
+      textInput = document.getElementById("textField");
+      scoreElement = document.getElementById("score");
+      
+      // Initialize the game
+      initializeGame();
+      var langSel = document.getElementById('langSelect');
+      if (langSel) {
+        langSel.value = currentLang;
+        langSel.onchange = function() {
+          currentLang = this.value;
+          localStorage.setItem('lang', currentLang);
+          applyTranslations();
+        };
+      }
+      
+      function id(id) {
+        return document.getElementById(id);
+      }
+      
+      function clas(clas) {
+        return document.getElementsByClassName(clas);
+      }
+
+      let pageTitle = ["Word"];//end-var
+      
+      function setPageTitle(selector) {
+        // Only set the document title, don't modify the header
+        let title = document.querySelector("title");
+        if (title) {
+          title.innerText = pageTitle[0];
+        }
+      }
+      setPageTitle('#header');
+    }); // End of DOMContentLoaded
+    
+    // Move these functions outside so they're accessible everywhere
+    function id(id) {
+      return document.getElementById(id);
+    }
+    
+    function clas(clas) {
+      return document.getElementsByClassName(clas);
+    }
+
+    function showGameOver() {
+      const modal = document.getElementById('gameOverModal');
+      if (modal) {
+        // Update the final score
+        document.getElementById('finalScore').textContent = score;
+        
+        // Show the modal with animations
+        modal.style.display = 'flex';
+        setTimeout(() => {
+          modal.classList.add('show');
+        }, 10);
+        
+        // Add confetti effect
+        startConfetti();
+        
+        // Play celebration sound if available
+        const winSound = new Audio();
+        winSound.src = 'https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3';
+        winSound.volume = 0.5;
+        winSound.play().catch(() => {});
+        
+        // Add click handler for restart button
+        const restartBtn = document.getElementById('restartBtn');
+        if (restartBtn) {
+          restartBtn.onclick = function() {
+            modal.classList.remove('show');
+            setTimeout(() => {
+              modal.style.display = 'none';
+              initializeGame();
+            }, 300);
+          };
+        }
+      }
+    }
+    
+    function startConfetti() {
+      // Confetti is handled by CSS animations
+      // This function can be extended if more dynamic confetti is needed
+    }
+    
+    // Hide the game container when game is over
+    const gameContainer = document.querySelector('.container');
+    if (gameContainer) {
+      gameContainer.style.display = 'none';
+    }
+
+    function initializeGame() {
+        // Reset game state
+        currentIndex = 0;
+        score = 0;
+        isCaps = true;
+        i = 0; // reset keyboard letter index
+
+        // Initialize score display
+        if (scoreElement) {
+            scoreElement.textContent = score;
+        } else {
+            scoreElement = document.getElementById('score');
+            if (scoreElement) {
+                scoreElement.textContent = score;
+            }
+        }
+        
+        // Show the game container
+        const gameContainer = document.querySelector('.container');
+        if (gameContainer) {
+            gameContainer.style.display = 'block';
+        }
+        
+        // Hide game over modal if visible
+        const modal = document.getElementById('gameOverModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        
+        // Clear and recreate keyboard
+        const kb = document.getElementsByClassName('keyboardCon')[0];
+        if (kb) kb.innerHTML = '';
+        elementCreation();
+
+        // Initialize interactions and first image
+        interactions();
+        displayImage();
+        applyTranslations();
+        
+        if (textInput) {
+            textInput.value = '';
+            textInput.focus();
+        }
+    }
+    
+    function updateScoreDisplay() {
+        if (scoreElement) {
+            scoreElement.textContent = score;
+        }
+    }
+
+    function elementCreation() {
+      const a = clas("keyboardCon")[0];
+      if (!a) return;
+      // Ensure fresh keyboard
+      a.innerHTML = '';
+      i = 0;
+
+      // Caps toggle key
+      const caps = document.createElement('div');
+      caps.className = 'key special';
+      caps.id = 'capsKey';
+      caps.textContent = 'Caps';
+      a.appendChild(caps);
+
+      // Backspace key directly after Caps
+      const backspace = document.createElement('div');
+      backspace.className = 'key icon';
+      backspace.id = 'backspaceKey';
+      backspace.textContent = '⌫';
+      a.appendChild(backspace);
+
+      // Letter keys
+      for (let k = 0; k < arrOfStr2.length; k++) {
+        const b = document.createElement("div");
+        b.className = "key";
+        b.dataset.letter = arrOfStr2[k];
+        b.textContent = isCaps ? arrOfStr2[k].toUpperCase() : arrOfStr2[k].toLowerCase();
+        a.appendChild(b);
+        i++;
+      }
+    }
+
+    function getNextWordIndex() {
+      // Move to next word
+      currentIndex++;
+      
+      // Check if we've reached the end
+      if (currentIndex >= arrOfStr.length) {
+        showGameOver();
+        return -1;
+      }
+      
+      return currentIndex;
+    }
+    
+    function interactions() {
+      // Get the current word safely
+      const currentWord = arrOfStr[currentIndex];
+      if (!currentWord) {
+        return;
+      }
+      
+      // Letter key clicks
+      const keys = document.querySelectorAll('.key');
+      keys.forEach(k => {
+        if (k.dataset && k.dataset.letter) {
+          k.onclick = function () {
+            const ch = k.dataset.letter;
+            textInput.value = textInput.value + (isCaps ? ch.toUpperCase() : ch.toLowerCase());
+            textInput.focus();
+          };
+        }
+      });
+
+      // Caps toggle
+      const capsKey = document.getElementById('capsKey');
+      if (capsKey) {
+        capsKey.onclick = function () {
+          isCaps = !isCaps;
+          document.querySelectorAll('.key').forEach(k => {
+            if (k.dataset && k.dataset.letter) {
+              const ch = k.dataset.letter;
+              k.textContent = isCaps ? ch.toUpperCase() : ch.toLowerCase();
+            }
+          });
+        };
+      }
+
+      const backspaceKey = document.getElementById('backspaceKey');
+      if (backspaceKey) {
+        backspaceKey.onclick = function () {
+          textInput.value = textInput.value.slice(0, -1);
+          textInput.focus();
+        };
+      }
+      id("clear").onclick = function () {
+        textInput.value = "";
+        textInput.focus();
+        textInput.placeholder = t('placeholderTypeHere');
+      };
+
+      id("ok").onclick = function () {
+        submit();
+      };
+
+      textInput.onkeypress = function (e) {
+        if (e.keyCode == 32 || e.keyCode == 13) {
+          submit();
+        }
+      };
+
+      function submit() {
+      const input = textInput.value.trim().toLowerCase();
+      const currentWord = arrOfStr[currentIndex].toLowerCase();
+      
+      if (input === '') {
+        textInput.placeholder = t('placeholderEmpty');
+        textInput.classList.add('wrong');
+        setTimeout(() => textInput.classList.remove('wrong'), 500);
+        return;
+      }
+      
+      // Play sound
+      const sound = id("submitSound");
+      sound.currentTime = 0;
+      
+      if (input === currentWord) {
+        // Correct answer
+        score += 10;
+        updateScoreDisplay();
+        textInput.placeholder = t('placeholderCorrect');
+        textInput.classList.add('correct');
+        sound.src = "./assets/timer.mp3";
+        
+        // Move to next level after delay
+        setTimeout(() => {
+          textInput.classList.remove('correct');
+          textInput.value = "";
+          textInput.placeholder = t('placeholderTypeHere');
+          
+          // Get next word index
+          const nextIndex = getNextWordIndex();
+          if (nextIndex !== -1) {
+            // Update the image for the next word
+            displayImage();
+          }
+        }, 800);
+        
+      } else {
+        // Wrong answer
+        score = Math.max(0, score - 5); // Decrease score by 5, but not below 0
+        updateScoreDisplay();
+        textInput.value = "";
+        textInput.placeholder = t('placeholderTryAgain');
+        textInput.classList.add('wrong');
+        sound.src = "./assets/17.wav";
+        
+        // Shake animation for wrong answer
+        const gameArea = document.querySelector('.game-area');
+        if (gameArea) {
+          gameArea.style.animation = 'shake 0.5s';
+          setTimeout(() => {
+            gameArea.style.animation = '';
+          }, 500);
+        }
+        
+        setTimeout(() => {
+          textInput.classList.remove('wrong');
+          textInput.focus();
+        }, 500);
+      }
+      
+      // Play sound
+      sound.play().catch(e => console.log("Audio play failed:", e));
+    }
+    }
+
+    function displayImage() {
+      // Get the current word
+      const currentWord = arrOfStr[currentIndex];
+      if (!currentWord) return;
+      
+      // Use the full word (converted to lowercase) as the filename
+      const imagePath = `./assets/${currentWord.toLowerCase()}.png`;
+      
+      // Update the image source
+      const picElement = id("pic");
+      picElement.src = imagePath;
+      picElement.title = `Guess the word: ${currentWord}`;
+    }
+  </script>
+</html>

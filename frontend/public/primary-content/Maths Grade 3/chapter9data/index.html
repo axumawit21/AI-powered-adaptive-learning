@@ -1,0 +1,572 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Graph Builder - ስእላዊ ግራፍ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sky-top: #4FC3F7;
+            --sky-bottom: #81D4FA;
+            --grass-light: #7CB342;
+            --grass-dark: #558B2F;
+            --line-color: #33691E;
+            --text-color: #37474F;
+            --primary: #4361ee;
+            --secondary: #f72585;
+            --ball-size: 50px; 
+            --ball-gap: 2px;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-bottom) 40%, var(--grass-light) 40%, var(--grass-light) 100%);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+            touch-action: none;
+        }
+
+        /* --- Header --- */
+        header {
+            width: 100%;
+            padding: 10px 30px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            border-bottom: 4px solid var(--grass-dark);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header-item-left { display: flex; justify-content: flex-start; }
+        .header-item-right { display: flex; justify-content: flex-end; }
+
+        .grade-badge {
+            background: var(--secondary); color: white; width: 45px; height: 45px;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.4rem; border: 3px solid white;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1); transform: rotate(-5deg);
+        }
+
+        h1 { margin: 0; color: var(--text-color); font-size: 1.6rem; font-weight: 900; letter-spacing: -1px; text-align: center; }
+
+        /* Custom Dropdown */
+        .custom-select-wrapper { position: relative; display: inline-block; cursor: pointer; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; font-weight: 800; color: var(--grass-dark);
+            height: 40px; background: white; border-radius: 20px;
+            width: 160px; border: 2px solid var(--grass-dark);
+        }
+        .custom-options {
+            position: absolute; top: 115%; right: 0; left: 0;
+            background: white; opacity: 0; visibility: hidden;
+            pointer-events: none; transform: translateY(-10px);
+            transition: all 0.3s ease; display: flex; flex-direction: column;
+            border-radius: 15px; padding: 6px; box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border: 1px solid #eee; z-index: 200;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; pointer-events: all; transform: translateY(0); }
+        .custom-option { padding: 10px; border-radius: 10px; cursor: pointer; font-weight: 600; color: #444; font-size: 0.9rem; }
+        .custom-option:hover { background: #f0fdf4; color: var(--grass-dark); }
+
+        /* --- Game Container --- */
+        #game-container {
+            flex: 1; 
+            width: 100%; 
+            max-width: 800px;
+            display: flex; 
+            flex-direction: column;
+            padding: 15px; 
+            box-sizing: border-box;
+            position: relative; 
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        /* Survey Board */
+        .clipboard {
+            background: #FFECB3;
+            border-radius: 15px;
+            padding: 12px 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            position: relative;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-top: 10px solid #8D6E63;
+            flex-shrink: 0;
+            z-index: 20;
+        }
+        .data-title { font-size: 1.1rem; font-weight: 900; color: #5D4037; margin-bottom: 8px; }
+        .data-row { display: flex; width: 100%; justify-content: space-around; }
+        .data-item {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 1.4rem; font-weight: 900; color: #333;
+            background: rgba(255,255,255,0.6); padding: 6px 16px; border-radius: 12px;
+        }
+
+        /* Graph Area */
+        .graph-area {
+            flex: 1;
+            min-height: 0;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
+            border-bottom: 5px solid var(--line-color);
+            border-left: 5px solid var(--line-color);
+            margin-bottom: 10px;
+            margin-left: 40px;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            position: relative;
+            overflow: visible; 
+        }
+
+        .grid-line {
+            position: absolute; width: 100%; height: 1px; background: rgba(0,0,0,0.1);
+            left: 0; z-index: -1; pointer-events: none;
+        }
+        .grid-num {
+            position: absolute; left: -35px; 
+            font-size: 1.1rem; color: var(--line-color); font-weight: 900;
+            display: flex; align-items: center; justify-content: flex-end;
+            width: 30px; height: 0;
+        }
+
+        .graph-col {
+            width: calc(var(--ball-size) + 30px);
+            height: 100%;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px 15px 0 0;
+        }
+        .graph-col.highlight { background: rgba(255,255,255,0.3); box-shadow: inset 0 0 15px rgba(255,255,255,0.5); }
+
+        .col-label {
+            position: absolute; bottom: -45px;
+            font-size: 1.8rem;
+            background: white;
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Footer */
+        .footer-area {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            height: 100px;
+            width: 100%;
+            position: relative;
+        }
+
+        .ball-bin {
+            flex: 1;
+            height: 100%;
+            background: rgba(255,255,255,0.3);
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            align-items: center;
+            padding: 0 20px;
+            border: 3px dashed var(--grass-dark);
+        }
+
+        .ball {
+            width: var(--ball-size); 
+            height: var(--ball-size);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: calc(var(--ball-size) * 0.6); 
+            margin-bottom: var(--ball-gap);
+            box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            background-color: white;
+            flex-shrink: 0;
+        }
+        
+        .ball-soccer { background: radial-gradient(circle at 30% 30%, #fff, #bbb); border: 2px solid #333; }
+        .ball-soccer::after { content: '⚽'; }
+        
+        .ball-basket { background: radial-gradient(circle at 30% 30%, #FF9800, #E65100); border: 2px solid #BF360C; }
+        .ball-basket::after { content: '🏀'; }
+
+        .source-ball { cursor: grab; transform: scale(1.1); }
+        .source-ball:active { cursor: grabbing; transform: scale(0.9); }
+
+        .drag-clone { position: fixed; pointer-events: none; z-index: 1000; width: var(--ball-size); height: var(--ball-size); }
+
+        .btn-check {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: #FFD700; color: #333; border: 4px solid #FBC02D;
+            font-size: 2rem; cursor: pointer;
+            box-shadow: 0 6px 0 #D4AF37;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-check:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Overlays */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(8px); padding: 20px;
+        }
+        .overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+        
+        .modal {
+            background: white; padding: 40px; border-radius: 40px;
+            text-align: center; max-width: 450px; width: 95%;
+            border: 10px solid var(--grass-dark);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        }
+        .modal-icon { font-size: 7rem; display: block; margin-bottom: 20px; }
+        .modal-title { font-size: 2.5rem; font-weight: 900; color: var(--text-color); margin-bottom: 15px; }
+        .modal-body { font-size: 1.3rem; color: #555; margin-bottom: 30px; font-weight: 700; }
+        
+        .btn-modal {
+            background: var(--grass-dark); color: white; border: none;
+            padding: 15px 45px; border-radius: 50px; font-weight: 900;
+            font-size: 1.4rem; cursor: pointer; box-shadow: 0 8px 0 #33691E;
+            width: 100%;
+        }
+        .btn-modal:active { transform: translateY(4px); box-shadow: none; }
+
+        #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 1100; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media (max-width: 600px) {
+            header { padding: 10px; grid-template-columns: auto 1fr auto; }
+            h1 { font-size: 1.1rem; }
+            .clipboard { padding: 8px 15px; }
+            .data-item { font-size: 1.1rem; padding: 4px 10px; }
+            .ball-bin { gap: 20px; padding: 0 10px; }
+            .btn-check { width: 60px; height: 60px; font-size: 1.6rem; }
+            .col-label { width: 32px; height: 32px; font-size: 1.4rem; bottom: -38px; }
+            .graph-area { margin-left: 30px; }
+            .grid-num { font-size: 0.9rem; left: -28px; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <header>
+        <div class="header-item-left"><div class="grade-badge">3</div></div>
+        <h1 id="app-title">Graph Builder</h1>
+        <div class="header-item-right">
+            <div class="custom-select-wrapper" id="lang-dropdown">
+                <div class="custom-select">
+                    <div class="custom-select__trigger">
+                        <span id="current-lang-text">🗺️ ትግርኛ</span>
+                        <span style="font-size:0.6rem">▼</span>
+                    </div>
+                    <div class="custom-options">
+                        <div class="custom-option" data-value="ti">ትግርኛ</div>
+                        <div class="custom-option" data-value="am">አማርኛ</div>
+                        <div class="custom-option" data-value="en">English</div>
+                        <div class="custom-option" data-value="om">Afan Oromoo</div>
+                        <div class="custom-option" data-value="so">Soomaali</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="game-container">
+        
+        <div class="clipboard">
+            <div class="data-title" id="lbl-survey">Survey Results:</div>
+            <div class="data-row">
+                <div class="data-item">⚽ <span id="target-soccer">0</span></div>
+                <div class="data-item">🏀 <span id="target-basket">0</span></div>
+            </div>
+        </div>
+
+        <div class="graph-area" id="graph">
+            <div class="graph-col" id="col-soccer" data-type="soccer">
+                <div class="col-label">⚽</div>
+            </div>
+            <div class="graph-col" id="col-basket" data-type="basket">
+                <div class="col-label">🏀</div>
+            </div>
+        </div>
+
+        <div class="footer-area">
+            <div class="ball-bin">
+                <div class="ball ball-soccer source-ball" data-type="soccer"></div>
+                <div class="ball ball-basket source-ball" data-type="basket"></div>
+            </div>
+            <button class="btn-check" onclick="checkAnswer()">✓</button>
+        </div>
+    </div>
+
+    <!-- Reactions Overlays -->
+    <div class="overlay" id="overlay-win">
+        <div class="modal">
+            <span class="modal-icon">🏆✨</span>
+            <div class="modal-title" id="win-title">ትኽክል!</div>
+            <div class="modal-body" id="win-body">ብጣዕሚ ጽቡቕ! ግራፍ ሰሪሕካዮ።</div>
+            <button class="btn-modal" onclick="nextLevel()" id="btn-next">ቀፃሊ ➡</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay-fail">
+        <div class="modal" style="border-color: #f59e0b;">
+            <span class="modal-icon">📊</span>
+            <div class="modal-title" id="fail-title">እንደገና ፈትን!</div>
+            <div class="modal-body" id="fail-body">መልሲ ጌጋ እዩ። ቁፅሪ ኳሶታት ርአ።</div>
+            <button class="btn-modal" onclick="closeFail()" id="btn-retry" style="background:#f59e0b; box-shadow: 0 8px 0 #b45309;">እንደገና ፈትን 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            ti: {
+                title: "ስእላዊ ግራፍ", survey: "ውፅኢት ዳህሳስ:",
+                win: "ትኽክል!", winSub: "ብጣዕሚ ጽቡቕ! ግራፍ ሰሪሕካዮ።",
+                fail: "እንደገና ፈትን!", failSub: "መልሲ ጌጋ እዩ። ቁፅሪ ኰዕሶታት ርአ።",
+                next: "ቀፃሊ ➡", retry: "እንደገና ፈትን 🔄"
+            },
+            am: {
+                title: "ስዕላዊ ግራፍ", survey: "የዳሰሳ ጥናት ውጤት:",
+                win: "ትክክል!", winSub: "በጣም ጎበዝ! ግራፉን ሰርተሃል።",
+                fail: "እንደገና ይሞክሩ!", failSub: "መልሱ ልክ አይደለም። የኳሶቹን ብዛት ይመልከቱ።",
+                next: "ቀጣይ ➡", retry: "እንደገና ሞክር 🔄"
+            },
+            en: {
+                title: "Graph Builder", survey: "Survey Results:",
+                win: "Correct!", winSub: "Awesome job! You built the graph.",
+                fail: "Try Again!", failSub: "Check the ball counts again.",
+                next: "Next Level ➡", retry: "Try Again 🔄"
+            },
+            om: {
+                title: "Giraafii Bocaa", survey: "Bu'aa Qorannoo:",
+                win: "Sirrii!", winSub: "Baay'ee gaariidha! Giraafii hojjetteetta.",
+                fail: "Irra deebi'ii yaali!", failSub: "Deebiin dogoggora. Baay'ina kubbaa ilaali.",
+                next: "Itti Aanu ➡", retry: "Irra deebi'ii 🔄"
+            },
+            so: {
+                title: "Dhisidda Jaantuska", survey: "Natiijada Sahanka:",
+                win: "Sax!", winSub: "Shaqo fiican! Jaantuska waad dhistay.",
+                fail: "Khalad!", failSub: "Fiiri tirada kubbadaha mar kale.",
+                next: "Xiga ➡", retry: "Mar kale isku day 🔄"
+            }
+        };
+
+        let currentLang = 'ti';
+        let targetSoccer = 0, targetBasket = 0;
+        const maxVal = 8, GAP = 2;
+
+        function init() {
+            updateLanguage();
+            resizeGraph();
+            generateLevel();
+            setupDragAndDrop();
+        }
+
+        function updateLanguage() {
+            const t = translations[currentLang];
+            document.getElementById('app-title').textContent = t.title;
+            document.getElementById('lbl-survey').textContent = t.survey;
+            document.getElementById('win-title').textContent = t.win;
+            document.getElementById('win-body').textContent = t.winSub;
+            document.getElementById('btn-next').textContent = t.next;
+            document.getElementById('fail-title').textContent = t.fail;
+            document.getElementById('fail-body').textContent = t.failSub;
+            document.getElementById('btn-retry').textContent = t.retry;
+        }
+
+        function resizeGraph() {
+            const area = document.getElementById('graph');
+            let h = area.clientHeight - 25; 
+            let size = Math.floor((h - (maxVal * GAP)) / maxVal);
+            size = Math.min(Math.max(size, 30), 60);
+            document.documentElement.style.setProperty('--ball-size', size + 'px');
+            drawGrid(size);
+        }
+
+        function drawGrid(ballSize) {
+            const container = document.getElementById('graph');
+            container.querySelectorAll('.grid-line, .grid-num').forEach(el => el.remove());
+            for(let i=1; i<=maxVal; i++) {
+                const bottom = i * (ballSize + GAP);
+                const line = document.createElement('div');
+                line.className = 'grid-line'; line.style.bottom = bottom + 'px';
+                const num = document.createElement('span');
+                num.className = 'grid-num'; num.innerText = i; num.style.bottom = (bottom - 8) + 'px'; 
+                container.appendChild(line); container.appendChild(num);
+            }
+        }
+
+        function generateLevel() {
+            targetSoccer = Math.floor(Math.random() * 6) + 2;
+            targetBasket = Math.floor(Math.random() * 6) + 2;
+            document.getElementById('target-soccer').textContent = targetSoccer;
+            document.getElementById('target-basket').textContent = targetBasket;
+            document.getElementById('col-soccer').innerHTML = '<div class="col-label">⚽</div>';
+            document.getElementById('col-basket').innerHTML = '<div class="col-label">🏀</div>';
+        }
+
+        function addBall(type, colId) {
+            const col = document.getElementById(colId);
+            if (col.childElementCount > maxVal) return; 
+            const ball = document.createElement('div');
+            ball.className = `ball ball-${type}`;
+            ball.onclick = () => { ball.remove(); playSound('pop'); };
+            col.appendChild(ball); 
+            playSound('drop');
+        }
+
+        function setupDragAndDrop() {
+            const sources = document.querySelectorAll('.source-ball');
+            let activeDrag = null, clone = null, offset = 0;
+
+            const startDrag = (e) => {
+                e.preventDefault();
+                const touch = e.touches ? e.touches[0] : e;
+                activeDrag = e.target;
+                const size = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ball-size')) || 50;
+                offset = size / 2;
+                clone = activeDrag.cloneNode(true);
+                clone.classList.add('drag-clone');
+                clone.style.left = (touch.clientX - offset) + 'px';
+                clone.style.top = (touch.clientY - offset) + 'px';
+                document.body.appendChild(clone);
+            };
+
+            const moveDrag = (e) => {
+                if (!activeDrag) return;
+                const touch = e.touches ? e.touches[0] : e;
+                clone.style.left = (touch.clientX - offset) + 'px';
+                clone.style.top = (touch.clientY - offset) + 'px';
+                highlightTarget(touch.clientX, touch.clientY);
+            };
+
+            const endDrag = (e) => {
+                if (!activeDrag) return;
+                const touch = e.changedTouches ? e.changedTouches[0] : e;
+                const type = activeDrag.dataset.type;
+                const targetCol = document.getElementById(`col-${type}`);
+                const rect = targetCol.getBoundingClientRect();
+                if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                    touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                    addBall(type, `col-${type}`);
+                }
+                clone.remove(); activeDrag = null; clone = null;
+                document.querySelectorAll('.graph-col').forEach(c => c.classList.remove('highlight'));
+            };
+
+            sources.forEach(s => { s.addEventListener('mousedown', startDrag); s.addEventListener('touchstart', startDrag); });
+            window.addEventListener('mousemove', moveDrag);
+            window.addEventListener('touchmove', moveDrag, {passive: false});
+            window.addEventListener('mouseup', endDrag);
+            window.addEventListener('touchend', endDrag);
+        }
+
+        function highlightTarget(x, y) {
+            document.querySelectorAll('.graph-col').forEach(col => {
+                const r = col.getBoundingClientRect();
+                if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) col.classList.add('highlight');
+                else col.classList.remove('highlight');
+            });
+        }
+
+        function checkAnswer() {
+            const soccer = document.getElementById('col-soccer').childElementCount - 1;
+            const basket = document.getElementById('col-basket').childElementCount - 1;
+            if (soccer === targetSoccer && basket === targetBasket) {
+                playSound('win'); startConfetti();
+                document.getElementById('overlay-win').classList.add('show');
+            } else {
+                playSound('fail');
+                document.getElementById('overlay-fail').classList.add('show');
+            }
+        }
+
+        function closeFail() { document.getElementById('overlay-fail').classList.remove('show'); }
+        function nextLevel() { stopConfetti(); document.getElementById('overlay-win').classList.remove('show'); generateLevel(); }
+        function restartGame() { closeFail(); generateLevel(); }
+
+        // Dropdown
+        const dropdown = document.getElementById('lang-dropdown');
+        dropdown.querySelector('.custom-select__trigger').addEventListener('click', (e) => {
+            dropdown.querySelector('.custom-select').classList.toggle('open'); e.stopPropagation();
+        });
+        dropdown.querySelectorAll('.custom-option').forEach(opt => {
+            opt.addEventListener('click', function(e) {
+                currentLang = this.dataset.value;
+                document.getElementById('current-lang-text').textContent = "🗺️ " + this.textContent;
+                dropdown.querySelector('.custom-select').classList.remove('open');
+                updateLanguage(); e.stopPropagation();
+            });
+        });
+        window.addEventListener('click', () => dropdown.querySelector('.custom-select').classList.remove('open'));
+
+        // Audio
+        function playSound(type) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator(); const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            const t = ctx.currentTime;
+            if (type === 'win') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(440, t); osc.frequency.exponentialRampToValueAtTime(880, t + 0.1);
+                gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+                osc.start(t); osc.stop(t + 0.5);
+            } else if (type === 'pop') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(800, t); osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
+                gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.1);
+                osc.start(t); osc.stop(t + 0.1);
+            } else if (type === 'drop') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(600, t); osc.frequency.exponentialRampToValueAtTime(300, t + 0.1);
+                gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.1);
+                osc.start(t); osc.stop(t + 0.1);
+            } else {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); osc.frequency.linearRampToValueAtTime(80, t + 0.3);
+                gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.3);
+                osc.start(t); osc.stop(t + 0.3);
+            }
+        }
+
+        // Confetti
+        let pieces = [], isConfettiActive = false;
+        function startConfetti() {
+            isConfettiActive = true; const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            pieces = [];
+            for(let i=0; i<120; i++) pieces.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height - canvas.height, vx: (Math.random() - 0.5) * 4, vy: Math.random() * 5 + 2, color: `hsl(${Math.random()*360}, 100%, 50%)`, size: Math.random() * 8 + 4 });
+            function anim() { if (!isConfettiActive) return; ctx.clearRect(0,0,canvas.width,canvas.height); pieces.forEach(p => { p.x += p.vx; p.y += p.vy; if (p.y > canvas.height) p.y = -20; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); }); requestAnimationFrame(anim); }
+            anim();
+        }
+        function stopConfetti() { isConfettiActive = false; document.getElementById('confetti-canvas').getContext('2d').clearRect(0,0,window.innerWidth,window.innerHeight); }
+
+        window.onload = init;
+        window.onresize = resizeGraph;
+    </script>
+</body>
+</html>

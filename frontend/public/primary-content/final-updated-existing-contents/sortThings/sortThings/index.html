@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sequence Express | ሪጋ ስራዕ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <style>
+        :root {
+            --primary-bg: #FFEBEE;
+            --accent-yellow: #FFD54F;
+            --accent-blue: #4FC3F7;
+            --accent-green: #81C784;
+            --accent-red: #FF8A65;
+            --text-dark: #3E2723;
+            --card-shadow: 0 10px 0 rgba(0,0,0,0.05);
+            --card-radius: 25px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0; padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--primary-bg);
+            /* Polka dot pattern */
+            background-image: radial-gradient(#FFCDD2 2px, transparent 2px);
+            background-size: 30px 30px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Confetti */
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 2000;
+        }
+
+        /* Header */
+        header {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .logo-icon { font-size: 2.5rem; animation: bounce 2s infinite; }
+        h1 { font-size: 1.8rem; color: var(--text-dark); font-weight: 700; }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .score-pill {
+            background: var(--accent-yellow);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: #5D4037;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 5px 0 #FBC02D;
+        }
+
+        select#langSelect {
+            background: white;
+            border: 3px solid #ddd;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* Main Game Area */
+        #game-container {
+            width: 95%;
+            max-width: 1200px; /* Bigger desktop container */
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            padding: 20px 0 60px 0;
+            justify-content: center;
+        }
+
+        /* Train / Drop Zone */
+        .train-track {
+            width: 100%;
+            background: rgba(0,0,0,0.03);
+            border-radius: 40px;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            border: 5px dashed #cfd8dc;
+            position: relative;
+            min-height: 180px;
+        }
+
+        .train-track::before {
+            content: '🚂';
+            position: absolute;
+            left: -60px;
+            font-size: 4rem;
+            opacity: 0.1;
+        }
+
+        .train-car {
+            width: 160px;
+            height: 100px;
+            background: #fff;
+            border: 4px dashed #ddd;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .train-car.active-drop {
+            border-color: var(--accent-blue);
+            background: #E1F5FE;
+            transform: scale(1.05);
+        }
+
+        .train-car.filled {
+            border-style: solid;
+            border-color: var(--accent-green);
+        }
+
+        /* Word Cards Pool */
+        .word-pool {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .word-card {
+            min-width: 150px;
+            padding: 20px 30px;
+            background: white;
+            border-radius: var(--card-radius);
+            box-shadow: 0 8px 0 #eee, 0 10px 20px rgba(0,0,0,0.05);
+            cursor: grab;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 4px solid white;
+        }
+
+        .word-card:active { cursor: grabbing; transform: translateY(4px); box-shadow: 0 2px 0 #eee; }
+        
+        .word-card .word-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .word-card .emoji { font-size: 2rem; }
+
+        .word-card.dragging { opacity: 0.5; transform: scale(0.9); }
+        
+        .word-card.placed {
+            box-shadow: none;
+            background: transparent;
+            cursor: default;
+        }
+
+        /* Colors for Variety */
+        .c1 { background: #E1F5FE; border-color: #B3E5FC; }
+        .c2 { background: #FFF9C4; border-color: #FFF176; }
+        .c3 { background: #F8BBD0; border-color: #F48FB1; }
+        .c4 { background: #DCEDC8; border-color: #C5E1A5; }
+        .c5 { background: #FFE0B2; border-color: #FFCC80; }
+        .c6 { background: #E1BEE7; border-color: #CE93D8; }
+
+        /* Success Overlay */
+        #victory-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .victory-train {
+            font-size: 8rem;
+            margin-bottom: 20px;
+            animation: driveBy 3s infinite linear;
+        }
+
+        @keyframes driveBy {
+            0% { transform: translateX(-150vw); }
+            100% { transform: translateX(150vw); }
+        }
+
+        .victory-title {
+            font-size: 3.5rem;
+            color: var(--accent-green);
+            font-weight: 900;
+            margin-bottom: 15px;
+        }
+
+        .btn-next {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 20px 60px;
+            border-radius: 50px;
+            font-size: 1.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #43A047;
+            margin-top: 30px;
+            transition: all 0.1s;
+        }
+
+        .btn-next:active { transform: translateY(4px); box-shadow: 0 2px 0 #43A047; }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.2rem; }
+            .logo-icon { font-size: 1.8rem; }
+            .word-card .word-text { font-size: 1.3rem; }
+            .train-car { width: 120px; height: 80px; }
+            .train-car::after { font-size: 0.8rem; }
+            .btn-next { padding: 15px 40px; font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+
+    <header>
+        <div class="logo-group">
+            <span class="logo-icon">🚂</span>
+            <h1 id="titleText">ሪጋ ስራዕ</h1>
+        </div>
+        <div class="header-controls">
+            <select id="langSelect" onchange="changeLanguage(this.value)">
+                <option value="ti" selected>ትግርኛ (Tigrinya)</option>
+                <option value="am">አማርኛ (Amharic)</option>
+                <option value="en">English (እንግሊዝኛ)</option>
+                <option value="om">Afaan Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+            <div class="score-pill">
+                <span>⭐</span>
+                <span id="scoreVal">0</span>
+            </div>
+        </div>
+    </header>
+
+    <div id="game-container">
+        <div class="train-track" id="dropArea">
+            <!-- Train cars generated by JS -->
+        </div>
+
+        <div class="word-pool" id="poolArea">
+            <!-- Shuffled words generated by JS -->
+        </div>
+    </div>
+
+    <div id="victory-modal">
+        <div class="victory-train">🚂🚃🚃🚃</div>
+        <h2 class="victory-title" id="vicTitle">ንኡድ ስራሕ!</h2>
+        <p id="vicMsg" style="font-size: 1.5rem; color: #666;">ብትኽክል ሰሪዕካዮም ኣለኻ።</p>
+        <button class="btn-next" onclick="nextLevel()" id="nextBtn">ቀጻሊ ➜</button>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { title: "ብሪጋ ስራዕ", vic: "ንኡድ ስራሕ!", msg: "ብትኽክል ሰሪዕካዮም ኣለኻ።", next: "ቀጻሊ ➜" },
+            am: { title: "ቅደም ተከተል", vic: "ድንቅ ስራ!", msg: "በትክክል ተቀምጠዋል።", next: "ቀጣይ ➜" },
+            en: { title: "Sequence Express", vic: "Great Job!", msg: "You ordered them perfectly!", next: "Next ➜" },
+            om: { title: "Tartiiba", vic: "Hojii Gaarii!", msg: "Sirriitti hiriirsiteetta.", next: "Itti fufi ➜" },
+            so: { title: "Habeynta", vic: "Shaqo Fiican!", msg: "Si sax ah ayaad u habaysay.", next: "Xiga ➜" }
+        };
+
+        const wordSets = [
+            { items: ["ሰኑይ", "ሰሉስ", "ረቡዕ", "ሓሙስ", "ዓርቢ", "ቀዳም", "ሰንበት"], icons: ["📅","📅","📅","📅","📅","🏖️","🎉"] },
+            { items: ["ሓደ", "ክልተ", "ሰለስተ", "አርባዕተ", "ሓሙሽተ", "ሽዱሽተ"], icons: ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣"] },
+            { items: ["መስከረም", "ጥቅምቲ", "ሕዳር", "ታሕሳስ", "ጥሪ", "ለካቲት"], icons: ["🌼","☔","🍂","❄️","☀️","🌱"] },
+            { items: ["መጋቢት", "ሚያዝያ", "ግንቦት", "ሰነ", "ሓምለ", "ነሓሰ"], icons: ["🌼","☔","🍂","❄️","☀️","🌱"] },
+            { items: ["ቀዳማይ", "ካልኣይ", "ሳልሳይ", "ራብዓይ", "ሓምሻይ"], icons: ["🥇","🥈","🥉","🏅","🎖️"] }
+        ];
+
+        let currentSetIdx = 0;
+        let score = 0;
+        let currentLang = 'ti';
+        let draggedItem = null;
+        let particles = [];
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const now = audioCtx.currentTime;
+
+            if (type === 'pop') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
+            } else if (type === 'drop') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(800, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
+            } else if (type === 'success') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523, now);
+                osc.frequency.setValueAtTime(659, now + 0.1);
+                osc.frequency.setValueAtTime(783, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start(); osc.stop(now + 0.5);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(); osc.stop(now + 0.3);
+            }
+            osc.connect(gain); gain.connect(audioCtx.destination);
+        }
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const t = i18n[lang] || i18n.en;
+            document.getElementById('titleText').innerText = t.title;
+            document.getElementById('vicTitle').innerText = t.vic;
+            document.getElementById('vicMsg').innerText = t.msg;
+            document.getElementById('nextBtn').innerText = t.next;
+        }
+
+        function initLevel() {
+            const set = wordSets[currentSetIdx];
+            const dropArea = document.getElementById('dropArea');
+            const poolArea = document.getElementById('poolArea');
+            
+            dropArea.innerHTML = '';
+            poolArea.innerHTML = '';
+            
+            // Create cars
+            set.items.forEach((_, i) => {
+                const car = document.createElement('div');
+                car.className = 'train-car';
+                car.dataset.index = i;
+                car.ondragover = e => e.preventDefault();
+                car.ondrop = e => handleDrop(e, i);
+                dropArea.appendChild(car);
+            });
+
+            // Create shuffled word cards
+            const indices = set.items.map((_, i) => i);
+            indices.sort(() => Math.random() - 0.5);
+
+            indices.forEach(idx => {
+                const card = document.createElement('div');
+                card.className = `word-card c${(idx % 6) + 1} animate__animated animate__zoomIn`;
+                card.draggable = true;
+                card.dataset.idx = idx;
+                card.innerHTML = `
+                    <span class="emoji">${set.icons[idx]}</span>
+                    <span class="word-text">${set.items[idx]}</span>
+                `;
+                
+                card.ondragstart = () => { draggedItem = card; card.classList.add('dragging'); playSound('pop'); };
+                card.ondragend = () => { card.classList.remove('dragging'); };
+                
+                // Mobile tap support
+                card.onclick = () => {
+                    const nextSlot = Array.from(document.querySelectorAll('.train-car')).find(c => !c.hasChildNodes());
+                    if (nextSlot) simulateDrop(card, parseInt(nextSlot.dataset.index));
+                };
+
+                poolArea.appendChild(card);
+            });
+        }
+
+        function handleDrop(e, slotIdx) {
+            e.preventDefault();
+            if (!draggedItem) return;
+            simulateDrop(draggedItem, slotIdx);
+        }
+
+        function simulateDrop(item, slotIdx) {
+            const set = wordSets[currentSetIdx];
+            const targetCar = document.querySelectorAll('.train-car')[slotIdx];
+            
+            if (targetCar.hasChildNodes()) return;
+
+            // Validation: Must match the order index
+            if (parseInt(item.dataset.idx) === slotIdx) {
+                playSound('drop');
+                targetCar.appendChild(item);
+                item.draggable = false;
+                item.classList.add('animate__animated', 'animate__bounceIn');
+                item.style.boxShadow = 'none';
+                item.style.minWidth = '100%';
+                item.style.padding = '10px';
+                item.querySelector('.word-text').style.fontSize = '1.2rem';
+                
+                checkWin();
+            } else {
+                playSound('error');
+                item.classList.add('animate__animated', 'animate__headShake');
+                setTimeout(() => item.classList.remove('animate__animated', 'animate__headShake'), 500);
+            }
+        }
+
+        function checkWin() {
+            const cars = document.querySelectorAll('.train-car');
+            const filled = Array.from(cars).filter(c => c.hasChildNodes()).length;
+            
+            if (filled === wordSets[currentSetIdx].items.length) {
+                score += 50;
+                document.getElementById('scoreVal').innerText = score;
+                playSound('success');
+                fireConfetti();
+                setTimeout(() => {
+                    document.getElementById('victory-modal').style.display = 'flex';
+                }, 1000);
+            }
+        }
+
+        function nextLevel() {
+            document.getElementById('victory-modal').style.display = 'none';
+            currentSetIdx = (currentSetIdx + 1) % wordSets.length;
+            initLevel();
+        }
+
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const colors = ['#81C784', '#4FC3F7', '#FFD54F', '#FF8A65', '#BA68C8'];
+            
+            for(let i=0; i<150; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height + 20,
+                    vx: (Math.random() - 0.5) * 30,
+                    vy: (Math.random() - 0.8) * 45,
+                    size: Math.random() * 10 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1.0,
+                    rotation: Math.random() * 360,
+                    rVel: (Math.random() - 0.5) * 15
+                });
+            }
+            if(!window.confettiActive) {
+                window.confettiActive = true;
+                animateConfetti();
+            }
+        }
+
+        function animateConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let alive = false;
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                if (p.life > 0) {
+                    alive = true;
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.8;
+                    p.vx *= 0.98;
+                    p.life -= 0.01;
+                    p.rotation += p.rVel;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.life;
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                } else {
+                    particles.splice(i, 1);
+                }
+            }
+            if(alive) requestAnimationFrame(animateConfetti);
+            else window.confettiActive = false;
+        }
+
+        window.onload = () => {
+            changeLanguage('ti');
+            initLevel();
+        };
+    </script>
+</body>
+</html>

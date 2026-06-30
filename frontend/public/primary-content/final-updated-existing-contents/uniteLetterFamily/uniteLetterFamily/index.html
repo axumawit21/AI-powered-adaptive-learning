@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Letter Families | ዘርኢ ፊደላት</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      --bubble-bg: #ffffff;
+      --bubble-shadow: rgba(0, 0, 0, 0.1);
+      --correct-color: #4CAF50;
+      --wrong-color: #FF5252;
+      --text-dark: #2c3e50;
+      --accent-purple: #9c27b0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+      background: var(--primary-gradient);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+      overflow-x: hidden;
+    }
+
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1500;
+    }
+
+    /* Decorative Floating Clouds */
+    .cloud {
+      position: fixed; background: white; border-radius: 50px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      animation: floatCloud linear infinite;
+      z-index: 0; pointer-events: none; opacity: 0.6;
+    }
+    .cloud::after, .cloud::before { content:''; position:absolute; background:inherit; border-radius:50%; }
+    .cloud::after { width: 50px; height: 50px; top: -25px; left: 25px; }
+    .cloud::before { width: 40px; height: 40px; top: -15px; left: 10px; }
+    @keyframes floatCloud { from { left: -200px; } to { left: 100vw; } }
+
+    .main-container {
+      width: 100%;
+      max-width: 850px;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(15px);
+      border-radius: 40px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+      border: 8px solid white;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Header */
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .nav-home {
+      background: #FF6B6B;
+      color: white;
+      width: 50px; height: 50px;
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; font-size: 1.6rem;
+      box-shadow: 0 5px 0 #d64545;
+      transition: all 0.1s;
+    }
+    .nav-home:active { transform: translateY(4px); box-shadow: 0 1px 0 #d64545; }
+
+    .score-badge {
+      background: #FFD93D;
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: #5D4037;
+      display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 5px 0 #FBC02D;
+    }
+
+    .lang-wrapper select {
+      padding: 10px 15px;
+      border-radius: 15px;
+      border: 3px solid #eee;
+      font-family: inherit;
+      font-weight: bold;
+      outline: none;
+      cursor: pointer;
+      background: white;
+    }
+
+    /* Question Card */
+    .question-box {
+      background: #E3F2FD;
+      border-radius: 30px;
+      padding: 20px;
+      text-align: center;
+      border: 4px solid #BBDEFB;
+      position: relative;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .q-text {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+    .q-text span { color: var(--accent-purple); font-size: 2.2rem; }
+
+    /* Game Grid */
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+      gap: 20px;
+      justify-items: center;
+      padding: 10px;
+    }
+
+    .letter-bubble {
+      width: 95px;
+      height: 95px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      cursor: pointer;
+      box-shadow: 0 8px 0 #eee, 0 10px 20px rgba(0,0,0,0.05);
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: 4px solid white;
+      position: relative;
+    }
+
+    .letter-bubble:hover { transform: translateY(-5px); }
+    .letter-bubble:active { transform: translateY(4px); box-shadow: 0 2px 0 #eee; }
+
+    .letter-bubble.correct {
+      background: var(--correct-color);
+      color: white;
+      border-color: #81C784;
+      box-shadow: 0 4px 0 #388E3C;
+      transform: scale(1.1);
+      cursor: default;
+    }
+
+    .letter-bubble.correct::after {
+      content: '⭐';
+      position: absolute;
+      top: -15px;
+      right: -5px;
+      font-size: 1.5rem;
+      animation: bounceIn 0.5s;
+    }
+
+    .letter-bubble.wrong {
+      background: var(--wrong-color);
+      color: white;
+      border-color: #FF8A80;
+      box-shadow: 0 4px 0 #D32F2F;
+      animation: shakeX 0.5s;
+    }
+
+    /* Celebration Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 40px;
+      padding: 40px;
+      text-align: center;
+      max-width: 450px;
+      width: 100%;
+      animation: bounceIn 0.8s;
+      border: 10px solid #FFD93D;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-content h2 { font-size: 2.5rem; color: var(--accent-purple); margin-bottom: 10px; }
+    .modal-content p { font-size: 1.3rem; color: #666; margin-bottom: 30px; }
+
+    .btn-next {
+      background: var(--correct-color);
+      color: white;
+      border: none;
+      padding: 18px 45px;
+      border-radius: 50px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 0 #388E3C;
+      transition: all 0.1s;
+      width: 100%;
+    }
+    .btn-next:active { transform: translateY(4px); box-shadow: 0 2px 0 #388E3C; }
+
+    @media (max-width: 600px) {
+      .main-container { padding: 20px; border-width: 5px; }
+      .letter-bubble { width: 75px; height: 75px; font-size: 2rem; }
+      .game-grid { grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 12px; }
+      .q-text { font-size: 1.3rem; }
+      .q-text span { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="confetti-canvas"></canvas>
+  <!-- Clouds -->
+  <div class="cloud" style="top: 10%; width: 120px; height: 50px; animation-duration: 30s;"></div>
+  <div class="cloud" style="top: 30%; width: 100px; height: 40px; animation-duration: 45s; animation-delay: -15s;"></div>
+  <div class="cloud" style="top: 5%; left: 70%; width: 150px; height: 60px; animation-duration: 25s;"></div>
+
+  <div class="main-container">
+    <div class="game-header">
+      <a href="index.html" class="nav-home">♜</a>
+      <div class="lang-wrapper">
+        <select id="language-select" onchange="changeLanguage(this.value)">
+          <option value="ti">ትግርኛ</option>
+          <option value="am">አማርኛ</option>
+          <option value="en">English</option>
+          <option value="om">Afan Oromoo</option>
+          <option value="so">Soomaali</option>
+        </select>
+      </div>
+      <div class="score-badge">
+        <span>⭐</span>
+        <span id="score-val">0</span>
+      </div>
+    </div>
+
+    <div class="question-box">
+      <div class="q-text" id="question-text">ዘርኢ <span id="target-fidel">?</span> ምረፁ</div>
+    </div>
+
+    <div class="game-grid" id="game-grid">
+      <!-- Letters injected by JS -->
+    </div>
+  </div>
+
+  <!-- Celebration Modal -->
+  <div id="celebration-modal" class="modal">
+    <div class="modal-content">
+      <div style="font-size: 5rem;">🏆</div>
+      <h2 id="modal-title">ንኡድ ስራሕ!</h2>
+      <p id="modal-msg">ኩሎም ብትኽክል መሊስካዮም ኣለኻ።</p>
+      <button class="btn-next" onclick="nextRound()" id="modal-btn">ቀጻሊ</button>
+    </div>
+  </div>
+
+  <!-- Audio Context Placeholder -->
+  <audio id="sfx-correct"></audio>
+  <audio id="sfx-wrong"></audio>
+
+  <script>
+    const letterFamilies = [
+      ["ሀ", "ሁ", "ሂ", "ሃ", "ሄ", "ህ", "ሆ"],
+      ["ለ", "ሉ", "ሊ", "ላ", "ሌ", "ል", "ሎ"],
+      ["ሐ", "ሑ", "ሒ", "ሓ", "ሔ", "ሕ", "ሖ"],
+      ["መ", "ሙ", "ሚ", "ማ", "ሜ", "ም", "ሞ"],
+      ["ረ", "ሩ", "ሪ", "ራ", "ሬ", "ር", "ሮ"],
+      ["ሰ", "ሱ", "ሲ", "ሳ", "ሴ", "ስ", "ሶ"],
+      ["ሸ", "ሹ", "ሺ", "ሻ", "ሼ", "ሽ", "ሾ"],
+      ["ቀ", "ቁ", "ቂ", "ቃ", "ቄ", "ቅ", "ቆ"],
+      ["በ", "ቡ", "ቢ", "ባ", "ቤ", "ብ", "ቦ"],
+      ["ተ", "ቱ", "ቲ", "ታ", "ቴ", "ት", "ቶ"],
+      ["ቸ", "ቹ", "ቺ", "ቻ", "ቼ", "ች", "ቾ"],
+      ["ነ", "ኑ", "ኒ", "ና", "ኔ", "ን", "ኖ"],
+      ["አ", "ኡ", "ኢ", "ኣ", "ኤ", "እ", "ኦ"],
+      ["ከ", "ኩ", "ኪ", "ካ", "ኬ", "ክ", "ኮ"],
+      ["ወ", "ዉ", "ዊ", "ዋ", "ዌ", "ው", "ዎ"],
+      ["ዘ", "ዙ", "ዚ", "ዛ", "ዜ", "ዝ", "ዞ"],
+      ["ደ", "ዱ", "ዲ", "ዳ", "ዴ", "ድ", "ዶ"],
+      ["ገ", "ጉ", "ጊ", "ጋ", "ጌ", "ግ", "ጎ"],
+      ["ጠ", "ጡ", "ጢ", "ጣ", "ጤ", "ጥ", "ጦ"],
+      ["ፈ", "ፉ", "ፊ", "ፋ", "ፌ", "ፍ", "ፎ"]
+    ];
+
+    const i18n = {
+      ti: { q: "ዘርኢ \"{f}\" ምረፁ", title: "ንኡድ ስራሕ!", msg: "ኩሎም ብትኽክል መሊስካዮም ኣለኻ።", btn: "ቀጻሊ" },
+      am: { q: "የ \"{f}\" ቤተሰብ ይምረጡ", title: "ድንቅ ስራ!", msg: "ሁሉንም በትክክል መልሰዋል።", btn: "ቀጣይ" },
+      en: { q: "Select family of \"{f}\"", title: "Great Job!", msg: "You found all of them!", btn: "Next" },
+      om: { q: "Maatii \"{f}\" filadhu", title: "Hojii gaarii!", msg: "Hunda sirriitti deebisteetta!", btn: "Itti fufi" },
+      so: { q: "Dooro qoyska \"{f}\"", title: "Shaqo fiican!", msg: "Dhammaan si sax ah ayaad u helay!", btn: "Xiga" }
+    };
+
+    let currentFamilyIdx = 0;
+    let score = 0;
+    let lang = 'ti';
+    let correctlyAnswered = 0;
+    let targetLetters = [];
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    let confettiParticles = [];
+    let confettiActive = false;
+
+    function resizeConfettiCanvas() {
+      const canvas = document.getElementById('confetti-canvas');
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function fireConfetti(count = 180) {
+      const colors = ['#81C784', '#4FC3F7', '#FFD54F', '#FF8A65', '#BA68C8', '#FFD93D'];
+      const originX = window.innerWidth / 2;
+      const originY = Math.max(120, window.innerHeight * 0.28);
+
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.random() * Math.PI) - (Math.PI / 2);
+        const speed = 10 + Math.random() * 18;
+        confettiParticles.push({
+          x: originX,
+          y: originY,
+          vx: Math.cos(angle) * speed + (Math.random() - 0.5) * 6,
+          vy: Math.sin(angle) * speed - (Math.random() * 10),
+          size: 6 + Math.random() * 10,
+          color: colors[(Math.random() * colors.length) | 0],
+          life: 1,
+          rot: Math.random() * Math.PI,
+          rVel: (Math.random() - 0.5) * 0.35
+        });
+      }
+
+      if (!confettiActive) {
+        confettiActive = true;
+        animateConfetti();
+      }
+    }
+
+    function animateConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      if (!canvas) { confettiActive = false; return; }
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+      let alive = false;
+      for (let i = confettiParticles.length - 1; i >= 0; i--) {
+        const p = confettiParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.7;
+        p.vx *= 0.985;
+        p.life -= 0.012;
+        p.rot += p.rVel;
+
+        if (p.life > 0 && p.y < window.innerHeight + 80) {
+          alive = true;
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, p.life);
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.7);
+          ctx.restore();
+        } else {
+          confettiParticles.splice(i, 1);
+        }
+      }
+
+      if (alive) requestAnimationFrame(animateConfetti);
+      else confettiActive = false;
+    }
+
+    function playSound(type) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const now = audioCtx.currentTime;
+
+      if (type === 'tap') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.1);
+        osc.start(); osc.stop(now + 0.1);
+      } else if (type === 'success') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523, now);
+        osc.frequency.setValueAtTime(659, now + 0.1);
+        osc.frequency.setValueAtTime(783, now + 0.2);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.5);
+        osc.start(); osc.stop(now + 0.5);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.3);
+        osc.start(); osc.stop(now + 0.3);
+      }
+      osc.connect(gain); gain.connect(audioCtx.destination);
+    }
+
+    function initGame() {
+      const grid = document.getElementById('game-grid');
+      grid.innerHTML = '';
+      correctlyAnswered = 0;
+      
+      // Select random family
+      currentFamilyIdx = Math.floor(Math.random() * letterFamilies.length);
+      targetLetters = [...letterFamilies[currentFamilyIdx]];
+      
+      // Select random decoys
+      let allDecoys = [];
+      letterFamilies.forEach((f, idx) => {
+        if (idx !== currentFamilyIdx) allDecoys.push(...f);
+      });
+      let decoys = allDecoys.sort(() => Math.random() - 0.5).slice(0, 8);
+      
+      // Combine and shuffle
+      let pool = [...targetLetters, ...decoys].sort(() => Math.random() - 0.5);
+      
+      pool.forEach(char => {
+        const bubble = document.createElement('div');
+        bubble.className = 'letter-bubble animate__animated animate__zoomIn';
+        bubble.innerText = char;
+        bubble.onclick = () => checkLetter(bubble, char);
+        grid.appendChild(bubble);
+      });
+
+      updateUI();
+    }
+
+    function checkLetter(el, char) {
+      if (el.classList.contains('correct') || el.classList.contains('wrong')) return;
+
+      if (targetLetters.includes(char)) {
+        el.classList.add('correct');
+        playSound('tap');
+        correctlyAnswered++;
+        
+        if (correctlyAnswered === targetLetters.length) {
+          score += 50;
+          document.getElementById('score-val').innerText = score;
+          playSound('success');
+          fireConfetti(220);
+          setTimeout(() => fireConfetti(140), 120);
+          setTimeout(showCelebration, 600);
+        }
+      } else {
+        el.classList.add('wrong');
+        playSound('wrong');
+        setTimeout(() => el.classList.remove('wrong'), 500);
+      }
+    }
+
+    function updateUI() {
+      const t = i18n[lang];
+      const targetFidel = targetLetters[0];
+      document.getElementById('question-text').innerHTML = t.q.replace('{f}', `<span>${targetFidel}</span>`);
+      document.getElementById('modal-title').innerText = t.title;
+      document.getElementById('modal-msg').innerText = t.msg;
+      document.getElementById('modal-btn').innerText = t.btn;
+    }
+
+    function changeLanguage(val) {
+      lang = val;
+      updateUI();
+    }
+
+    function showCelebration() {
+      document.getElementById('celebration-modal').style.display = 'flex';
+    }
+
+    function nextRound() {
+      document.getElementById('celebration-modal').style.display = 'none';
+      initGame();
+    }
+
+    window.addEventListener('resize', resizeConfettiCanvas);
+
+    window.onload = () => {
+      resizeConfettiCanvas();
+      initGame();
+    };
+  </script>
+</body>
+</html>

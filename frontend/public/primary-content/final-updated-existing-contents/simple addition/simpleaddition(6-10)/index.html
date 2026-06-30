@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adding 6–10 — Practice for Young Students</title>
+  <style>
+    :root{ --bg:#f8fbff; --card:#ffffff; --accent:#2b8cff; --accent-2:#ff7a59; --good:#28a745; --bad:#dc3545; }
+    html,body{height:100%;margin:0;overflow:hidden;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+    body{display:flex;align-items:flex-start;justify-content:center;background:url('cover.png') top center / 100% auto no-repeat fixed, var(--bg);padding:16px 32px 32px}
+    .card{background:var(--card);border-radius:16px;box-shadow:0 16px 40px rgba(22,40,80,0.10);width:720px;max-width:100%;padding:28px;border:1px solid #eaf2ff}
+    h1{font-size:28px;margin:0 0 10px;text-align:center;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+    p.lead{margin:0 0 16px;color:#556}
+    .question{font-size:44px;font-weight:800;margin:16px 0;text-align:center;color:#0b57d0;text-shadow:0 1px 0 rgba(255,255,255,.8)}
+    .controls{display:flex;gap:12px;align-items:center;justify-content:center;margin-bottom:16px}
+    input[type=number]{width:180px;padding:12px 14px;border-radius:12px;border:1px solid #d6e4ff;font-size:20px;text-align:center;background:#fbfdff}
+    input[type=number]:focus{outline:2px solid #cfe1ff;box-shadow:0 0 0 4px rgba(43,140,255,0.15)}
+    button{padding:12px 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;font-weight:800;cursor:pointer;transition:transform .05s ease, box-shadow .2s ease, background .2s ease}
+    button:hover{box-shadow:0 6px 16px rgba(43,140,255,0.3)}
+    button:active{transform:translateY(1px)}
+    button.secondary{background:#ffece6;color:#b83b1d;font-weight:800;border:1px solid #ffd3c7}
+    .feedback{min-height:32px;text-align:center;font-weight:800}
+    .feedback.good{color:var(--good)}
+    .feedback.bad{color:var(--bad)}
+    .meta{display:flex;justify-content:space-between;margin-top:18px;color:#334;align-items:center;background:#f7fbff;border:1px solid #e6f0ff;border-radius:12px;padding:12px 14px}
+    .small{font-size:14px;color:#556;display:flex;align-items:center;gap:8px}
+    #scoreLabel,#solvedLabel{background:#eef5ff;border:1px solid #d6e4ff;color:#0b57d0;padding:4px 10px;border-radius:999px;font-weight:700}
+    #score,#solved{font-size:26px;color:#0b57d0}
+    .help{font-size:13px;color:#446;text-align:center;margin-top:10px}
+    footer{margin-top:14px;text-align:center;font-size:12px;color:#889}
+    .topbar{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:8px}
+    .lang-select{padding:10px 12px;border-radius:10px;border:1px solid #d6e4ff;background:#fff}
+    .lang-select:focus{outline:2px solid #cfe1ff;box-shadow:0 0 0 4px rgba(43,140,255,0.12)}
+    .result-img{display:none;margin:8px auto 0;max-width:100%;height:140px;object-fit:contain;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.08)}
+    @media (max-width: 600px){
+      body{background:url('cover.png') center center / cover no-repeat fixed, var(--bg); padding:0 16px 16px}
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <div class="topbar">
+      <label for="lang" class="small" id="langLabel">Language</label>
+      <select id="lang" class="lang-select" aria-label="Language">
+        <option value="en">English</option>
+        <option value="am">አማርኛ</option>
+        <option value="ti">ትግርኛ</option>
+        <option value="om">Afan Oromoo</option>
+        <option value="so">Soomaali</option>
+      </select>
+    </div>
+    <h1 id="heading">Simple Addition Practice</h1>
+
+    <div id="questionArea">
+      <div class="question" id="question">0 + 0 = ?</div>
+      <div class="controls">
+        <input id="answer" type="number" inputmode="numeric" min="12" max="20" placeholder="Type answer" />
+        <button id="check">Check</button>
+        <button id="hint" class="secondary" title="Show the correct answer">Show</button>
+      </div>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+      <img id="resultImg" class="result-img" alt="" />
+    </div>
+
+    <div class="meta">
+      <div class="small"><span id="scoreLabel">Score:</span> <strong id="score">0</strong></div>
+      <div class="small"><span id="solvedLabel">Questions solved:</span> <strong id="solved">0</strong></div>
+    </div>
+  </main>
+
+  <script>
+    // Utility to generate a random integer between min and max (inclusive)
+    function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min }
+
+    const questionEl = document.getElementById('question');
+    const answerEl = document.getElementById('answer');
+    const checkBtn = document.getElementById('check');
+    const hintBtn = document.getElementById('hint');
+    const feedbackEl = document.getElementById('feedback');
+    const scoreEl = document.getElementById('score');
+    const solvedEl = document.getElementById('solved');
+    const scoreLabelEl = document.getElementById('scoreLabel');
+    const solvedLabelEl = document.getElementById('solvedLabel');
+    const headingEl = document.getElementById('heading');
+    const langSelect = document.getElementById('lang');
+    const langLabel = document.getElementById('langLabel');
+    const resultImg = document.getElementById('resultImg');
+
+    // Preload audio for correct/incorrect feedback
+    const audioCorrect = new Audio('assets/intelligent.mp3');
+    const audioWrong = new Audio('assets/nope.mp3');
+
+    let a = 6, b = 6; // Initial values for the new range
+    let score = 0;
+    let solved = 0;
+
+    const i18n = {
+      en: {
+        title: 'Adding 6–10 — Practice for Young Students',
+        heading: 'Simple Addition Practice',
+        langLabel: 'Language',
+        placeholder: 'Type answer',
+        check: 'Check',
+        show: 'Show',
+        showTitle: 'Show the correct answer',
+        pleaseNumber: 'Please type a number.',
+        correct: 'Correct! ✅ Great job — here is a new question.',
+        notQuite: 'Not quite — try again.',
+        answer: 'Answer:',
+        score: 'Score:',
+        solved: 'Questions solved:',
+        aria_question: 'Addition question',
+        aria_input: 'Type your numeric answer here'
+      },
+      am: {
+        title: '6–10 መደመር — ለልጆች ልምምድ',
+        heading: 'ቀላል መደመር ልምምድ',
+        langLabel: 'ቋንቋ',
+        placeholder: 'መልስ ይጻፉ',
+        check: 'ያረጋግጡ',
+        show: 'አሳይ',
+        showTitle: 'ትክክለኛውን መልስ አሳይ',
+        pleaseNumber: 'እባክዎ ቁጥር ያስገቡ።',
+        correct: 'ትክክል ነው! ✅ ጥሩ ስራ — አዲስ ጥያቄ ይመጣል።',
+        notQuite: 'አልተረከተም — እንደገና ይሞክሩ።',
+        answer: 'መልስ:',
+        score: 'ነጥብ:',
+        solved: 'የተፈቱ ጥያቄዎች:',
+        aria_question: 'የመደመር ጥያቄ',
+        aria_input: 'የቁጥር መልስዎን እዚህ ያስገቡ'
+      },
+      ti: {
+        title: '6–10 መደመር — ልምዲ ንተንኮለን ህፃናት',
+        heading: 'ቀሊል መደመሪ ልምዲ',
+        langLabel: 'ቋንቋ',
+        placeholder: 'መልሲ ኣእትው',
+        check: 'ኣረጋግጽ',
+        show: 'ክርኢ',
+        showTitle: 'ዝተፈትነ መልሲ ኣሳይ',
+        pleaseNumber: 'ቍጽሪ ኣእትው።',
+        correct: 'ትኽክል እዩ! ✅ ጽቡቕ ስራሕ — ሓድሽ ሕቶ ክመጽእ እዩ።',
+        notQuite: 'ኣይኮነን — እንደገና ፈትን።',
+        answer: 'መልሲ:',
+        score: 'ነጥቢ:',
+        solved: 'ዝተመለሱ ሕቶታት:',
+        aria_question: 'ሕቶ መደመር',
+        aria_input: 'ቁጽሪ መልስካ ኣብዚ ኣእትው'
+      },
+      om: {
+        title: '6–10 Dabaluu — Shaakala Barattoota Xixiqqaa',
+        heading: 'Shaakala Dabaluu Salphaa',
+        langLabel: 'Afaan',
+        placeholder: 'Deebii barreessi',
+        check: 'Mirkaneessi',
+        show: 'Agarsiisi',
+        showTitle: 'Deebii sirrii agarsiisi',
+        pleaseNumber: 'Mee lakkoofsa galchi.',
+        correct: 'Sirrii dha! ✅ Hojiin gaari — gaaffii haaraa ni dhufa.',
+        notQuite: 'Hin ta\'in — irra deebi\'ii yaali.',
+        answer: 'Deebii:',
+        score: 'Bu\'aa:',
+        solved: 'Gaaffilee furaman:',
+        aria_question: 'Gaaffii dabaluu',
+        aria_input: 'Deebii lakkoofsaa kee as galchi'
+      },
+      so: {
+        title: '6–10 Isku-dar — Jimicsi Ardayda Yar',
+        heading: 'Jimicsiga Isku-darka Fudud',
+        langLabel: 'Luqad',
+        placeholder: 'Geli jawaabta',
+        check: 'Hubi',
+        show: 'Muuji',
+        showTitle: 'Muuji jawaabta saxda ah',
+        pleaseNumber: 'Fadlan geli tiro.',
+        correct: 'Sax tahay! ✅ Shaqo fiican — su\'aal cusub ayaa iman doonta.',
+        notQuite: 'Ma aha sax — mar kale isku day.',
+        answer: 'Jawaab:',
+        score: 'Dhibco:',
+        solved: 'Su\'aalaha la xalliyey:',
+        aria_question: 'Su\'aasha isku-darka',
+        aria_input: 'Halkan geli jawaabtaada tiro ahaan'
+      }
+    };
+
+    let currentLang = 'en';
+
+    function applyLang(){
+      const t = i18n[currentLang] || i18n.en;
+      document.title = t.title;
+      headingEl.textContent = t.heading;
+      langLabel.textContent = t.langLabel;
+      answerEl.placeholder = t.placeholder;
+      checkBtn.textContent = t.check;
+      hintBtn.textContent = t.show;
+      hintBtn.title = t.showTitle;
+      scoreLabelEl.textContent = t.score;
+      solvedLabelEl.textContent = t.solved;
+      questionEl.setAttribute('aria-label', t.aria_question);
+      answerEl.setAttribute('aria-label', t.aria_input);
+      document.documentElement.lang = currentLang;
+    }
+
+    function newQuestion(){
+      // numbers between 6 and 10 inclusive
+      a = randInt(6,10);
+      b = randInt(6,10);
+      questionEl.textContent = `${a} + ${b} = ?`;
+      feedbackEl.textContent = '';
+      feedbackEl.className = 'feedback';
+      answerEl.value = '';
+      answerEl.focus();
+      // clear previous result visual
+      resultImg.style.display = 'none';
+      resultImg.removeAttribute('src');
+      resultImg.removeAttribute('alt');
+    }
+
+    function checkAnswer(){
+      const val = Number(answerEl.value);
+      const correct = (a + b);
+      if (!Number.isFinite(val) || answerEl.value === ''){
+        feedbackEl.textContent = (i18n[currentLang]||i18n.en).pleaseNumber;
+        feedbackEl.className = 'feedback bad';
+        return;
+      }
+      if (val === correct){
+        score += 5; // reward points
+        solved += 1;
+        scoreEl.textContent = score;
+        solvedEl.textContent = solved;
+        feedbackEl.textContent = (i18n[currentLang]||i18n.en).correct;
+        feedbackEl.className = 'feedback good';
+        // play positive sound and show image
+        try { audioWrong.pause(); audioWrong.currentTime = 0; } catch(e){}
+        try { audioCorrect.currentTime = 0; audioCorrect.play(); } catch(e){}
+        resultImg.src = 'assets/yes.jpg';
+        resultImg.alt = (i18n[currentLang]||i18n.en).correct;
+        resultImg.style.display = 'block';
+        // generate the next question after a short friendly pause so the child sees success
+        setTimeout(newQuestion, 900);
+      } else {
+        // wrong answer — encourage retry but keep same question
+        feedbackEl.textContent = (i18n[currentLang]||i18n.en).notQuite;
+        feedbackEl.className = 'feedback bad';
+        answerEl.focus();
+        // play negative sound and show image
+        try { audioCorrect.pause(); audioCorrect.currentTime = 0; } catch(e){}
+        try { audioWrong.currentTime = 0; audioWrong.play(); } catch(e){}
+        resultImg.src = 'assets/no.jpg';
+        resultImg.alt = (i18n[currentLang]||i18n.en).notQuite;
+        resultImg.style.display = 'block';
+      }
+    }
+
+    checkBtn.addEventListener('click', checkAnswer);
+    hintBtn.addEventListener('click', ()=>{
+      const t = (i18n[currentLang]||i18n.en);
+      feedbackEl.textContent = `${t.answer} ${a + b}`;
+      feedbackEl.className = 'feedback';
+    });
+
+    // allow Enter key to submit
+    answerEl.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter'){
+        e.preventDefault();
+        checkAnswer();
+      }
+    });
+
+    // language change handling
+    langSelect.addEventListener('change', ()=>{
+      currentLang = langSelect.value;
+      applyLang();
+    });
+
+    // initialize
+    applyLang();
+    newQuestion();
+  </script>
+</body>
+</html>

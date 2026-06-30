@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mean Adventure | ዛንታታት ማእኸላይ ውፅኢት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ecfdf5;
+            --ink: #064e3b;
+            --primary: #10b981;
+            --secondary: #3b82f6;
+            --white: #ffffff;
+            --danger: #ef4444;
+            --gold: #fbbf24;
+            --paper: #fffef2;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--bg);
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+            color: var(--ink); overflow-x: hidden; position: relative;
+        }
+
+        .landscape-deco {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.1;
+            background-image: radial-gradient(var(--ink) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        header {
+            width: 100%; max-width: 1000px; padding: 15px 25px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            gap: 10px; flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            background: var(--white); padding: 8px 16px; border-radius: 15px; border: 3px solid var(--ink);
+            display: flex; align-items: center; gap: 8px; font-weight: 800; 
+            font-size: clamp(0.7rem, 2.5vw, 0.95rem); box-shadow: 0 4px 0 var(--ink);
+        }
+        .stat-val { color: var(--primary); }
+
+        .container {
+            flex: 1; width: 100%; max-width: 1000px; display: flex; flex-direction: column;
+            justify-content: flex-start; align-items: center; padding: 10px 20px 40px 20px; z-index: 10; gap: 20px;
+        }
+
+        /* The Story Card */
+        .story-card {
+            background: var(--paper); border-radius: 35px; border: 5px solid var(--ink);
+            padding: clamp(20px, 5vw, 40px); width: 100%; max-width: 700px; 
+            box-shadow: 0 12px 0 var(--ink);
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column; gap: 20px;
+            transition: transform 0.3s;
+        }
+
+        .level-indicator {
+            position: absolute; top: 15px; right: 20px; font-weight: 900; 
+            background: var(--ink); color: white; padding: 4px 12px; border-radius: 10px;
+            font-size: 0.8rem; letter-spacing: 1px;
+        }
+
+        .character-box {
+            font-size: 4rem; text-align: center; margin-bottom: -10px;
+            filter: drop-shadow(0 4px 0 var(--ink));
+        }
+
+        .story-text {
+            font-size: clamp(1.1rem, 3.5vw, 1.5rem); font-weight: 800; line-height: 1.5;
+            color: var(--ink); text-align: center;
+        }
+
+        .ans-preview {
+            background: var(--white); border: 4px solid var(--secondary); border-radius: 20px;
+            min-height: 70px; display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 900; color: var(--secondary);
+            box-shadow: 0 6px 0 var(--secondary); margin: 0 auto; min-width: 120px;
+        }
+        .ans-preview.active { border-color: var(--primary); box-shadow: 0 6px 0 var(--primary); color: var(--primary); }
+
+        /* Choice Buttons (For Story 4) */
+        .choice-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%;
+        }
+        .btn-choice {
+            background: var(--white); border: 4px solid var(--ink); border-radius: 20px;
+            padding: 20px; font-size: 1.3rem; font-weight: 900; cursor: pointer;
+            box-shadow: 0 6px 0 var(--ink); transition: 0.1s; color: var(--ink);
+        }
+        .btn-choice:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ink); }
+        .btn-choice:hover { background: var(--secondary); color: white; border-color: white; }
+
+        /* Keypad Styling */
+        .keypad-wrapper {
+            width: 100%; max-width: 400px;
+        }
+        .keypad {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%;
+        }
+        .key {
+            height: clamp(55px, 8vh, 70px); background: var(--white); border: 4px solid var(--ink); border-radius: 18px;
+            font-size: 1.6rem; font-weight: 900; cursor: pointer; transition: 0.1s;
+            box-shadow: 0 6px 0 var(--ink); display: flex; align-items: center; justify-content: center;
+            color: var(--ink);
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ink); }
+        .key.del { background: var(--danger); color: white; border-color: var(--ink); }
+        .key.check {
+            grid-column: 1 / -1; background: var(--primary); color: white;
+            height: clamp(70px, 10vh, 85px); font-size: 1.8rem; margin-top: 5px;
+            box-shadow: 0 8px 0 #065f46;
+        }
+
+        /* Overlays */
+        .overlay {
+            position: fixed; inset: 0; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 5000;
+            background: rgba(255, 255, 255, 0.98); text-align: center; padding: 20px;
+        }
+        .big-icon { font-size: 8rem; margin-bottom: 20px; animation: bounce 1s infinite alternate; }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        @media (min-width: 1024px) {
+            .container { flex-direction: row; gap: 50px; align-items: stretch; justify-content: center; margin-top: 20px; }
+            .story-card { flex: 1.2; justify-content: center; }
+            .keypad-wrapper { flex: 0.8; display: flex; flex-direction: column; justify-content: center; }
+        }
+
+        @media (max-width: 640px) {
+            .story-card { border-radius: 25px; padding: 20px; }
+            .story-text { font-size: 1.1rem; }
+            .key { height: 55px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="landscape-deco"></div>
+    <canvas id="confetti-canvas" style="position:fixed; inset:0; pointer-events:none; z-index:6000;"></canvas>
+
+    <header>
+        <div style="display: flex; gap: 10px;">
+            <div class="stat-pill">⭐ <span id="lblScore">Score</span>: <span id="valScore" class="stat-val">0</span></div>
+            <div class="stat-pill">👑 <span id="lblHigh">High</span>: <span id="valHigh" class="stat-val">0</span></div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="stat-pill" style="width: 44px; height: 44px; border-radius: 50%; padding:0; justify-content:center; cursor: pointer;" onclick="toggleMute()" id="muteBtn">🔊</button>
+            <select id="langSelect" class="stat-pill" style="cursor: pointer;" onchange="setLanguage(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="en">English</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="story-card" id="storyCard">
+            <div class="level-indicator" id="lvlIndicator">STORY 1 / 7</div>
+            <div class="character-box" id="charEmoji">👨‍🌾</div>
+            <p class="story-text" id="storyText">Loading Story...</p>
+            <div id="inputWrapper">
+                <div class="ans-preview active" id="ansBox">?</div>
+            </div>
+            <div id="choiceWrapper" style="display: none;">
+                <div class="choice-grid" id="choiceGrid">
+                    <!-- Buttons for Story 4 -->
+                </div>
+            </div>
+        </div>
+
+        <div class="keypad-wrapper" id="keypadWrapper">
+            <div class="keypad" id="keypad">
+                <!-- Keys injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback -->
+    <div id="success-overlay" class="overlay">
+        <div class="big-icon">📚</div>
+        <h2 style="font-size: 3rem; color: var(--primary); font-weight: 950;">ንፉዕ!</h2>
+        <p style="font-size: 1.5rem; color: #64748b;">ልክዕ መልሲ!</p>
+    </div>
+
+    <div id="error-overlay" class="overlay" style="background: #fee2e2;">
+        <div class="big-icon">❌</div>
+        <h2 style="font-size: 3rem; color: var(--danger); font-weight: 950;">ጌጋ!</h2>
+        <p style="font-size: 1.5rem; color: var(--danger);">እንደገና ፈትን</p>
+    </div>
+
+    <script>
+        const stories = [
+            {
+                id: 1, emoji: "👬",
+                ans: 15, type: "numeric",
+                ti: "ገብራይን መሓመድን ስራሕ ሰሪሖም ገብራይ ብር 10፣ መሓመድ ድማ ብር 20 ሞቑሽሽ ረኺቦም፡፡ ነቲ ሞቑሽሽ ብማዕረ እንተተማቒሎም ሕድ ሕዶም ከክንደይ ይበፅሖም?",
+                en: "Gebray and Mohamed worked together. Gebray got 10 Birr and Mohamed got 20 Birr. If they share the total equally, how much does each person get?"
+            },
+            {
+                id: 2, emoji: "👩‍🎓",
+                ans: 26, type: "numeric",
+                ti: "ኣሚና 4ይ ክፍሊ ተምሃሪት እያ፡፡ ኣብ ሚድ ፈተና ዉፅኢት ሒሳብ 26፣ እንግሊዝኛ 28፣ ከባቢ ሳይንስ 24 ረኺባ፡፡ ማእኸላይ ዉፅኢታ ክንደይ እዩ?",
+                en: "Amina is a Grade 4 student. In her mid-exams, she scored 26 in Math, 28 in English, and 24 in Science. What is her average score?"
+            },
+            {
+                id: 3, emoji: "👩‍🏫",
+                ans: 65, type: "numeric",
+                ti: "ማርታ ብሰለስተ ዓይነታት ትምህርቲ ዝረኸበቶ ውፅኢት 55፣ 65፣ 75 እዩ፡፡ ማእኸላይ ውፅኢት ማርታ ክንደይ እዩ?",
+                en: "Marta's scores in three subjects are 55, 65, and 75. What is Marta's average score?"
+            },
+            {
+                id: 4, emoji: "⚖️",
+                ans: "Marta", type: "choice",
+                choices: { ti: ["ማርታ", "ርሕመት"], en: ["Marta", "Ruhmet"] },
+                ti: "ምሕረት ብኣርባዕተ ዓይነታት ትምህርቲ ዝረኸበቶ ውፅኢት 45፣ 55፣ 65 ን 75 ን እንተኾይኑ ካብ ማርታ (ማርታ 65 ነይሩ) ን ካብ ምሕረትን ዝበለፀ ማእኸላይ ውፅኢት ዝረኸበት መን እያ?",
+                en: "Mhret's scores in four subjects are 45, 55, 65, and 75. Comparing Mhret's average to Marta's (Marta's average was 65), who has the higher average?"
+            },
+            {
+                id: 5, emoji: "👨‍🎓",
+                ans: 90, type: "numeric",
+                ti: "ካሕሱ ብሰለስተ ዓይነታት ትምህርቲ ዝረኸቦ ውፅኢት 85፣ 90፣ 95 እዩ፡፡ ማእኸላይ ውፅኢቱ ክንደይ እዩ?",
+                en: "Kahsu scored 85, 90, and 95 in three subjects. What is his average score?"
+            },
+            {
+                id: 6, emoji: "🏃",
+                ans: 75, type: "numeric",
+                ti: "ዓብዱ ኣብ ሕድ ሕድ መዓልቲ ልምምድ ጉያ ይገብር፡፡ ኣብ ሰለስተ መዓልቲ በቢመዓልቱ ን75 ደቒቓ፣ ን 65 ደቒቓን ን85 ደቒቓን ልምምድ እንተገይሩ በቢመዓልቱ ዝሰርሖ ልምምድ ብማእኸላይ ውፅኢት ክንደይ ዯቒቓ እዩ?",
+                en: "Abdu practices running every day. If he trained for 75, 65, and 85 minutes over three days, what is the average time he trained per day?"
+            },
+            {
+                id: 7, emoji: "✈️",
+                ans: 298, type: "numeric",
+                ti: "መንገዱ ኣየር ኢትዮጵያ ካብ ኣዱስ ኣበባ ናብ መቐለ በቢመዓልቱ ተሳፈርቲ የጓዓዕዝ፡፡ ኣብ ኣርባዕተ መዓልቲ 252፣ 300፣ 280፣ 360 ተሳፈርቲ እንተተጓዓዘ ኣብ መዓልቲ ብማእኸላይ ክንደይ ተሳፈርቲ የጓዕዝ?",
+                en: "Ethiopian Airlines flies from Addis Ababa to Mekelle. In four days, it carried 252, 300, 280, and 360 passengers. What is the average number of passengers per day?"
+            }
+        ];
+
+        let currentIdx = 0, score = 0, lang = 'ti', userVal = "", busy = false, muted = false;
+        let highScore = parseInt(localStorage.getItem('mean_stories_73_high')) || 0;
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if (type === 'tap') { o.type = 'sine'; o.frequency.setValueAtTime(800, n); g.gain.setValueAtTime(0.05, n); o.start(); o.stop(n + 0.05); }
+            else if (type === 'win') { o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1)); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.5); }
+            else if (type === 'err') { o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.exponentialRampToValueAtTime(40, n + 0.3); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.3); }
+        }
+
+        function setLanguage(l) { lang = l; renderRound(); }
+        function toggleMute() { muted = !muted; document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊'; }
+
+        function renderRound() {
+            const story = stories[currentIdx];
+            document.getElementById('storyText').innerText = story[lang];
+            document.getElementById('charEmoji').innerText = story.emoji;
+            document.getElementById('lvlIndicator').innerText = `STORY ${currentIdx + 1} / 7`;
+            document.getElementById('valScore').innerText = score;
+            document.getElementById('valHigh').innerText = highScore;
+
+            const inputWrap = document.getElementById('inputWrapper');
+            const choiceWrap = document.getElementById('choiceWrapper');
+            const keypadWrap = document.getElementById('keypadWrapper');
+
+            if (story.type === "numeric") {
+                inputWrap.style.display = 'block';
+                choiceWrap.style.display = 'none';
+                keypadWrap.style.display = 'flex';
+                document.getElementById('ansBox').innerText = userVal || "?";
+            } else {
+                inputWrap.style.display = 'none';
+                choiceWrap.style.display = 'block';
+                keypadWrap.style.display = 'none';
+                const grid = document.getElementById('choiceGrid');
+                grid.innerHTML = "";
+                story.choices[lang].forEach((choice, i) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-choice';
+                    btn.innerText = choice;
+                    btn.onclick = () => checkChoice(i);
+                    grid.appendChild(btn);
+                });
+            }
+        }
+
+        function press(k) {
+            if (busy) return;
+            sfx('tap');
+            if (k === 'bk') userVal = userVal.slice(0, -1);
+            else if (userVal.length < 5) userVal += k;
+            document.getElementById('ansBox').innerText = userVal || "?";
+        }
+
+        function checkNumeric() {
+            if (busy || userVal === "") return;
+            const story = stories[currentIdx];
+            if (parseInt(userVal) === story.ans) handleWin();
+            else handleErr();
+        }
+
+        function checkChoice(idx) {
+            if (busy) return;
+            // For Story 4, the answer is Marta (idx 0)
+            if (idx === 0) handleWin();
+            else handleErr();
+        }
+
+        function handleWin() {
+            busy = true; sfx('win'); burst(300);
+            score += 100;
+            if (score > highScore) { 
+                highScore = score; 
+                localStorage.setItem('mean_stories_73_high', highScore); 
+            }
+            const overlay = document.getElementById('success-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                currentIdx = (currentIdx + 1) % stories.length;
+                userVal = "";
+                busy = false;
+                renderRound();
+            }, 2000);
+        }
+
+        function handleErr() {
+            busy = true; sfx('err');
+            const overlay = document.getElementById('error-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                userVal = "";
+                busy = false;
+                renderRound();
+            }, 1800);
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const p = [];
+            const colors = ['#10b981', '#3b82f6', '#fbbf24', '#ffffff'];
+            for(let i=0; i<count; i++) p.push({
+                x: Math.random()*c.width, y: c.height+20, vx: (Math.random()-0.5)*40, vy: (Math.random()-1.2)*65,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 2.5, r: Math.random()*360, rv: (Math.random()-0.5)*20
+            });
+            (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=p.length-1; i>=0; i--){
+                    const pt=p[i]; if(pt.l>0){
+                        al=true; pt.x+=pt.vx; pt.y+=pt.vy; pt.vy+=0.85; pt.l-=0.01; pt.r+=pt.rv;
+                        x.save(); x.translate(pt.x,pt.y); x.rotate(pt.r*Math.PI/180);
+                        x.fillStyle=pt.c; x.fillRect(-pt.s/2,-pt.s/2,pt.s,pt.s); x.restore();
+                    } else p.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f);
+            })();
+        }
+
+        window.onload = () => {
+            const kp = document.getElementById('keypad');
+            [1,2,3,4,5,6,7,8,9,0,'00','bk'].forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key'; 
+                if(k === 'bk') { b.innerText = '⌫'; b.classList.add('del'); }
+                else b.innerText = k;
+                b.onclick = () => press(k); 
+                kp.appendChild(b);
+            });
+            const checkBtn = document.createElement('button');
+            checkBtn.className = 'key check';
+            checkBtn.innerText = 'ኣረጋግፅ';
+            checkBtn.onclick = checkNumeric;
+            kp.appendChild(checkBtn);
+            renderRound();
+        };
+    </script>
+</body>
+</html>

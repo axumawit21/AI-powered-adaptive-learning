@@ -1,0 +1,689 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Length Units - Island Adventure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sky-blue: #00d2ff;
+            --ocean-blue: #3a7bd5;
+            --island-mm: #ff9f43;
+            --island-cm: #ee5253;
+            --island-m: #1dd1a1;
+            --island-km: #5f27cd;
+            --text-dark: #2c3e50;
+            --white: #ffffff;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: linear-gradient(to bottom, var(--sky-blue), var(--ocean-blue));
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+            touch-action: none;
+        }
+
+        /* --- Waves Background --- */
+        .waves {
+            position: absolute; bottom: 0; width: 100%; height: 15vh;
+            min-height: 100px; max-height: 150px; z-index: 1;
+        }
+
+        /* --- Header --- */
+        header {
+            width: 100%;
+            padding: 15px 30px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .header-item-left { justify-self: start; }
+        .header-item-right { justify-self: end; }
+
+        .grade-badge {
+            background: var(--island-cm); color: white; width: 50px; height: 50px;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.5rem; border: 3px solid white;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1); transform: rotate(-5deg);
+        }
+
+        h1 { margin: 0; color: white; font-size: 1.8rem; font-weight: 900; letter-spacing: -1px; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+
+        /* Custom Dropdown */
+        .custom-select-wrapper { position: relative; display: inline-block; cursor: pointer; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; font-weight: 800; color: var(--text-dark);
+            height: 45px; background: white; border-radius: 22px;
+            width: 160px; border: 2px solid white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .custom-options {
+            position: absolute; top: 115%; right: 0; left: 0;
+            background: white; opacity: 0; visibility: hidden;
+            pointer-events: none; transform: translateY(-10px);
+            transition: all 0.3s ease; display: flex; flex-direction: column;
+            border-radius: 15px; padding: 6px; box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            z-index: 200;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; pointer-events: all; transform: translateY(0); }
+        .custom-option { padding: 10px; border-radius: 10px; cursor: pointer; font-weight: 600; color: #444; font-size: 0.9rem; }
+        .custom-option:hover { background: #f0f9ff; color: var(--ocean-blue); }
+
+        /* --- Main Content --- */
+        .container {
+            flex: 1; width: 100%; max-width: 1000px;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px; z-index: 10;
+            justify-content: space-between;
+        }
+
+        .stats-bar { display: flex; gap: 20px; margin-bottom: 10px; }
+        .stat-card {
+            background: rgba(255,255,255,0.9); padding: 10px 25px; border-radius: 30px;
+            font-weight: 900; color: var(--text-dark);
+            box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+            display: flex; align-items: center; gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .instruction-box {
+            background: white; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.4rem; font-weight: 800; color: var(--ocean-blue);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); text-align: center;
+            margin: 10px 0; border: 4px solid var(--sky-blue);
+            max-width: 90%;
+        }
+
+        /* --- Item Display --- */
+        .ship-deck {
+            flex: 1; width: 100%; display: flex; justify-content: center; align-items: center;
+            position: relative;
+        }
+
+        .item-card {
+            width: 220px; height: 260px;
+            background: white; border: 10px solid white;
+            border-radius: 40px; box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: grab; z-index: 20;
+            animation: float 3s ease-in-out infinite alternate;
+        }
+        @keyframes float { from { transform: translateY(0); } to { transform: translateY(-20px); } }
+        .item-card:active { cursor: grabbing; transform: scale(1.1) rotate(3deg); z-index: 100; animation: none; }
+
+        .item-icon { font-size: 6rem; margin-bottom: 15px; pointer-events: none; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1)); }
+        .item-label { font-size: 1.4rem; font-weight: 900; color: #333; text-align: center; pointer-events: none; padding: 0 15px; }
+
+        /* --- Islands --- */
+        .archipelago {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 20px; width: 100%; margin-bottom: 30px;
+        }
+
+        .island {
+            background: #a29bfe; /* Sand color placeholder */
+            border-radius: 40% 40% 30% 30%; height: 140px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            position: relative;
+            box-shadow: 0 12px 0 rgba(0,0,0,0.2);
+            border: 5px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+        }
+        .island.hover,
+        .island:hover {
+            transform: scale(1.1);
+            border-color: white;
+            box-shadow: 0 0 30px white;
+        }
+        .island:active { transform: scale(0.95); }
+        
+        .island-label { font-size: 2.8rem; font-weight: 900; color: white; text-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .island-desc { font-size: 1rem; font-weight: bold; color: white; opacity: 0.9; text-transform: uppercase; }
+
+        .isl-mm { background: var(--island-mm); }
+        .isl-cm { background: var(--island-cm); }
+        .isl-m { background: var(--island-m); }
+        .isl-km { background: var(--island-km); }
+
+        /* --- Overlay Reactions --- */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(8px); padding: 20px;
+        }
+        .overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+        
+        .modal {
+            background: white; padding: 50px; border-radius: 40px;
+            text-align: center; max-width: 450px; width: 95%;
+            border: 12px solid var(--ocean-blue);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        }
+        .modal-icon { font-size: 7rem; display: block; margin-bottom: 20px; }
+        .modal-title { font-size: 2.5rem; font-weight: 900; color: var(--text-dark); margin-bottom: 20px; }
+        .btn-modal {
+            background: var(--ocean-blue); color: white; border: none;
+            padding: 18px 50px; border-radius: 50px; font-weight: 900;
+            font-size: 1.6rem; cursor: pointer; box-shadow: 0 8px 0 #1e3799;
+            width: 100%;
+        }
+        .btn-modal:active { transform: translateY(4px); box-shadow: none; }
+
+        #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 1100; }
+
+        /* Big red X for wrong answers */
+        .wrong-x {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 1200;
+            transition: opacity 0.25s ease;
+        }
+        .wrong-x span {
+            font-size: 7rem;
+            color: #ff1744;
+            text-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        .wrong-x.show {
+            opacity: 1;
+        }
+
+        /* Draggable Clone */
+        .drag-clone {
+            position: fixed; pointer-events: none; z-index: 1000;
+            transform: scale(0.8); filter: drop-shadow(0 25px 50px rgba(0,0,0,0.4));
+        }
+
+        @media (min-width: 800px) {
+            .archipelago { grid-template-columns: repeat(4, 1fr); height: 200px; }
+            .island { height: 100%; }
+            h1 { font-size: 2.8rem; }
+            .item-card { width: 280px; height: 340px; }
+            .item-icon { font-size: 8rem; }
+        }
+
+        @media (max-width: 600px) {
+            header { padding: 10px; grid-template-columns: auto 1fr auto; }
+            h1 { font-size: 1.3rem; }
+            .custom-select__trigger { width: 130px; font-size: 0.8rem; height: 38px; }
+            .island-label { font-size: 2rem; }
+            .stat-card { padding: 8px 15px; font-size: 0.9rem; }
+            .instruction-box { font-size: 1.1rem; padding: 10px 25px; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+    <div class="header-item-left"><div class="grade-badge">3</div></div>
+    <h1 id="app-title">Island Hop</h1>
+    <div class="header-item-right">
+        <div class="custom-select-wrapper" id="lang-dropdown">
+            <div class="custom-select">
+                <div class="custom-select__trigger">
+                    <span id="current-lang-text">🗺️ ትግርኛ</span>
+                    <span style="font-size:0.6rem">▼</span>
+                </div>
+                <div class="custom-options">
+                    <div class="custom-option" data-value="ti">ትግርኛ</div>
+                    <div class="custom-option" data-value="am">አማርኛ</div>
+                    <div class="custom-option" data-value="en">English</div>
+                    <div class="custom-option" data-value="om">Afan Oromoo</div>
+                    <div class="custom-option" data-value="so">Soomaali</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="stats-bar">
+        <div class="stat-card">🏅 <span id="lbl-record">Record</span>: <span id="val-high">0</span></div>
+        <div class="stat-card">⭐ <span id="lbl-score">Score</span>: <span id="val-score">0</span></div>
+        <button id="btn-reset" class="stat-card" style="border:none; cursor:pointer;">
+            🔁 <span id="lbl-reset">Reset</span>
+        </button>
+    </div>
+
+    <div class="instruction-box" id="lbl-instr">እዚ ንምዕቃን ኣየናይ ኣሃዱ ይሓይሽ?</div>
+
+    <div class="ship-deck" id="item-spawner">
+        <!-- Draggable Card Injected Here -->
+    </div>
+
+    <div class="archipelago">
+        <div class="island isl-mm" id="isl-mm" data-unit="mm">
+            <span class="island-label">ሚ.ሜ</span>
+            <span class="island-desc">mm</span>
+        </div>
+        <div class="island isl-cm" id="isl-cm" data-unit="cm">
+            <span class="island-label">ሳ.ሜ</span>
+            <span class="island-desc">cm</span>
+        </div>
+        <div class="island isl-m" id="isl-m" data-unit="m">
+            <span class="island-label">ሜ</span>
+            <span class="island-desc">m</span>
+        </div>
+        <div class="island isl-km" id="isl-km" data-unit="km">
+            <span class="island-label">ኪ.ሜ</span>
+            <span class="island-desc">km</span>
+        </div>
+    </div>
+</div>
+
+<div class="wrong-x" id="wrong-x">
+    <span>✖</span>
+    </div>
+
+<div class="overlay" id="overlay-win">
+    <div class="modal">
+        <span class="modal-icon">🌴💎</span>
+        <div class="modal-title" id="win-title">ትኽክል!</div>
+        <button class="btn-modal" onclick="nextLevel()" id="btn-next">ቀፃሊ ➡</button>
+    </div>
+</div>
+
+<svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+    <defs><path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" /></defs>
+    <g class="parallax">
+        <use xlink:href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.7" />
+        <use xlink:href="#gentle-wave" x="48" y="3" fill="rgba(255,255,255,0.5)" />
+        <use xlink:href="#gentle-wave" x="48" y="5" fill="rgba(255,255,255,0.3)" />
+        <use xlink:href="#gentle-wave" x="48" y="7" fill="#fff" />
+    </g>
+</svg>
+
+<script>
+    const translations = {
+        ti: {
+            title: "መዐቀኒታት", record: "ዝለዓለ", score: "ነጥቢ", instr: "እዚ ንምዕቃን ኣየናይ ኣሃዱ ይሓይሽ?", next: "ቀፃሊ ➡", win: "ትኽክል!", reset: "ደጊምካ ጀምር",
+            units: { mm: "ሚ.ሜ", cm: "ሳ.ሜ", m: "ሜ", km: "ኪ.ሜ" },
+            items: {
+                ant: "ፃፀ", grain: "ሩዝ", eyelash: "ፀጉሪ ዓይኒ", pencil: "እርሳስ", phone: "ሞባይል", key: "ቁልፊ",
+                tree: "ኦም", house: "ገዛ", bus: "አውቶቡስ", road: "መንገዲ", mountain: "ጎቦ", river: "ሩባ",
+                needle: "መርፈእ", paperclip: "ፔፐር ክሊፕ", ruler: "መለክዒ", book: "መጽሓፍ",
+                door: "በሪ", giraffe: "ጅራፍ", city: "ከተማ", plane: "አውሮፕላን"
+            }
+        },
+        am: {
+            title: "መለኪያዎች", record: "ከፍተኛ", score: "ውጤት", instr: "ይህንን ለመለካት የትኛው ክፍል ይመረጣል?", next: "ቀጣይ ➡", win: "ትክክል!", reset: "እንደገና መጀመር",
+            units: { mm: "ሚ.ሜ", cm: "ሳ.ሜ", m: "ሜ", km: "ኪ.ሜ" },
+            items: {
+                ant: "ጉንዳን", grain: "የሩዝ ፍሬ", eyelash: "ሽፋሽፍት", pencil: "እርሳስ", phone: "ስልክ", key: "ቁልፍ",
+                tree: "ዛፍ", house: "ቤት", bus: "አውቶቡስ", road: "መንገድ", mountain: "ተራራ", river: "ወንዝ",
+                needle: "መርፌ", paperclip: "የወረቀት ክሊፕ", ruler: "መለኪያ መዶሻ", book: "መጽሐፍ",
+                door: "በር", giraffe: "ጅራፍ", city: "ከተማ", plane: "አውሮፕላን"
+            }
+        },
+        en: {
+            title: "Measurements", record: "Record", score: "Score", instr: "Which unit is best to measure this?", next: "Next ➡", win: "Correct!", reset: "Reset",
+            units: { mm: "mm", cm: "cm", m: "m", km: "km" },
+            items: {
+                ant: "Ant", grain: "Rice Grain", eyelash: "Eyelash", pencil: "Pencil", phone: "Phone", key: "Key",
+                tree: "Tree", house: "House", bus: "Bus", road: "Road", mountain: "Mountain", river: "River",
+                needle: "Sewing Needle", paperclip: "Paperclip", ruler: "Ruler", book: "Book",
+                door: "Door", giraffe: "Giraffe", city: "City Distance", plane: "Airplane Trip"
+            }
+        },
+        om: {
+            title: "Safara Dheerinaa", record: "Rikardii", score: "Qabxii", instr: "Kana safaruuf kamtu filatama?", next: "Itti Aanu ➡", win: "Sirrii!", reset: "Irraa jalqabaa",
+            units: { mm: "mm", cm: "cm", m: "m", km: "km" },
+            items: {
+                ant: "Mixii", grain: "Ruuzii", eyelash: "Hallaqqee", pencil: "Irsaasii", phone: "Bilbila", key: "Furtuu",
+                tree: "Muka", house: "Mana", bus: "Atobusii", road: "Daandii", mountain: "Tulluu", river: "Laga",
+                needle: "Mermsaa", paperclip: "Kiliippii waraqaa", ruler: "Rulaa", book: "Kitaaba",
+                door: "Balbalaa", giraffe: "Jiraafaa", city: "Magaalaa", plane: "Xiyyaaraa"
+            }
+        },
+        so: {
+            title: "Cabbirka Dhererka", record: "Rikoodh", score: "Dhibco", instr: "Cutubkee ugu habboon in lagu cabbiro?", next: "Xiga ➡", win: "Sax!", reset: "Bilow mar kale",
+            units: { mm: "mm", cm: "cm", m: "m", km: "km" },
+            items: {
+                ant: "Quraanjo", grain: "Bariis", eyelash: "Baalalka indhaha", pencil: "Qalin", phone: "Telefoon", key: "Fure",
+                tree: "Geed", house: "Guri", bus: "Bas", road: "Waddo", mountain: "Buur", river: "Wabi",
+                needle: "Cirbad tolid", paperclip: "Qabato warqad", ruler: "Qiyaas", book: "Buug",
+                door: "Albaab", giraffe: "Geri", city: "Magaalo u jirta", plane: "Safar diyaaradeed"
+            }
+        }
+    };
+
+    const items = [
+        { id: 'ant', icon: '🐜', unit: 'mm' }, { id: 'grain', icon: '🌾', unit: 'mm' }, { id: 'eyelash', icon: '👁️', unit: 'mm' },
+        { id: 'needle', icon: '🪡', unit: 'mm' }, { id: 'paperclip', icon: '📎', unit: 'mm' },
+        { id: 'pencil', icon: '✏️', unit: 'cm' }, { id: 'phone', icon: '📱', unit: 'cm' }, { id: 'key', icon: '🔑', unit: 'cm' },
+        { id: 'ruler', icon: '📏', unit: 'cm' }, { id: 'book', icon: '📚', unit: 'cm' },
+        { id: 'tree', icon: '🌳', unit: 'm' }, { id: 'house', icon: '🏠', unit: 'm' }, { id: 'bus', icon: '🚌', unit: 'm' },
+        { id: 'door', icon: '🚪', unit: 'm' }, { id: 'giraffe', icon: '🦒', unit: 'm' },
+        { id: 'road', icon: '🛣️', unit: 'km' }, { id: 'mountain', icon: '⛰️', unit: 'km' }, { id: 'river', icon: '🌊', unit: 'km' },
+        { id: 'city', icon: '🏙️', unit: 'km' }, { id: 'plane', icon: '✈️', unit: 'km' }
+    ];
+
+    // Pool of remaining items to avoid repeats until all questions are used
+    let remainingItems = [];
+
+    let currentLang = 'ti';
+    let score = 0;
+    let highScore = localStorage.getItem('islandHopHigh_V2') || 0;
+    let currentItem = null;
+    let clone = null;
+    let activeDrag = null;
+
+    const islands = document.querySelectorAll('.island');
+
+    islands.forEach(isl => {
+        isl.addEventListener('click', handleIslandClick);
+    });
+
+    function init() {
+        document.getElementById('val-high').textContent = highScore;
+        updateLanguage();
+        spawnItem();
+    }
+
+    function spawnItem() {
+        const spawner = document.getElementById('item-spawner');
+        spawner.innerHTML = '';
+        if (remainingItems.length === 0) {
+            remainingItems = shuffleItems(items.slice());
+        }
+        currentItem = remainingItems.pop();
+        
+        const card = document.createElement('div');
+        card.className = 'item-card';
+        card.innerHTML = `
+            <div class="item-icon">${currentItem.icon}</div>
+            <div class="item-label">${translations[currentLang].items[currentItem.id]}</div>
+        `;
+        
+        spawner.appendChild(card);
+        makeDraggable(card);
+    }
+
+    function shuffleItems(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function makeDraggable(el) {
+        const onStart = (e) => {
+            const touch = e.touches ? e.touches[0] : e;
+            activeDrag = el;
+            const rect = el.getBoundingClientRect();
+            
+            clone = el.cloneNode(true);
+            clone.classList.add('drag-clone');
+            clone.style.width = rect.width + 'px';
+            clone.style.height = rect.height + 'px';
+            clone.style.left = rect.left + 'px';
+            clone.style.top = rect.top + 'px';
+            document.body.appendChild(clone);
+            
+            el.style.opacity = '0';
+            playSound('pop');
+        };
+
+        const onMove = (e) => {
+            if (!activeDrag) return;
+            const touch = e.touches ? e.touches[0] : e;
+            clone.style.left = (touch.clientX - clone.offsetWidth / 2) + 'px';
+            clone.style.top = (touch.clientY - clone.offsetHeight / 2) + 'px';
+            
+            islands.forEach(isl => {
+                const r = isl.getBoundingClientRect();
+                if (touch.clientX > r.left && touch.clientX < r.right && touch.clientY > r.top && touch.clientY < r.bottom) {
+                    isl.classList.add('hover');
+                } else {
+                    isl.classList.remove('hover');
+                }
+            });
+        };
+
+        const onEnd = (e) => {
+            if (!activeDrag) return;
+            const touch = e.changedTouches ? e.changedTouches[0] : e;
+            
+            let targetIsland = null;
+            islands.forEach(isl => {
+                const r = isl.getBoundingClientRect();
+                if (touch.clientX > r.left && touch.clientX < r.right && touch.clientY > r.top && touch.clientY < r.bottom) {
+                    targetIsland = isl;
+                }
+                isl.classList.remove('hover');
+            });
+
+            if (targetIsland && targetIsland.dataset.unit === currentItem.unit) {
+                handleCorrect(targetIsland);
+            } else {
+                handleWrong();
+            }
+        };
+
+        el.addEventListener('mousedown', onStart);
+        el.addEventListener('touchstart', onStart, {passive: false});
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('touchmove', onMove, {passive: false});
+        window.addEventListener('mouseup', onEnd);
+        window.addEventListener('touchend', onEnd);
+    }
+
+    function handleIslandClick(e) {
+        const isl = e.currentTarget;
+        if (!currentItem) return;
+
+        if (isl.dataset.unit === currentItem.unit) {
+            score += 20;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('islandHopHigh_V2', highScore);
+            }
+            updateScoreUI();
+            playSound('win');
+            triggerConfetti();
+            document.getElementById('overlay-win').classList.add('show');
+        } else {
+            playSound('fail');
+            showWrongX();
+        }
+    }
+
+    function showWrongX() {
+        const el = document.getElementById('wrong-x');
+        if (!el) return;
+        el.classList.add('show');
+        setTimeout(() => {
+            el.classList.remove('show');
+        }, 600);
+    }
+
+    function handleCorrect(isl) {
+        score += 20;
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('islandHopHigh_V2', highScore);
+        }
+        updateScoreUI();
+        playSound('win');
+        triggerConfetti();
+        
+        const r = isl.getBoundingClientRect();
+        clone.style.transition = 'all 0.5s ease-in';
+        clone.style.left = (r.left + r.width/2 - clone.offsetWidth/2) + 'px';
+        clone.style.top = (r.top + r.height/2 - clone.offsetHeight/2) + 'px';
+        clone.style.transform = 'scale(0) rotate(720deg)';
+        clone.style.opacity = '0';
+
+        setTimeout(() => {
+            cleanupDrag();
+            document.getElementById('overlay-win').classList.add('show');
+        }, 500);
+    }
+
+    function handleWrong() {
+        playSound('fail');
+        showWrongX();
+        clone.style.transition = 'all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+        const spawnerRect = document.getElementById('item-spawner').getBoundingClientRect();
+        clone.style.left = (spawnerRect.left + spawnerRect.width/2 - clone.offsetWidth/2) + 'px';
+        clone.style.top = (spawnerRect.top + spawnerRect.height/2 - clone.offsetHeight/2) + 'px';
+        
+        setTimeout(() => {
+            activeDrag.style.opacity = '1';
+            cleanupDrag();
+        }, 500);
+    }
+
+    function cleanupDrag() {
+        if (clone) clone.remove();
+        activeDrag = null;
+        clone = null;
+    }
+
+    function nextLevel() {
+        document.getElementById('overlay-win').classList.remove('show');
+        spawnItem();
+    }
+
+    function updateScoreUI() {
+        document.getElementById('val-score').textContent = score;
+        document.getElementById('val-high').textContent = highScore;
+    }
+
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('lbl-record').textContent = t.record;
+        document.getElementById('lbl-score').textContent = t.score;
+        const resetEl = document.getElementById('lbl-reset');
+        if (resetEl) resetEl.textContent = t.reset || 'Reset';
+        document.getElementById('lbl-instr').textContent = t.instr;
+        document.getElementById('btn-next').textContent = t.next;
+        document.getElementById('win-title').textContent = t.win;
+        
+        document.querySelectorAll('.island').forEach(isl => {
+            const unit = isl.dataset.unit;
+            isl.querySelector('.island-label').textContent = t.units[unit];
+        });
+
+        if (currentItem) {
+            const labelEl = document.querySelector('.item-label');
+            if (labelEl) labelEl.textContent = t.items[currentItem.id];
+        }
+    }
+
+    // Reset button: set score to 0 and restart question pool
+    const resetBtn = document.getElementById('btn-reset');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            score = 0;
+            updateScoreUI();
+            remainingItems = shuffleItems(items.slice());
+            document.getElementById('overlay-win').classList.remove('show');
+            spawnItem();
+        });
+    }
+
+    // Dropdown Handling
+    const dropdown = document.getElementById('lang-dropdown');
+    const trigger = dropdown.querySelector('.custom-select__trigger');
+    const options = dropdown.querySelectorAll('.custom-option');
+
+    trigger.addEventListener('click', (e) => {
+        dropdown.querySelector('.custom-select').classList.toggle('open');
+        e.stopPropagation();
+    });
+
+    options.forEach(opt => {
+        opt.addEventListener('click', function(e) {
+            e.stopPropagation();
+            currentLang = this.dataset.value;
+            document.getElementById('current-lang-text').textContent = "🗺️ " + this.textContent;
+            dropdown.querySelector('.custom-select').classList.remove('open');
+            updateLanguage();
+        });
+    });
+
+    window.addEventListener('click', () => dropdown.querySelector('.custom-select').classList.remove('open'));
+
+    // Audio Engine
+    function playSound(type) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        const t = ctx.currentTime;
+        if (type === 'win') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(523, t); osc.frequency.exponentialRampToValueAtTime(1046, t + 0.15);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+            osc.start(t); osc.stop(t + 0.4);
+        } else if (type === 'fail') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); osc.frequency.linearRampToValueAtTime(80, t + 0.3);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.3);
+            osc.start(t); osc.stop(t + 0.3);
+        } else {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(400, t); osc.frequency.exponentialRampToValueAtTime(600, t + 0.05);
+            gain.gain.setValueAtTime(0.05, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+            osc.start(t); osc.stop(t + 0.1);
+        }
+    }
+
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const pieces = [];
+        for(let i=0; i<80; i++) {
+            pieces.push({
+                x: canvas.width / 2, y: canvas.height / 2,
+                vx: (Math.random() - 0.5) * 25, vy: (Math.random() - 0.5) * 25 - 5,
+                color: `hsl(${Math.random()*360}, 100%, 50%)`, size: Math.random() * 10 + 5
+            });
+        }
+        function anim() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            let alive = false;
+            pieces.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.6;
+                if (p.y < canvas.height) {
+                    ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
+                    alive = true;
+                }
+            });
+            if (alive) requestAnimationFrame(anim);
+        }
+        anim();
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>

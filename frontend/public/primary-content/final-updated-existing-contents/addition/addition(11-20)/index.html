@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="assets/Percents.png" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <title>Addition Adventure!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Roboto:wght@400;700&display=swap');
+
+        body {
+            background: linear-gradient(135deg, #f9d423 0%, #ff4e50 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Fredoka One', 'Comic Sans MS', cursive, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        
+        .top-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px; /* Space from the top of the body */
+            margin-bottom: 10px; /* Space below controls, separating them from the heading */
+            z-index: 1000;
+            align-items: center;
+        }
+
+        #fullscreen, #home, #back {
+            background: #fffbe7;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.6rem;
+            box-shadow: 0 4px 10px rgba(255, 78, 80, 0.4);
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #ff4e50;
+            text-decoration: none;
+        }
+        #fullscreen:hover, #home:hover, #back:hover {
+            background: #ffe082;
+            transform: scale(1.15) rotate(5deg);
+            box-shadow: 0 6px 15px rgba(255, 78, 80, 0.6);
+        }
+        #back_img {
+            width: 30px;
+            height: 30px;
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3));
+        }
+        #back { padding: 0; }
+
+        /* Language select styling */
+        #lang-select {
+            background: #fffbe7;
+            color: #ff4e50;
+            border: 2px solid #ffd54f;
+            border-radius: 999px;
+            padding: 8px 14px;
+            height: 44px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 10px rgba(255, 213, 79, 0.5);
+            transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+            cursor: pointer;
+            outline: none;
+        }
+        #lang-select:hover {
+            background: #fff3b0;
+            box-shadow: 0 6px 14px rgba(255, 213, 79, 0.7);
+            transform: translateY(-1px);
+        }
+        #lang-select:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 10px rgba(255, 213, 79, 0.5);
+        }
+
+        h1 {
+            color: #fff;
+            text-shadow: 3px 3px 10px rgba(255, 78, 80, 0.7), 0 0 15px rgba(249, 212, 35, 0.8);
+            font-size: 3rem;
+            margin-top: 0; /* Heading should have space from controls now, not from top of body */
+            margin-bottom: 0.5em; /* Space below heading, slightly reduced */
+            letter-spacing: 2px;
+            text-align: center;
+            line-height: 1.2;
+            padding: 0 10px;
+        }
+
+        .inp {
+            margin: 2em auto 1em auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            background: #fffbe7ee;
+            border-radius: 1.5em;
+            box-shadow: 0 4px 15px rgba(255, 78, 80, 0.5);
+            padding: 2em 2.5em;
+            max-width: 650px;
+            width: 90%;
+            position: relative;
+            z-index: 10;
+            gap: 10px;
+            box-sizing: border-box;
+        }
+
+        #feedback-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .feedback-content {
+            display: inline-flex;
+            gap: 12px;
+            align-items: center;
+            background: #fffbe7;
+            border: 3px solid #ffd54f;
+            border-radius: 16px;
+            padding: 12px 18px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            transform: scale(1);
+        }
+        .feedback-content img {
+            width: 105px;
+            height: 105px;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.2));
+        }
+        .feedback-text {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.6rem;
+            color: #ff4e50;
+        }
+
+        /* Fullscreen cheering mode (only when correct) */
+        #feedback-overlay.fullscreen {
+            background: rgba(0,0,0,0.85);
+        }
+        #feedback-overlay.fullscreen .feedback-content {
+            background: transparent;
+            border: none;
+            padding: 0;
+            box-shadow: none;
+        }
+        #feedback-overlay.fullscreen .feedback-content img {
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain;
+            filter: none;
+        }
+        #feedback-overlay.fullscreen .feedback-text {
+            display: none;
+        }
+
+        .input-group-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .inp input[type="number"] {
+            width: 100px;
+            height: 65px;
+            font-size: 2.8rem;
+            border-radius: 0.8em;
+            border: 3px solid #ff4e50;
+            text-align: center;
+            background: #fff;
+            color: #ff4e50;
+            box-shadow: inset 0 2px 6px rgba(249, 212, 35, 0.5);
+            font-weight: bold;
+            -moz-appearance: textfield;
+            appearance: textfield;
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+        .inp input[type="number"]::-webkit-outer-spin-button,
+        .inp input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .answer-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        .hand-hint {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            line-height: 1;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
+            pointer-events: none;
+            user-select: none;
+            z-index: 2;
+        }
+        .hand-hint-emoji {
+            display: inline-block;
+            font-size: 2rem;
+            animation: hint-bounce 1.2s infinite ease-in-out;
+        }
+        @keyframes hint-bounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-6px) rotate(-5deg); }
+        }
+
+        .operation img {
+            width: 60px;
+            height: 60px;
+            filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.3));
+            flex-shrink: 0;
+        }
+        .operation .plus-sign {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            font-size: 3rem;
+            line-height: 1;
+            color: #ff4e50;
+            text-shadow: 2px 2px 3px rgba(0,0,0,0.2);
+            filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.3));
+            flex-shrink: 0;
+        }
+
+        .result-equals {
+            font-size: 3rem;
+            color: #ff4e50;
+            font-weight: bold;
+            margin: 0 0.2em;
+            flex-shrink: 0;
+        }
+
+        .nresult {
+            min-width: 80px;
+            min-height: 65px;
+            font-size: 2.8rem;
+            color: #43e97b;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e6ffe6;
+            border: 3px solid #43e97b;
+            border-radius: 0.8em;
+            box-shadow: inset 0 2px 6px rgba(67, 233, 123, 0.5);
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+
+        .ops {
+            margin: 1.5em auto 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            max-width: 650px;
+            width: 90%;
+            gap: 15px;
+            box-sizing: border-box;
+        }
+
+        .left_oprand, .right_oprand {
+            min-height: 100px;
+            padding: 0.8em;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 1em;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex: 1;
+            min-width: 45%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        .flex-container img {
+            max-width: 60px;
+            height: auto;
+            display: block;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.2));
+            transition: transform 0.1s ease-out;
+        }
+        .flex-container img:hover {
+            transform: scale(1.05);
+        }
+
+        #next-button-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+        #check-button {
+            background: #43e97b;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 15px 30px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(67, 233, 123, 0.6);
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+            letter-spacing: 1px;
+            font-family: 'Fredoka One', cursive;
+        }
+        #check-button:hover {
+            background: #2cb360;
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 8px 20px rgba(67, 233, 123, 0.8);
+        }
+        #check-button:active {
+            transform: scale(1.0);
+            box-shadow: 0 4px 10px rgba(67, 233, 123, 0.4);
+        }
+
+        #mute-button {
+            background: #fffbe7;
+            color: #ff4e50;
+            border: 2px solid #ffd54f;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 213, 79, 0.5);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #mute-button:hover {
+            transform: scale(1.07);
+            background: #fff3b0;
+            box-shadow: 0 6px 14px rgba(255, 213, 79, 0.7);
+        }
+
+        #streak-pill {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: #ffffffdd;
+            color: #ff4e50;
+            border: 2px solid #ffd54f;
+            border-radius: 16px;
+            padding: 6px 10px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            pointer-events: none;
+        }
+        #streak-pill strong { margin-right: 4px; }
+
+        /* --- Mobile Specific Adjustments --- */
+        @media (max-width: 767.98px) {
+            body {
+                padding-bottom: 50px;
+            }
+            .top-controls {
+                margin-top: 15px; /* Space from top of body */
+                margin-bottom: 15px; /* Space below controls and above heading */
+                width: 100%;
+                justify-content: center;
+                gap: 8px;
+            }
+            #fullscreen, #home, #back {
+                width: 38px;
+                height: 38px;
+                font-size: 1.1rem;
+            }
+            #lang-select {
+                height: 38px;
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+            #back_img {
+                width: 20px;
+                height: 20px;
+            }
+            h1 {
+                font-size: 2rem;
+                margin-top: 0; /* Space is handled by .top-controls margin-bottom */
+                margin-bottom: 0.4em; /* Slightly reduced for mobile */
+                padding: 0 8px;
+            }
+
+            .inp {
+                flex-wrap: wrap;
+                justify-content: center;
+                padding: 1em;
+                margin: 0.8em auto;
+                width: 95%;
+                gap: 10px;
+            }
+            .input-group-item {
+                flex: 1;
+                min-width: 0;
+            }
+            .inp input[type="number"] {
+                width: 90px;
+                height: 54px;
+                font-size: 2rem;
+            }
+            .operation img {
+                width: 40px;
+                height: 40px;
+            }
+            .operation .plus-sign {
+                width: 40px;
+                height: 40px;
+                font-size: 2.2rem;
+            }
+            .result-equals {
+                font-size: 2.2rem;
+                margin: 0 0.1em;
+            }
+            .nresult {
+                min-width: 70px;
+                height: 54px;
+                font-size: 2rem;
+            }
+
+            .ops {
+                flex-direction: column;
+                gap: 10px;
+                padding: 0.5em;
+                width: 95%;
+            }
+            .left_oprand, .right_oprand {
+                flex: none;
+                width: 100%;
+                min-width: auto;
+                padding: 0.6em;
+                min-height: 60px;
+            }
+            .flex-container img {
+                max-width: 55px;
+                max-height: 55px;
+            }
+
+            #next-button-container {
+                bottom: 10px;
+                right: 10px;
+            }
+            #check-button {
+                padding: 10px 20px;
+                font-size: 1.3rem;
+                border-radius: 20px;
+            }
+            #mute-button {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+            }
+            #streak-pill {
+                bottom: 66px;
+                right: 10px;
+                font-size: 0.9rem;
+                padding: 5px 8px;
+            }
+        }
+
+        /* Tablet/Larger Mobile Landscape (e.g., ~576px to ~767px) */
+        @media (min-width: 576px) and (max-width: 767.98px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            .inp {
+                padding: 1em;
+                gap: 8px;
+            }
+            .inp input[type="number"] {
+                height: 45px;
+                font-size: 1.8rem;
+                min-width: 50px;
+            }
+            .operation img {
+                width: 35px;
+                height: 35px;
+            }
+            .operation .plus-sign {
+                width: 35px;
+                height: 35px;
+                font-size: 2rem;
+            }
+            .result-equals {
+                font-size: 2.2rem;
+            }
+            .nresult {
+                height: 45px;
+                font-size: 1.8rem;
+                min-width: 50px;
+            }
+            .ops {
+                flex-direction: row;
+                gap: 15px;
+            }
+            .left_oprand, .right_oprand {
+                width: auto;
+                flex: 1;
+                min-width: calc(50% - 10px);
+            }
+            .flex-container img {
+                max-width: 45px;
+                max-height: 45px;
+            }
+            #check-button {
+                padding: 12px 25px;
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Desktop specific adjustments */
+        @media (min-width: 768px) {
+            .left_oprand, .right_oprand {
+                flex: 1;
+                max-width: calc(50% - 10px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <audio src="" style="display: none;"></audio>
+
+    <div class="top-controls">
+        <button id="fullscreen" title="Fullscreen">⇹</button>
+        <a id="home" href="index.html" title="Home">♜</a>
+        <a id="back" href="operations.html" title="Back">
+            <img src="assets/back.png" alt="Back" id="back_img">
+        </a>
+        <select id="lang-select" aria-label="Language" title="Language">
+            <option value="ti" selected>ትግርኛ</option>
+            <option value="am">አማርኛ</option>
+            <option value="en">English</option>
+            <option value="om">Afan Oromoo</option>
+            <option value="so">Soomaali</option>
+        </select>
+    </div>
+
+    <h1 id="page-title">ምድማር</h1>
+
+    <div class="inp">
+        <div class="input-group-item">
+            <input type="number" name="left" id="left" readonly>
+        </div>
+        <div class="input-group-item operation">
+            <span class="plus-sign" aria-label="Plus Sign">+</span>
+        </div>
+        <div class="input-group-item">
+            <input type="number" name="right" id="right" readonly>
+        </div>
+        <div class="input-group-item result">
+            <span class="result-equals">=</span>
+        </div>
+        <div class="input-group-item"><div class="answer-wrap"><input type="number" id="answer"><div id="answer-hint" class="hand-hint" aria-hidden="true"><span class="hand-hint-emoji">👉</span></div></div></div>
+    </div>
+
+    <div class="ops">
+        <div class="left_oprand flex-container"></div>
+        <div class="right_oprand flex-container"></div>
+    </div>
+
+    <div id="primary-actions" style="margin-top:12px; width:100%; display:flex; align-items:center; justify-content:center;">
+        <button id="check-button">Check</button>
+    </div>
+
+    <div id="next-button-container">
+        <button id="mute-button" aria-label="Mute/unmute" title="Mute">🔊</button>
+    </div>
+
+    <div id="streak-pill"><strong>Streak:</strong><span id="streak-count">0</span></div>
+
+    <div id="feedback-overlay" hidden>
+        <div class="feedback-content">
+            <img id="feedback-icon" src="" alt="feedback" aria-hidden="true">
+        </div>
+        <span class="feedback-text" id="feedback-text"></span>
+    </div>
+
+    <script>
+        // Inline of js/images.js (themes)
+        // Restrict themes to existing files only
+        let cake = ['assets/cake/choclate-no-base.png']
+        let chocolate = ['assets/chocolate/purple-wrapper.png']
+        let cupcake = ['assets/cupcake/cupcake.jpg']
+        let donuts = ['assets/donuts/donut.jpg']
+        let houses = ['assets/houses/house.jpg']
+        let lantern = ['assets/lantern/lantern.jpg']
+        let light_bulb = ['assets/light_bulb/light_bulb_04.png']
+        let lollipop = ['assets/lollipop/lolipop.jpg']
+        let balloons = ['assets/balloons/red.png']
+        let balls = ['assets/balls/football.png']
+        let beachballs = ['assets/beachball/beach_ball_00.png']
+        // Master list used to pick random theme
+        let images = [cake, chocolate, cupcake, donuts, houses, lantern, light_bulb, lollipop, balloons, balls, beachballs]
+    </script>
+    <script>
+        // --- Fullscreen and Navigation Logic ---
+        var fullScreen = document.querySelector("#fullscreen");
+        var html = document.querySelector("html");
+
+        fullScreen.addEventListener("click", function () {
+            let screenAudio = document.querySelector("audio");
+            screenAudio.src = "assets/fullScreen.mp3"; // Ensure this audio file exists
+            screenAudio.load();
+            screenAudio.play();
+            setTimeout(function () {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    html.requestFullscreen().catch(err => {
+                        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    });
+                }
+            }, 200);
+        });
+
+        var backImg = document.querySelector("#back_img");
+        backImg.addEventListener("mouseover", function () {
+            backImg.src = "assets/ice_back.png"; // Ensure this image exists
+        });
+        backImg.addEventListener("mouseout", function () {
+            backImg.src = "assets/back.png"; // Ensure this image exists
+        });
+
+        // --- Random Number Generation and Display Logic ---
+        const leftInput = document.getElementById('left');
+        const rightInput = document.getElementById('right');
+        const nResult = document.querySelector('.nresult');
+        const leftOperandContainer = document.querySelector('.left_oprand');
+        const rightOperandContainer = document.querySelector('.right_oprand');
+        const checkButton = document.getElementById('check-button');
+
+        const answerInput = document.getElementById('answer');
+        const audioEl = document.querySelector('audio');
+
+        const overlay = document.getElementById('feedback-overlay');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const feedbackText = document.getElementById('feedback-text');
+
+        // --- i18n ---
+        const translations = {
+            ti: {
+                title: 'ምድማር',
+                check: 'ኣረጋግጽ',
+                streak: 'ነጥቢ',
+                greatJob: 'ጽቡቕ ስራ!',
+                tryAgain: 'እንደገና ፈትሽ!',
+                fullscreen: 'Fullscreen',
+                home: 'Home',
+                back: 'Back',
+                mute: 'Mute',
+                unmute: 'Unmute'
+            },
+            am: {
+                title: 'መደመር',
+                check: 'አረጋግጥ',
+                streak: 'ነጥብ',
+                greatJob: 'እጅግ ጥሩ ሥራ!',
+                tryAgain: 'እንደገና ሞክር!',
+                fullscreen: 'ሙሉ እስክሪን',
+                home: 'መነሻ',
+                back: 'ወደ ኋላ',
+                mute: 'ዝም',
+                unmute: 'ዝም አትበል'
+            },
+            en: {
+                title: 'Addition',
+                check: 'Check',
+                streak: 'Score',
+                greatJob: 'Great job!',
+                tryAgain: 'Try again!',
+                fullscreen: 'Fullscreen',
+                home: 'Home',
+                back: 'Back',
+                mute: 'Mute',
+                unmute: 'Unmute'
+            },
+            om: {
+                title: 'Wali-idaa',
+                check: 'Mirkaneessi',
+                streak: 'Streak',
+                greatJob: 'Hojii gaarii!',
+                tryAgain: 'Irra deebiʼi yaali!',
+                fullscreen: 'Fuula guutuu',
+                home: 'Mana',
+                back: 'Duuba',
+                mute: 'Calʼisi',
+                unmute: 'Sagalee banu'
+            },
+            so: {
+                title: 'Isku-darid',
+                check: 'Hubi',
+                streak: 'Streak',
+                greatJob: 'Shaqo fiican!',
+                tryAgain: 'Mar kale isku day!',
+                fullscreen: 'Shaashad buuxda',
+                home: 'Hoyga',
+                back: 'Dib u noqo',
+                mute: 'Aamus',
+                unmute: 'Aamusnaanta ka saar'
+            }
+        };
+        let currentLang = localStorage.getItem('lang') || 'ti';
+
+        function applyLanguage() {
+            const t = translations[currentLang] || translations.ti;
+            const titleEl = document.getElementById('page-title');
+            if (titleEl) titleEl.textContent = t.title;
+            document.title = t.title + ' - Addition Adventure!';
+            const checkBtn = document.getElementById('check-button');
+            if (checkBtn) checkBtn.textContent = t.check;
+            const fullscreenBtn = document.getElementById('fullscreen');
+            if (fullscreenBtn) fullscreenBtn.title = t.fullscreen;
+            const homeEl = document.getElementById('home');
+            if (homeEl) homeEl.title = t.home;
+            const backEl = document.getElementById('back');
+            if (backEl) backEl.title = t.back;
+            const streakLabel = document.querySelector('#streak-pill strong');
+            if (streakLabel) streakLabel.textContent = t.streak + ':';
+            updateMuteUI();
+        }
+        function loadLanguage() {
+            if (langSelect) {
+                langSelect.value = currentLang;
+                langSelect.addEventListener('change', () => {
+                    currentLang = langSelect.value;
+                    localStorage.setItem('lang', currentLang);
+                    applyLanguage();
+                });
+            }
+            applyLanguage();
+        }
+
+        const muteButton = document.getElementById('mute-button');
+        const streakCountEl = document.getElementById('streak-count');
+        const answerHint = document.getElementById('answer-hint');
+        const langSelect = document.getElementById('lang-select');
+
+        // Always start fresh each load
+        let streak = 0;
+
+        function updateStreakUI() {
+            if (streakCountEl) streakCountEl.textContent = String(streak);
+        }
+        function setStreak(n) {
+            streak = Math.max(0, n);
+            updateStreakUI();
+        }
+
+        function updateMuteUI() {
+            if (muteButton) {
+                muteButton.textContent = audioEl.muted ? '🔇' : '🔊';
+                const t = translations[currentLang];
+                const muteTitle = audioEl.muted ? t.unmute : t.mute;
+                muteButton.title = muteTitle;
+                muteButton.setAttribute('aria-label', muteTitle);
+            }
+        }
+        function loadSettings() {
+            const muted = localStorage.getItem('muted') === 'true';
+            audioEl.muted = muted;
+            updateMuteUI();
+            updateStreakUI();
+        }
+        if (muteButton) {
+            muteButton.addEventListener('click', () => {
+                audioEl.muted = !audioEl.muted;
+                localStorage.setItem('muted', String(audioEl.muted));
+                updateMuteUI();
+            });
+        }
+
+        function showFeedback(type) {
+            if (type === 'correct') {
+                feedbackIcon.src = 'assets/award.jpg';
+                feedbackText.textContent = translations[currentLang].greatJob;
+                audioEl.src = 'assets/goodjob.mp3';
+            } else {
+                feedbackIcon.src = 'assets/dogg.png';
+                feedbackText.textContent = translations[currentLang].tryAgain;
+                audioEl.src = 'assets/tryagain.mp3';
+            }
+            overlay.classList.toggle('fullscreen', type === 'correct');
+            audioEl.load();
+            audioEl.play().catch(() => {});
+            overlay.hidden = false;
+        }
+
+        function hideFeedback() {
+            overlay.hidden = true;
+        }
+
+        function checkAnswer() {
+            const correct = (+leftInput.value) + (+rightInput.value);
+            const user = +answerInput.value;
+            if (user === correct) {
+                setStreak(streak + 1);
+                showFeedback('correct');
+                setTimeout(() => {
+                    hideFeedback();
+                    answerInput.value = '';
+                    generateNewProblem();
+                }, 900);
+            } else {
+                setStreak(0);
+                answerInput.style.borderColor = '#ff4e50';
+                showFeedback('wrong');
+                setTimeout(() => {
+                    hideFeedback();
+                    answerInput.style.borderColor = '';
+                    answerInput.focus();
+                }, 900);
+            }
+        }
+
+        // Enter-to-check
+        answerInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') checkAnswer();
+        });
+
+        function hideHint() {
+            if (answerHint) answerHint.style.display = 'none';
+        }
+        answerInput.addEventListener('focus', hideHint);
+        answerInput.addEventListener('input', hideHint);
+        checkButton.addEventListener('click', hideHint);
+
+        function generateNewProblem() {
+            // Updated for NumberRange: 11-20
+            const minNum = 11;
+            const maxNum = 20;
+            const num1 = Math.floor(Math.random() * (maxNum - minNum + 1)) + minNum; 
+            const num2 = Math.floor(Math.random() * (maxNum - minNum + 1)) + minNum;
+            
+            const theme = images[Math.floor(Math.random() * images.length)];
+            leftInput.value = num1;
+            rightInput.value = num2;
+            if (nResult) {
+                nResult.textContent = '';
+                nResult.style.color = '#43e97b';
+            }
+
+            // Clear previous images
+            leftOperandContainer.innerHTML = '';
+            rightOperandContainer.innerHTML = '';
+
+            // Populate image containers (assuming "star.png" exists)
+            for (let i = 0; i < num1; i++) {
+                const img = document.createElement('img');
+                img.src = theme[Math.floor(Math.random() * theme.length)];
+                img.alt = "Count item";
+                // Note: The size of these images is handled by CSS media queries.
+                leftOperandContainer.appendChild(img);
+            }
+
+            for (let i = 0; i < num2; i++) {
+                const img = document.createElement('img');
+                img.src = theme[Math.floor(Math.random() * theme.length)];
+                img.alt = "Count item";
+                rightOperandContainer.appendChild(img);
+            }
+        }
+
+        // --- Event Listeners ---
+        checkButton.addEventListener('click', checkAnswer);
+
+        // Initial problem generation when the page loads
+        document.addEventListener('DOMContentLoaded', generateNewProblem);
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ensure overlay is cleared on load
+            overlay.hidden = true;
+            feedbackIcon.src = '';
+            feedbackText.textContent = '';
+
+            setStreak(0);
+            loadSettings();
+            loadLanguage();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Time Architect | ሃናጺ ግዘ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --amber: #f59e0b;
+            --glass: rgba(255, 255, 255, 0.94);
+            --c1: #6366f1;
+            --c2: #a855f7;
+            --c3: #ec4899;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, #4338ca 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #7e22ce 0px, transparent 50%),
+                radial-gradient(at 100% 100%, #be185d 0px, transparent 50%),
+                radial-gradient(at 0% 100%, #115e59 0px, transparent 50%),
+                radial-gradient(at 50% 50%, #1e1b4b 0px, transparent 50%);
+            background-size: 200% 200%;
+            animation: moveBg 15s infinite alternate ease-in-out;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden;
+            color: #fff;
+        }
+
+        @keyframes moveBg { 0% { background-position: 0% 0%; } 100% { background-position: 100% 100%; } }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4000; }
+
+        header {
+            width: 100%; max-width: 850px; padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            flex-wrap: wrap; gap: 10px;
+        }
+
+        .header-stats { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .stat-pill {
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            padding: 8px 18px; border-radius: 50px; font-weight: 800; font-size: 1rem; color: #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .stat-label { opacity: 0.8; font-size: 0.8rem; text-transform: uppercase; }
+        .stat-val { color: #fff; }
+
+        .lang-select {
+            padding: 8px 15px; border-radius: 15px; border: none; font: inherit; font-weight: bold; cursor: pointer;
+            background: white; color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 650px; display: flex; flex-direction: column; 
+            padding: 10px 20px; gap: 15px; z-index: 10; justify-content: center;
+        }
+
+        .game-card {
+            background: var(--glass); backdrop-filter: blur(40px);
+            border-radius: 35px; padding: 25px; 
+            border: 8px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            width: 100%; text-align: center; display: flex; flex-direction: column; gap: 20px;
+            animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #1e293b;
+        }
+        
+        .game-card::before {
+            content: ''; position: absolute; top: -8px; bottom: -8px; left: -8px; right: -8px;
+            background: linear-gradient(45deg, #6366f1, #a855f7, #ec4899, #f59e0b);
+            z-index: -1; border-radius: 40px;
+        }
+
+        @keyframes slideUp { from { transform: translateY(40px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+        /* Clock Visual */
+        .clock-visual {
+            width: 140px; height: 140px; border-radius: 50%; border: 6px solid #334155;
+            background: white; margin: 0 auto; position: relative;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        .clock-face { position: absolute; inset: 8px; border-radius: 50%; background: #f8fafc; }
+        .clock-sector {
+            position: absolute; inset: 0; border-radius: 50%;
+            background: conic-gradient(var(--primary) 0deg, var(--primary) 0deg, transparent 0deg);
+            transition: 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .clock-marker { position: absolute; inset: 0; display: flex; justify-content: center; align-items: flex-start; padding-top: 4px; }
+        .clock-marker::before { content: ''; width: 3px; height: 8px; background: #94a3b8; border-radius: 2px; }
+        .m-3 { transform: rotate(90deg); }
+        .m-6 { transform: rotate(180deg); }
+        .m-9 { transform: rotate(270deg); }
+
+        .story-box {
+            background: #f0f9ff; border-radius: 20px; padding: 18px; border-left: 8px solid var(--primary);
+            text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+        .story-text { font-size: 1.3rem; font-weight: 700; color: #1e3a8a; line-height: 1.4; }
+
+        /* Answer Input Area */
+        .ans-area { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .input-row { display: flex; gap: 15px; align-items: flex-end; justify-content: center; }
+
+        .digit-slot {
+            width: 100px; height: 80px; background: white; border: 5px dashed #cbd5e1;
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            font-size: 2.8rem; font-weight: 900; color: var(--primary); cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 3px 6px rgba(0,0,0,0.05);
+        }
+        .digit-slot.active { border-style: solid; border-color: var(--primary); transform: scale(1.08); background: #f5f3ff; box-shadow: 0 0 25px rgba(99, 102, 241, 0.2); }
+        .digit-slot.wrong { border-color: var(--danger) !important; color: var(--danger) !important; background: #fee2e2 !important; }
+
+        .slot-label { font-size: 1rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 5px; }
+
+        /* Keypad */
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 450px; }
+        .key {
+            height: 60px; background: white; border: none; border-radius: 18px;
+            font-size: 1.6rem; font-weight: 800; color: #475569; cursor: pointer;
+            box-shadow: 0 5px 0 #e2e8f0; transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(3px); box-shadow: 0 2px 0 #e2e8f0; }
+        .key.del { background: #fff1f2; color: #ef4444; box-shadow: 0 5px 0 #fecdd3; }
+        .key.check { 
+            grid-column: span 4; background: linear-gradient(135deg, var(--secondary), #059669); 
+            color: white; box-shadow: 0 6px 0 #064e3b; font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px;
+            height: 75px; margin-top: 5px;
+        }
+        .key.check:active { transform: translateY(5px); box-shadow: 0 1px 0 #064e3b; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-12px); } 40%, 80% { transform: translateX(12px); } }
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        .wrong-flash { background-color: rgba(239, 68, 68, 0.4) !important; }
+
+        /* Success Overlay */
+        #success-overlay {
+            position: fixed; inset: 0; background: rgba(16, 185, 129, 0.95);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 3000; color: white; text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        #success-overlay h2 { font-size: 3.5rem; margin-top: 15px; text-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        #error-screen {
+            position: fixed; inset: 0; background: rgba(239, 68, 68, 0.3);
+            display: none; pointer-events: none; z-index: 2500;
+            align-items: center; justify-content: center;
+        }
+        #error-screen span { font-size: 12rem; color: white; opacity: 0.8; }
+
+        @media (max-width: 600px) {
+            .story-text { font-size: 1.1rem; }
+            .digit-slot { width: 85px; height: 70px; font-size: 2.2rem; }
+            .key { height: 50px; font-size: 1.3rem; border-radius: 14px; }
+            .key.check { font-size: 1.4rem; height: 65px; }
+            .game-card { padding: 20px 15px; border-radius: 30px; }
+            header { padding: 10px; justify-content: center; }
+            .clock-visual { width: 110px; height: 110px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <div id="error-screen"><span>❌</span></div>
+
+    <header>
+        <div class="header-stats">
+            <div class="stat-pill">
+                <span id="lvlLabel" class="stat-label">ደረጃ</span>
+                <span id="levelVal" class="stat-val">1</span>
+            </div>
+            <div class="stat-pill">
+                <span id="highLabel" class="stat-label">ዝለዓለ</span>
+                <span id="highScoreVal" class="stat-val">0</span>
+            </div>
+            <div class="stat-pill">
+                <span id="scoreLabel" class="stat-label">ነጥቢ</span>
+                <span id="scoreVal" class="stat-val">0</span>
+            </div>
+        </div>
+        <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+            <option value="ti">ትግርኛ</option>
+            <option value="am">አማርኛ</option>
+            <option value="en">English</option>
+            <option value="om">Oromoo</option>
+            <option value="so">Soomaali</option>
+        </select>
+    </header>
+
+    <div class="container">
+        <div class="game-card" id="gameCard">
+            <div class="clock-visual">
+                <div class="clock-face"></div>
+                <div id="clockSector" class="clock-sector"></div>
+                <div class="clock-marker m-12"></div>
+                <div class="clock-marker m-3"></div>
+                <div class="clock-marker m-6"></div>
+                <div class="clock-marker m-9"></div>
+            </div>
+
+            <div class="story-box">
+                <p class="story-text" id="storyText">...</p>
+            </div>
+
+            <div class="ans-area">
+                <div class="input-row">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span class="slot-label" id="txtUnit">ደቒቓ (Minutes)</span>
+                        <div class="digit-slot active" id="ansSlot" onclick="setFocus()">?</div>
+                    </div>
+                </div>
+
+                <div class="keypad">
+                    <button class="key" onclick="press(1)">1</button>
+                    <button class="key" onclick="press(2)">2</button>
+                    <button class="key" onclick="press(3)">3</button>
+                    <button class="key del" onclick="press('bk')">⌫</button>
+                    <button class="key" onclick="press(4)">4</button>
+                    <button class="key" onclick="press(5)">5</button>
+                    <button class="key" onclick="press(6)">6</button>
+                    <button class="key" onclick="press(0)">0</button>
+                    <button class="key" onclick="press(7)">7</button>
+                    <button class="key" onclick="press(8)">8</button>
+                    <button class="key" onclick="press(9)">9</button>
+                    <button class="key check" id="btnCheck" onclick="check()">ፈትሽ (Check)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-overlay">
+        <div style="font-size: 8rem; animation: bounce 1s infinite alternate;">⏳</div>
+        <h2 id="txtWin">ንኡድ ስራሕ!</h2>
+        <p style="font-size: 1.5rem;" id="txtWinSub">ብትኽክል መሊስካዮ ኣለኻ!</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { check: "ፈትሽ", win: "ንኡድ ስራሕ!", winsub: "ብትኽክል መሊስካዮ ኣለኻ!", mins: "ደቒቓ", hrs: "ሰዓት", template: "{val} ክንደይ ደቒቓ እዩ?", level: "ደረጃ", highest: "ዝለዓለ", score: "ነጥቢ" },
+            am: { check: "አረጋግጥ", win: "ድንቅ ስራ!", winsub: "በትክክል መልሰዋል!", mins: "ደቂቃ", hrs: "ሰዓት", template: "{val} ስንት ደቂቃ ነው?", level: "ደረጃ", highest: "ከፍተኛ", score: "ነጥብ" },
+            en: { check: "Check", win: "Great Job!", winsub: "You answered correctly!", mins: "Minutes", hrs: "Hours", template: "How many minutes are in {val}?", level: "Level", highest: "Highest", score: "Score" },
+            om: { check: "Mirkaneessi", win: "Guddina!", winsub: "Sirriitti deebisteetta!", mins: "Daqiiqaa", hrs: "Sa'aatii", template: "{val} keessa daqiiqaa meeqatu jira?", level: "Sadarkaa", highest: "Olaanaa", score: "Qabxii" },
+            so: { check: "Hubi", win: "Shaqo Fiican!", winsub: "Si sax ah ayaad uga jawaabtay!", mins: "Daqiiqado", hrs: "Saacadood", template: "{val} waa imisa daqiiqo?", level: "Heerka", highest: "Sare", score: "Dhibco" }
+        };
+
+        const TERMS = {
+            ti: { "1": "1 ሰዓት", "0.5": "ፍርቂ (1/2) ሰዓት", "0.25": "ርብዒ (1/4) ሰዓት", "0.75": "ሰለስተ ርብዒ (3/4) ሰዓት", "mix": "{h} ሰዓትን {m} ደቒቓን" },
+            am: { "1": "1 ሰዓት", "0.5": "ግማሽ (1/2) ሰዓት", "0.25": "ሩብ (1/4) ሰዓት", "0.75": "ሦስት አራተኛ (3/4) ሰዓት", "mix": "{h} ሰዓት ከ {m} ደቂቃ" },
+            en: { "1": "1 hour", "0.5": "half (1/2) hour", "0.25": "a quarter (1/4) hour", "0.75": "three quarters (3/4) hour", "mix": "{h} hours and {m} minutes" },
+            om: { "1": "Sa'aatii 1", "0.5": "Walakkaa (1/2) sa'aatii", "0.25": "Rubuu (1/4) sa'aatii", "0.75": "Rubuu sadii (3/4) sa'aatii", "mix": "Sa'aatii {h} fi daqiiqaa {m}" },
+            so: { "1": "1 saacadood", "0.5": "Nus (1/2) saacadood", "0.25": "Rubuc (1/4) saacadood", "0.75": "Saddex rubuc (3/4) saacadood", "mix": "{h} saacadood iyo {m} daqiiqo" }
+        };
+
+        let currentQuestion = null;
+        let score = 0, level = 1, lang = 'ti', userVal = "";
+        let highScore = parseInt(localStorage.getItem('time_conv_high')) || 0;
+        let particles = [];
+        let lastAns = -1; 
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(600, n); o.frequency.exponentialRampToValueAtTime(300, n + 0.1);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046, 1318].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.8);
+                o.start(); o.stop(n + 0.8);
+            } else {
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.linearRampToValueAtTime(50, n + 0.5);
+                g.gain.setValueAtTime(0.15, n); g.gain.linearRampToValueAtTime(0, n + 0.5);
+                o.start(); o.stop(n + 0.5);
+            }
+        }
+
+        function generateQuestion() {
+            if (score >= 120) level = 4;
+            else if (score >= 70) level = 3;
+            else if (score >= 30) level = 2;
+            else level = 1;
+
+            let h = 0, m = 0, ans = 0, termKey = "", angle = 0, isMix = false;
+            let attempts = 0;
+
+            do {
+                if (level === 1) {
+                    const pool = [
+                        { h: 1, m: 0, k: "1", a: 360 },
+                        { h: 0, m: 30, k: "0.5", a: 180 },
+                        { h: 0, m: 15, k: "0.25", a: 90 },
+                        { h: 0, m: 45, k: "0.75", a: 270 }
+                    ];
+                    const choice = pool[Math.floor(Math.random() * pool.length)];
+                    h = choice.h; m = choice.m; termKey = choice.k; angle = choice.a; isMix = false;
+                } else if (level === 2) {
+                    h = Math.floor(Math.random() * 4) + 2;
+                    m = 0; angle = 360; termKey = "mix"; isMix = true;
+                } else if (level === 3) {
+                    h = Math.floor(Math.random() * 2) + 1;
+                    m = [15, 30, 45][Math.floor(Math.random() * 3)];
+                    angle = (m / 60) * 360; termKey = "mix"; isMix = true;
+                } else {
+                    h = Math.floor(Math.random() * 5) + 1;
+                    m = [5, 10, 20, 25, 35, 40, 50, 55][Math.floor(Math.random() * 8)];
+                    angle = (m / 60) * 360; termKey = "mix"; isMix = true;
+                }
+                ans = (h * 60) + m;
+                attempts++;
+            } while (ans === lastAns && attempts < 10);
+
+            lastAns = ans;
+            currentQuestion = { h, m, ans, angle, termKey, isMix };
+        }
+
+        function loadLevel() {
+            generateQuestion();
+            const q = currentQuestion;
+            const t = i18n[lang];
+            const terms = TERMS[lang];
+            
+            let label = q.isMix ? terms.mix.replace('{h}', q.h).replace('{m}', q.m) : terms[q.termKey];
+
+            document.getElementById('storyText').innerText = t.template.replace('{val}', label);
+            document.getElementById('clockSector').style.background = `conic-gradient(var(--primary) 0deg, var(--primary) ${q.angle}deg, transparent ${q.angle}deg)`;
+            document.getElementById('ansSlot').innerText = "?";
+            document.getElementById('txtUnit').innerText = t.mins;
+            userVal = "";
+            updateUI();
+        }
+
+        function press(n) {
+            sfx('tap');
+            if (n === 'bk') userVal = userVal.slice(0, -1);
+            else if (userVal.length < 3) userVal += n;
+            document.getElementById('ansSlot').innerText = userVal || "?";
+        }
+
+        function check() {
+            if (userVal === "") return;
+            const q = currentQuestion;
+            if (parseInt(userVal) === q.ans) {
+                score += 10;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('time_conv_high', highScore);
+                }
+                sfx('win');
+                // Trigger celebratory confetti multiple times on top of the green background
+                burst(400);
+                setTimeout(() => burst(300), 400);
+                setTimeout(() => burst(200), 1000);
+                
+                const overlay = document.getElementById('success-overlay');
+                document.getElementById('txtWin').innerText = i18n[lang].win;
+                document.getElementById('txtWinSub').innerText = i18n[lang].winsub;
+                overlay.style.display = 'flex';
+
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    loadLevel();
+                }, 2000);
+            } else {
+                sfx('err');
+                const card = document.getElementById('gameCard');
+                const errScreen = document.getElementById('error-screen');
+                card.classList.add('shake', 'wrong-flash');
+                errScreen.style.display = 'flex';
+                document.getElementById('ansSlot').classList.add('wrong');
+                
+                setTimeout(() => {
+                    card.classList.remove('shake', 'wrong-flash');
+                    errScreen.style.display = 'none';
+                    document.getElementById('ansSlot').classList.remove('wrong');
+                    userVal = "";
+                    document.getElementById('ansSlot').innerText = "?";
+                }, 800);
+            }
+        }
+
+        function changeLang(l) {
+            lang = l;
+            loadLevel();
+        }
+
+        function updateUI() {
+            const t = i18n[lang];
+            document.getElementById('scoreVal').innerText = score;
+            document.getElementById('levelVal').innerText = level;
+            document.getElementById('highScoreVal').innerText = highScore;
+            document.getElementById('btnCheck').innerText = t.check;
+            document.getElementById('lvlLabel').innerText = t.level;
+            document.getElementById('highLabel').innerText = t.highest;
+            document.getElementById('scoreLabel').innerText = t.score;
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#ffffff', '#3b82f6'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random() * c.width, y: c.height + 20,
+                vx: (Math.random()-0.5)*40, vy: (Math.random()-0.9)*55,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)],
+                l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*25
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.vx *= 0.99; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); 
+                        x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = loadLevel;
+    </script>
+</body>
+</html>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Data Detective | ባር ግራፍ ምንባብ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --paper: #fffef2;
+            --ink: #1e293b;
+            --grid: rgba(14, 165, 233, 0.15);
+            --gold: #facc15;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --primary: #6366f1;
+            --white: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: #f1f5f9;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+            color: var(--ink); overflow-x: hidden; position: relative;
+        }
+
+        header {
+            width: 100%; max-width: 1200px; padding: 15px 25px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            gap: 10px; flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            background: var(--white); padding: 8px 16px; border-radius: 15px; border: 3px solid var(--ink);
+            display: flex; align-items: center; gap: 8px; font-weight: 800; 
+            font-size: clamp(0.7rem, 1.2vw, 1rem); box-shadow: 0 4px 0 var(--ink);
+        }
+        .stat-val { color: var(--primary); }
+        .stat-val.gold { color: #b45309; }
+
+        .container {
+            flex: 1; width: 100%; max-width: 1100px; display: flex; flex-direction: column;
+            justify-content: flex-start; align-items: center; padding: 0 20px 40px 20px; z-index: 10; gap: 20px;
+        }
+
+        /* Graph Section */
+        .graph-card {
+            background: var(--paper); border-radius: 30px; border: 5px solid var(--ink);
+            padding: 40px 30px 60px 45px; width: 100%; max-width: 800px; 
+            box-shadow: 0 12px 0 var(--ink);
+            display: flex; flex-direction: column; align-items: center; position: relative;
+        }
+
+        .graph-title { font-weight: 900; font-size: clamp(1rem, 3vw, 1.4rem); margin-bottom: 30px; text-transform: uppercase; color: var(--primary); text-align: center; }
+
+        .graph-area {
+            width: 100%; height: clamp(250px, 35vh, 400px); 
+            border-left: 5px solid var(--ink); border-bottom: 5px solid var(--ink);
+            position: relative; display: flex; align-items: flex-end; justify-content: space-around;
+            background-image: linear-gradient(var(--grid) 1px, transparent 1px);
+            background-size: 100% 10%; /* 10 horizontal divisions */
+            padding: 0 10px;
+        }
+
+        .y-axis-labels {
+            position: absolute; left: -40px; top: 0; height: 100%;
+            display: flex; flex-direction: column; justify-content: space-between;
+            font-weight: 900; color: #64748b; font-size: 0.9rem;
+            /* Precise alignment with grid lines */
+            height: calc(100% + 1rem); margin-top: -0.5rem;
+        }
+
+        .bar-slot {
+            width: 18%; height: 100%; position: relative; display: flex; 
+            align-items: flex-end; justify-content: center;
+        }
+
+        .bar {
+            width: 85%; border: 4px solid var(--ink);
+            border-bottom: none; border-radius: 10px 10px 0 0; position: relative;
+            transition: height 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: inset -10px 0 0 rgba(0,0,0,0.1);
+        }
+
+        .bar-label {
+            position: absolute; bottom: -45px; width: 100%; text-align: center;
+            font-weight: 900; font-size: 1rem; color: var(--ink);
+        }
+
+        /* Question Section */
+        .question-card {
+            background: var(--white); border-radius: 25px; border: 4px solid var(--ink);
+            padding: 25px; width: 100%; max-width: 800px; box-shadow: 0 10px 0 var(--ink);
+            text-align: center; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .question-text { font-size: clamp(1.1rem, 3vw, 1.6rem); font-weight: 950; color: var(--ink); line-height: 1.3; }
+
+        .options-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%;
+        }
+
+        .option-btn {
+            background: #f8fafc; border: 4px solid var(--ink); border-radius: 20px;
+            padding: clamp(12px, 2vw, 20px); font-size: clamp(1rem, 2vw, 1.3rem); font-weight: 900;
+            cursor: pointer; transition: 0.1s; box-shadow: 0 6px 0 var(--ink);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ink); }
+        .option-btn:hover { background: var(--primary); color: white; border-color: white; }
+
+        /* Overlays */
+        .overlay {
+            position: fixed; inset: 0; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 5000;
+            background: rgba(255, 255, 255, 0.98); text-align: center; padding: 20px;
+        }
+        .big-icon { font-size: clamp(8rem, 20vw, 12rem); margin-bottom: 30px; animation: bounce 1s infinite alternate; }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
+        .big-x { font-size: clamp(10rem, 30vw, 20rem); color: var(--danger); animation: shake 0.5s infinite; line-height: 1; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-15px); }
+            75% { transform: translateX(15px); }
+        }
+
+        @media (min-width: 1024px) {
+            .container { flex-direction: row; align-items: stretch; gap: 40px; padding-top: 20px; }
+            .graph-card { flex: 1.1; }
+            .question-card { flex: 0.9; justify-content: center; }
+        }
+
+        @media (max-width: 640px) {
+            header { padding: 10px 15px; }
+            .graph-card { padding: 30px 20px 50px 40px; }
+            .graph-area { margin-left: 0; }
+            .y-axis-labels { left: -35px; font-size: 0.8rem; }
+            .options-grid { grid-template-columns: 1fr; }
+            .question-text { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas" style="position:fixed; inset:0; pointer-events:none; z-index:6000;"></canvas>
+
+    <header>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div class="stat-pill">⭐ <span id="lblScore">ውፅኢት</span>: <span id="valScore" class="stat-val">0</span></div>
+            <div class="stat-pill">👑 <span id="lblHigh">ዝለዓለ</span>: <span id="valHigh" class="stat-val gold">0</span></div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="stat-pill" style="width: 44px; height: 44px; border-radius: 50%; font-size: 1.3rem; cursor: pointer; padding:0; justify-content:center; box-shadow: 0 4px 0 var(--ink);" onclick="toggleMute()" id="muteBtn">🔊</button>
+            <select id="langSelect" class="stat-pill" style="cursor: pointer; box-shadow: 0 4px 0 var(--ink);" onchange="setLanguage(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="graph-card">
+            <h2 id="txtGraphTitle" class="graph-title">ቁፅሪ ተምሃሮ ኣብ ቤት ትምህርቲ</h2>
+            <div class="graph-area" id="graphArea">
+                <div class="y-axis-labels" id="yLabels">
+                    <!-- Injected via JS -->
+                </div>
+                <!-- 4 Bars injected via JS -->
+            </div>
+        </div>
+
+        <div class="question-card" id="questionCard">
+            <div class="question-text" id="txtQuestion"> Loading... </div>
+            <div class="options-grid" id="optionsGrid">
+                <!-- Buttons injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Overlays -->
+    <div id="success-overlay" class="overlay">
+        <div class="big-icon">🏆</div>
+        <h2 id="txtWin" style="font-size: 3rem; color: var(--success); font-weight: 950;">ንፉዕ!</h2>
+        <p id="txtWinSub" style="font-size: 1.5rem; color: #64748b; font-weight: 700;">ልክዕ መልሲ!</p>
+    </div>
+
+    <div id="error-overlay" class="overlay" style="background: #fee2e2;">
+        <div class="big-x">✕</div>
+        <h2 id="txtFail" style="font-size: 3rem; color: var(--danger); font-weight: 950;">ጌጋ!</h2>
+        <p id="txtFailSub" style="font-size: 1.5rem; color: var(--danger); font-weight: 700;">እንደገና ፈትን</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { 
+                graphTitle: "ቁፅሪ ተምሃሮ ኣብ ቤት ትምህርቲ",
+                win: "ንፉዕ!", winsub: "ልክዕ መልሲ!", fail: "ጌጋ!", failsub: "እንደገና ፈትን", score: "ውፅኢት", high: "ዝለዓለ", 
+                grades: ["1ይ", "2ይ", "3ይ", "4ይ"],
+                questions: [
+                    "ሀ. ኣብዚ ቤት ትምህርቲ ካብ 1ይ ክሳብ 4ይ ዘለዉ ተምሃሮ ብድምር ክንደይ እዮም?",
+                    "ለ. ዝበዝሑ ተምሃሮ ኣበየናይ ደረጃ ክፍሊ እዮም ዘለዉ?",
+                    "ሐ. ዝወሓዱ ተምሃሮ ኣበየናይ ደረጃ ክፍሊ እዮም ዘለዉ?",
+                    "መ. 1ይ ክፍሊ ምስ 4ይ ክፍሊ ብክንደይ ይፈላለዩ?",
+                    "ሠ. ኣብ 2ይ ክፍሊ ዘለዉ ተምሃሮ ክንደይ እዮም?"
+                ]
+            },
+            am: { 
+                graphTitle: "በትምህርት ቤት ውስጥ ያሉት የተማሪዎች ብዛት",
+                win: "ድንቅ ስራ!", winsub: "ትክክል!", fail: "ስህተት!", failsub: "እንደገና ይሞክሩ", score: "ውጤት", high: "ከፍተኛ", 
+                grades: ["1ኛ", "2ኛ", "3ኛ", "4ኛ"],
+                questions: [
+                    "ሀ. በዚህ ትምህርት ቤት ውስጥ ከ1ኛ እስከ 4ኛ ክፍል ያሉ ተማሪዎች ድምር ስንት ነው?",
+                    "ለ. ብዙ ተማሪዎች ያሉት የትኛው ክፍል ነው?",
+                    "ሐ. ጥቂት ተማሪዎች ያሉት የትኛው ክፍል ነው?",
+                    "መ. በ4ኛ ክፍል ያሉት ተማሪዎች ከ1ኛ ክፍል ስንት ይበልጣሉ?",
+                    "ሠ. በ2ኛ ክፍል ያሉ ተማሪዎች ብዛት ስንት ነው?"
+                ]
+            },
+            en: { 
+                graphTitle: "Number of Students in School",
+                win: "Excellent!", winsub: "Correct Answer!", fail: "Oops!", failsub: "Try Again!", score: "Score", high: "High", 
+                grades: ["G1", "G2", "G3", "G4"],
+                questions: [
+                    "A. What is the total number of students from Grade 1 to 4?",
+                    "B. Which grade has the highest number of students?",
+                    "C. Which grade has the lowest number of students?",
+                    "D. How many more students are in Grade 4 than Grade 1?",
+                    "E. How many students are in Grade 2?"
+                ]
+            },
+            om: { 
+                graphTitle: "Baay'ina Barattoota Mana Barumsaa",
+                win: "Baay'ee Gaarii!", winsub: "Sirriidha!", fail: "Dogoggora!", failsub: "Irra deebi'i yaali", score: "Qabxii", high: "Olaanaa", 
+                grades: ["1ffaa", "2ffaa", "3ffaa", "4ffaa"],
+                questions: [
+                    "A. Ida'amni barattoota kutaa 1-4 meeqa?",
+                    "B. Kutaan baay'ina barattoota guddaa qabu kam?",
+                    "C. Kutaan baay'ina barattoota xiqqa qabu kam?",
+                    "D. Kutaa 4ffaan kutaa 1ffaa irra meeqaan caala?",
+                    "E. Barattoonni kutaa 2ffaa meeqa?"
+                ]
+            },
+            so: { 
+                graphTitle: "Tirada Ardayda ee Iskuulka",
+                win: "Shaqo Fiican!", winsub: "Waa sax!", fail: "Khalad!", failsub: "Markale isku day", score: "Dhibco", high: "Sare", 
+                grades: ["1aad", "2aad", "3aad", "4aad"],
+                questions: [
+                    "A. Waa maxay tirada guud ee ardayda Fasalka 1aad ilaa 4aad?",
+                    "B. Fasalkee baa leh tirada ugu badan ee ardayda?",
+                    "C. Fasalkee baa leh tirada ugu yar ee ardayda?",
+                    "D. Imisa arday baa Fasalka 4aad ka badan Fasalka 1aad?",
+                    "E. Imisa arday baa dhigata Fasalka 2aad?"
+                ]
+            }
+        };
+
+        const colors = ["#fbbf24", "#60a5fa", "#f87171", "#34d399"];
+        let score = 0, lang = 'ti', currentData = [], currentQ = null, busy = false, muted = false;
+        let highScore = parseInt(localStorage.getItem('bargraph_read_71_high')) || 0;
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function toggleMute() { muted = !muted; document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊'; }
+
+        function sfx(type) {
+            if (muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if (type === 'tap') { o.type = 'sine'; o.frequency.setValueAtTime(800, n); g.gain.setValueAtTime(0.05, n); o.start(); o.stop(n + 0.05); }
+            else if (type === 'win') { o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1)); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.5); }
+            else if (type === 'err') { o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.exponentialRampToValueAtTime(40, n + 0.3); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.3); }
+        }
+
+        function setLanguage(l) {
+            lang = l;
+            localStorage.setItem('bargraph_lang', lang);
+            updateUI();
+        }
+
+        function updateUI() {
+            const t = i18n[lang];
+            document.getElementById('lblScore').innerText = t.score;
+            document.getElementById('lblHigh').innerText = t.high;
+            document.getElementById('txtGraphTitle').innerText = t.graphTitle;
+            document.getElementById('txtWin').innerText = t.win;
+            document.getElementById('txtWinSub').innerText = t.winsub;
+            document.getElementById('txtFail').innerText = t.fail;
+            document.getElementById('txtFailSub').innerText = t.failsub;
+            document.getElementById('valScore').innerText = score;
+            document.getElementById('valHigh').innerText = highScore;
+            renderGraph();
+            renderQuestion();
+        }
+
+        function generateRound() {
+            busy = false;
+            // CRITICAL FIX: Ensure all bar values are UNIQUE to avoid ambiguous questions
+            const pool = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+            const shuffled = pool.sort(() => Math.random() - 0.5);
+            currentData = shuffled.slice(0, 4); 
+            
+            currentQ = Math.floor(Math.random() * 5);
+            updateUI();
+        }
+
+        function renderGraph() {
+            const area = document.getElementById('graphArea');
+            const yLabels = document.getElementById('yLabels');
+            const t = i18n[lang];
+
+            yLabels.innerHTML = '';
+            for(let i=100; i>=0; i-=10) {
+                const l = document.createElement('div');
+                l.innerText = i;
+                yLabels.appendChild(l);
+            }
+
+            area.querySelectorAll('.bar-slot').forEach(s => s.remove());
+
+            currentData.forEach((val, idx) => {
+                const slot = document.createElement('div');
+                slot.className = 'bar-slot';
+                
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.backgroundColor = colors[idx];
+                bar.style.height = val + '%';
+                
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.innerText = t.grades[idx];
+
+                slot.appendChild(bar);
+                slot.appendChild(label);
+                area.appendChild(slot);
+            });
+        }
+
+        function renderQuestion() {
+            const t = i18n[lang];
+            const qText = document.getElementById('txtQuestion');
+            const optGrid = document.getElementById('optionsGrid');
+            
+            qText.innerText = t.questions[currentQ];
+            optGrid.innerHTML = '';
+
+            let correctVal;
+            let options = [];
+
+            if (currentQ === 0) { // Total
+                correctVal = currentData.reduce((a, b) => a + b, 0);
+                options = [correctVal, correctVal - 10, correctVal + 20, correctVal + 10];
+            } else if (currentQ === 1) { // Max
+                const max = Math.max(...currentData);
+                const maxIdx = currentData.indexOf(max);
+                correctVal = t.grades[maxIdx];
+                options = [...t.grades];
+            } else if (currentQ === 2) { // Min
+                const min = Math.min(...currentData);
+                const minIdx = currentData.indexOf(min);
+                correctVal = t.grades[minIdx];
+                options = [...t.grades];
+            } else if (currentQ === 3) { // Difference |G4 - G1|
+                correctVal = Math.abs(currentData[3] - currentData[0]);
+                options = [correctVal, 10, 20, 30, 40, 50].slice(0, 4);
+            } else { // Single Grade (G2)
+                correctVal = currentData[1];
+                options = [correctVal, correctVal + 10, correctVal - 10, 50];
+            }
+
+            // Ensure options are unique and include the correct answer
+            let finalOptions = [correctVal];
+            const decoyPool = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 150, 200, 250, 300, 350, 400];
+            
+            // For grade name questions (Max/Min), decoys are just the grade names
+            if (typeof correctVal === 'string') {
+                finalOptions = [...t.grades];
+            } else {
+                // For numeric questions, pick unique numeric decoys
+                while (finalOptions.length < 4) {
+                    let decoy = decoyPool[Math.floor(Math.random() * decoyPool.length)];
+                    if (!finalOptions.includes(decoy)) finalOptions.push(decoy);
+                }
+            }
+
+            // Shuffle and render
+            finalOptions.sort(() => Math.random() - 0.5).forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, correctVal);
+                optGrid.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(chosen, correct) {
+            if (busy) return;
+            busy = true;
+
+            if (chosen === correct) {
+                score += 50;
+                if (score > highScore) { 
+                    highScore = score; 
+                    localStorage.setItem('bargraph_read_71_high', highScore); 
+                }
+                handleWin();
+            } else {
+                handleErr();
+            }
+        }
+
+        function handleWin() {
+            sfx('win'); burst(300);
+            const overlay = document.getElementById('success-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                generateRound();
+            }, 2000);
+        }
+
+        function handleErr() {
+            sfx('err');
+            const overlay = document.getElementById('error-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                busy = false; 
+            }, 1500);
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const p = [];
+            for(let i=0; i<count; i++) p.push({
+                x: Math.random()*c.width, y: c.height+20, vx: (Math.random()-0.5)*40, vy: (Math.random()-1.2)*65,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 2.5, r: Math.random()*360, rv: (Math.random()-0.5)*20
+            });
+            (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=p.length-1; i>=0; i--){
+                    const pt=p[i]; if(pt.l>0){
+                        al=true; pt.x+=pt.vx; pt.y+=pt.vy; pt.vy+=0.85; pt.l-=0.01; pt.r+=pt.rv;
+                        x.save(); x.translate(pt.x,pt.y); x.rotate(pt.r*Math.PI/180);
+                        x.fillStyle=pt.c; x.fillRect(-pt.s/2,-pt.s/2,pt.s,pt.s); x.restore();
+                    } else p.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f);
+            })();
+        }
+
+        window.onload = () => {
+            const savedLang = localStorage.getItem('bargraph_lang') || 'ti';
+            document.getElementById('langSelect').value = savedLang;
+            setLanguage(savedLang);
+            generateRound();
+        };
+    </script>
+</body>
+</html>

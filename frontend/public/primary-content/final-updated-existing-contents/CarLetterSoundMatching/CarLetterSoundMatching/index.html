@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game</title>
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+            text-align: center;
+            color: rgb(255, 255, 255);
+            font-family: sans-serif;
+            font-weight: bold;
+            font-size: 5vw;
+        }
+        /* Shrink Start overlay on desktop */
+        @media (min-width: 1024px){
+            .overlay-content{ max-width: 28%; padding: 0.5rem 0.75rem; border-radius: 6px; }
+            .overlay-content h1{ font-size: 1rem; }
+            .game-button{ font-size: 0.7rem; padding: 4px 8px; }
+        }
+        
+        /* Stars and level display */
+        .stars-container {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        
+        .star {
+            width: 30px;
+            height: 30px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffffff50"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>') no-repeat center;
+            background-size: contain;
+            transition: all 0.3s ease;
+        }
+        
+        .star.filled {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23FFD700"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>') no-repeat center;
+            background-size: contain;
+        }
+        
+        .star.active {
+            transform: scale(1.5) rotate(15deg);
+        }
+        
+        .level-display {
+            color: white;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            background: #4CAF50;
+            padding: 1px 8px;
+            border-radius: 10px;
+            min-width: 40px;
+            text-align: center;
+            line-height: 1.2;
+        }
+        
+        @keyframes levelUp {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); color: #FFD700; }
+            100% { transform: scale(1); }
+        }
+
+        body {
+            background: url('./assets/background_tracing_fun.png') no-repeat center center fixed;
+            background-size: cover;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-position: center bottom;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                background-size: auto 100%;
+                background-position: center bottom;
+            }
+            .purpleTyre {
+                top: 72%;
+            }
+        }
+        
+        /* Desktop specific adjustments */
+        @media (min-width: 769px) {
+            .purpleTyre {
+                top: 72%;
+            }
+        }
+        
+            /* Game Overlay */
+        .game-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .overlay-content {
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 80%;
+            margin: 0 auto;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        }
+        
+        .game-button {
+            background: linear-gradient(135deg, #4CAF50, #2e7d32);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            margin: 3px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+            min-width: 160px;
+        }
+        
+        .game-button:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        
+        .game-controls {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+        }
+        
+        .restart-icon {
+            background: #4CAF50;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 6px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .restart-icon:hover {
+            background: #45a049;
+            transform: rotate(90deg);
+        }
+        
+        .restart-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+        .parachute{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 15%;
+            height: 42%;
+            background: url('./assets/parachute.png') no-repeat;
+            background-size: 100%;
+            font-size: 9vw;
+            transition: 6s;
+        }
+
+        .road {
+            position: absolute;
+            top: 85%;
+            left: 0;
+            width: 100%;
+            height: 15%;
+            background: rgba(0,0,0,0.1);
+        }
+        .cars {
+            position: absolute;
+            width: 25%;
+            height: 32%;
+            cursor: pointer;
+            top: 58%;
+        }
+        #car1 {
+            left: 0;
+            background: url('./assets/pinkCar.png') no-repeat;
+            background-size: 100%;
+        }
+
+        #car2 {
+            left: 34%;
+            background: url('./assets/purpleCar.png') no-repeat;
+            background-size: 100%;
+        }
+        .purpleTyre {
+            position: absolute;
+            width: 6%;
+            height: 12%;
+            cursor: pointer;
+            transition: 5s;
+            left: 38%;
+            background: url('./assets/purpleCarTyre.png') no-repeat;
+            background-size: 100%;
+            z-index: 10;
+            transform: rotate(45deg);
+        }
+
+        #car3 {
+            left: 68%;
+            background: url('./assets/yellowCar.png') no-repeat;
+            background-size: 100%;
+        }
+
+        /* Bottom-right audio controls */
+        .bottom-right-controls {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1200;
+        }
+        .mute-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .mute-button .icon {
+            font-size: 22px;
+        }
+        /* Smaller mute button on desktop */
+        @media (min-width: 1024px){
+            .mute-button { width: 36px; height: 36px; }
+            .mute-button .icon { font-size: 18px; }
+        }
+        .readAgain{
+            background: url("./assets/speakerphone.png") no-repeat center;
+            background-size: 80%;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+
+        ::selection{
+            background: transparent;
+        }
+        @keyframes driveCar {
+            0%{
+                z-index: 100;
+            }
+            35%{
+                transform: scale(1.3);
+                left: 34%;
+                z-index: 100;
+            }
+            50%{
+                left: 110%;
+                z-index: 100;
+            }
+        }
+
+        /* Mobile layout: larger cars stacked vertically */
+        @media (max-width: 900px) {
+            .container {
+                position: absolute;
+                top: 45%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 100%;
+                height: 100vh; /* give space for cars to stack vertically */
+                /* flex no longer needed for cars layout; they are absolutely positioned */
+                display: block;
+            }
+            .cars {
+                /* keep absolute so left-based driveCar animation works */
+                position: absolute;
+                width: 60%;
+                height: 22vh;
+            }
+            .cars p {
+                font-size: 14vw;
+            }
+            /* Align all cars further to the left while keeping them in a straight vertical column
+               (no !important so the driveCar animation can change left) */
+            #car1, #car2, #car3 {
+                left: 5%;
+                transform: none;
+            }
+            /* Vertical stacking by top positions with extra gap between cars */
+            #car1 { top: 22% !important; }
+            #car2 { top: 48% !important; }
+            #car3 { top: 74% !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="containAll">
+        <div class="parachute"></div>
+    </div>
+    <audio class="letterSound" src="" autoplay></audio>
+    <!-- Stars and Level Display -->
+    <div class="stars-container">
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="level-display" id="currentLevel">1</div>
+    </div>
+
+    <!-- Game Overlay -->
+    <div class="game-overlay" id="startScreen">
+        <div class="overlay-content">
+            <button id="startButton" class="game-button">Start Game</button>
+        </div>
+    </div>
+
+    <div class="game-controls">
+        <button id="restartButton" class="restart-icon" title="Restart Game">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4 7.58 4 12C4 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.83 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z" fill="#FFFFFF"/>
+            </svg>
+        </button>
+    </div>
+
+    <div class="bottom-right-controls">
+        <div class="readAgain" id="readAgain" title="Read Again"></div>
+        <button id="muteButton" class="mute-button" aria-label="Mute cheering sound" aria-pressed="false" title="Mute cheering sound">
+            <span class="icon">🔊</span>
+        </button>
+    </div>
+
+</body>
+<script>
+    var arrOfStr = ["ሀ","ዐ","ፀ","ወ","መ","ረ","ፈ"];//end-var
+
+    var parach;
+    var letterSound = document.getElementsByClassName("letterSound")[0];
+    var array;
+    let selected;
+    var text;
+    var rand;
+    var sth
+    var slicer
+
+    let pageTitle = ["Games"];//end-var
+        function setPageTitle(selector) {
+            let titleElt = document.querySelector(selector);
+            let title = document.querySelector("title");
+            title.innerText = pageTitle[0];
+            if (titleElt) {
+                titleElt.innerText = pageTitle[0];
+            }
+        }
+        setPageTitle('.header')
+
+
+
+    // Game state
+    let gameActive = false;
+    let currentLevel = 1;
+    let starsEarned = 0;
+    const starsNeededForLevel = 5; // Stars needed to level up
+    // Game elements
+    let startScreen, restartButton, startButton;
+    
+
+    
+    // Start game function
+    function startGame() {
+        // Hide start screen if present
+        if (startScreen) {
+            startScreen.style.display = 'none';
+        }
+
+        // Clear any existing game elements
+        const container = document.querySelector('.container');
+        if (container) container.remove();
+
+        const tyre = document.querySelector('.purpleTyre');
+        if (tyre) tyre.remove();
+
+        // Initialize game state
+        gameActive = true;
+        createElement();
+        assignLetter();
+        checkAnswer();
+    }
+    
+    // Reset game function
+    function resetGame() {
+        // Reset game state
+        gameActive = false;
+        currentLevel = 1;
+        starsEarned = 0;
+
+        // Reset stars display
+        document.querySelectorAll('.star').forEach(star => {
+            star.classList.remove('filled');
+        });
+
+        // Reset level display
+        document.getElementById('currentLevel').textContent = currentLevel;
+
+        // Start a fresh game immediately
+        startGame();
+    }
+
+    // Initialize the game when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get UI elements
+        startScreen = document.getElementById('startScreen');
+        restartButton = document.getElementById('restartButton');
+        startButton = document.getElementById('startButton');
+
+        // Event listeners
+        if (restartButton) {
+            restartButton.addEventListener('click', resetGame);
+        }
+        if (startButton) {
+            startButton.addEventListener('click', startGame);
+        }
+
+        // Init audio controls
+        muteSound();
+        readAgain();
+
+        // Show start screen (game begins when user presses Start Game)
+        if (startScreen) {
+            startScreen.style.display = 'flex';
+        }
+    });
+
+
+    function createElement() {
+        var container = document.createElement("div")
+        container.className = "container"
+        document.getElementsByClassName("containAll")[0].appendChild(container);
+        for(let i=0;i<3;i++){
+            var cars = document.createElement("div");
+            var p = document.createElement("p");
+            cars.className = "cars"
+            cars.id = "car" + (i+1)
+            cars.appendChild(p)
+            container.appendChild(cars)
+        }
+
+    }
+
+
+
+    function assignLetter() {
+        text = document.getElementsByTagName("p")
+        parach = document.getElementsByClassName("parachute")[0]
+        slicer = arrOfStr.slice(0,)
+        array = [];
+        for(let i=0; i<text.length; i++){
+            var random = Math.floor(Math.random() * slicer.length);
+            let splicer = slicer.splice(random, 1)
+            array.push(splicer[0])
+        }
+        for(let i=0; i<text.length; i++){
+            text[i].innerText = array[i];
+        }
+        const ind = Math.floor(Math.random() * array.length)
+        selected = array[ind]
+        var tm = array.indexOf(selected)
+        letterSound.src = './assets/' + array[tm] + '.mp3';
+
+        // Try to play the letter sound immediately so the player hears it without pressing the icon.
+        // Some mobile browsers may block this until the first user interaction.
+        if (typeof letterSound.play === 'function') {
+            letterSound.play().catch(function(){ /* autoplay may be blocked; ignore */ });
+        }
+    }
+
+
+    // Update stars display
+    function updateStars(isCorrect) {
+        if (isCorrect) {
+            starsEarned++;
+            
+            // Animate the star
+            const stars = document.querySelectorAll('.star');
+            const starToFill = stars[Math.min(starsEarned - 1, 4)];
+            
+            if (starToFill) {
+                starToFill.classList.add('active', 'filled');
+                
+                // Remove active class after animation
+                setTimeout(() => {
+                    starToFill.classList.remove('active');
+                }, 500);
+            }
+            
+            // Check for level up
+            if (starsEarned >= starsNeededForLevel * currentLevel) {
+                levelUp();
+            }
+        } else {
+            // Remove a star for wrong answer, but never go below 0
+            if (starsEarned > 0) {
+                starsEarned--;
+                const stars = document.querySelectorAll('.star');
+                const starToRemove = stars[starsEarned];
+                
+                if (starToRemove) {
+                    starToRemove.classList.remove('filled');
+                    starToRemove.classList.add('active');
+                    setTimeout(() => starToRemove.classList.remove('active'), 500);
+                }
+            }
+        }
+    }
+    
+    function levelUp() {
+        currentLevel++;
+        const levelElement = document.getElementById('currentLevel');
+        levelElement.textContent = currentLevel;
+        levelElement.style.animation = 'levelUp 1s';
+        
+        // Reset animation after it completes
+        setTimeout(() => {
+            levelElement.style.animation = '';
+        }, 1000);
+        
+        // Play level up sound if available
+        if (letterSound) {
+            const originalSrc = letterSound.src;
+            letterSound.src = './assets/claps.mp3';
+            letterSound.play().then(() => {
+                setTimeout(() => {
+                    letterSound.src = originalSrc;
+                }, 1000);
+            });
+        }
+    }
+
+    function checkAnswer() {
+        for(let i=0; i<text.length; i++){
+            document.getElementsByClassName("cars")[i].onclick = function(){
+                if(text[i].innerText == selected ){
+                    updateStars(true);
+                    letterSound.src = './assets/single carDrive.mp3';
+                    setTimeout(function(){
+                        document.getElementsByClassName("containAll")[0].removeChild(document.getElementsByClassName("container")[0])
+                        createElement()
+                        assignLetter()
+                        checkAnswer()
+                    },2500)
+                    document.getElementsByClassName("cars")[i].style.animation = "driveCar 5s"
+                    document.getElementsByClassName("cars")[i].style.background = "url('./assets/purpleCar.gif') no-repeat"
+                    document.getElementsByClassName("cars")[i].style.backgroundSize = "100%"
+                } else {
+                    updateStars(false);
+                    letterSound.src = './assets/ambulance_horn_car.ogg';
+                }
+            }
+        }
+    }
+
+
+    function muteSound(){
+        const btn = document.getElementById('muteButton');
+        const ls = document.getElementsByClassName('letterSound')[0];
+        if (!btn || !ls) return;
+        if (btn.dataset.bound === '1') return; // avoid rebinding
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', function(){
+            ls.muted = !ls.muted;
+            const icon = btn.querySelector('.icon');
+            if (icon) icon.textContent = ls.muted ? '🔇' : '🔊';
+            btn.setAttribute('aria-pressed', String(ls.muted));
+            btn.title = ls.muted ? 'Unmute cheering sound' : 'Mute cheering sound';
+        });
+        // Initialize state
+        const initIcon = btn.querySelector('.icon');
+        if (initIcon) initIcon.textContent = ls.muted ? '🔇' : '🔊';
+        btn.setAttribute('aria-pressed', String(ls.muted));
+        btn.title = ls.muted ? 'Unmute cheering sound' : 'Mute cheering sound';
+    }
+
+    function readAgain(){
+        document.getElementsByClassName("readAgain")[0].onclick = function(){
+            letterSound.play()
+        }
+    }
+
+
+    function dynamics(){
+        let randomX = Math.floor(Math.random()*80)
+            let randomY = Math.floor(Math.random()*20)
+            document.getElementsByClassName("parachute")[0].style.top = randomY + "%";
+            document.getElementsByClassName("parachute")[0].style.left = randomX + "%";
+    }
+    document.getElementsByTagName("body")[0].onload = function(){
+        dynamics()
+        setInterval(dynamics,5000)
+    }
+
+</script>
+
+</html>

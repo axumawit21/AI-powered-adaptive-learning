@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tigrinya Alphabet Explorer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <style>
+        :root {
+            --sky-blue: #87CEEB;
+            --sun-yellow: #FFD700;
+            --grass-green: #90EE90;
+            --cloud-white: #FFFFFF;
+            --text-dark: #2c3e50;
+            --primary-btn: #FF6B6B;
+            --secondary-btn: #4ECDC4;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F7FA 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Scenery */
+        .cloud {
+            position: fixed; background: white; border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            animation: floatCloud linear infinite;
+            z-index: 0; pointer-events: none;
+        }
+        .cloud::after, .cloud::before { content:''; position:absolute; background:inherit; border-radius:50%; }
+        .cloud::after { width: 50px; height: 50px; top: -25px; left: 25px; }
+        .cloud::before { width: 40px; height: 40px; top: -15px; left: 10px; }
+        @keyframes floatCloud { from { left: -200px; } to { left: 100vw; } }
+
+        /* Header */
+        header {
+            width: 100%;
+            padding: 15px 25px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            border-bottom: 4px solid white;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 12px; }
+
+        #title-text {
+            justify-self: center;
+            text-align: center;
+        }
+        .nav-home {
+            background: var(--primary-btn);
+            color: white;
+            width: 45px; height: 45px;
+            border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none; font-size: 1.5rem;
+            box-shadow: 0 4px 0 #d64545;
+        }
+
+        h1 { font-size: 1.4rem; color: var(--text-dark); font-weight: 700; }
+
+        .lang-select {
+            padding: 8px; border-radius: 12px; border: 2px solid #ddd;
+            font-family: inherit; font-weight: bold; outline: none;
+            cursor: pointer; background: white;
+        }
+
+        /* Main Display Area */
+        .game-container {
+            flex: 1;
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            gap: 30px;
+            z-index: 10;
+        }
+
+        .main-card {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 1;
+            border-radius: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            border: 10px solid white;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .big-letter {
+            font-size: 12rem;
+            font-weight: 700;
+            color: var(--secondary-btn);
+            text-shadow: 4px 4px 0px rgba(0,0,0,0.05);
+            line-height: 1;
+        }
+
+        .letter-label {
+            font-size: 1.5rem;
+            color: #999;
+            margin-top: 10px;
+            font-weight: 600;
+            display: none;
+        }
+
+        /* The 7-Forms Strip */
+        .forms-strip {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .form-tile {
+            width: 70px;
+            height: 75px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            cursor: pointer;
+            box-shadow: 0 6px 0 #eee;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 4px solid transparent;
+        }
+
+        .form-tile:active { transform: translateY(4px); box-shadow: 0 2px 0 #eee; }
+        .form-tile.active {
+            background: var(--sun-yellow);
+            color: white;
+            border-color: #f1c40f;
+            box-shadow: 0 6px 0 #d4ac0d;
+            transform: scale(1.1) translateY(-5px);
+        }
+
+        /* Progression Controls */
+        .progression-nav {
+            display: flex;
+            width: 100%;
+            max-width: 600px;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 0 20px;
+        }
+
+        .nav-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            color: white;
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+            transition: all 0.1s;
+            font-family: inherit;
+        }
+
+        .nav-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+        .btn-prev { background: #95a5a6; }
+        .btn-next { background: var(--grass-green); }
+
+        .progress-indicator {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            background: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 0 #eee;
+        }
+
+        @media (max-width: 600px) {
+            .big-letter { font-size: 8rem; }
+            .form-tile { width: 55px; height: 60px; font-size: 1.8rem; border-radius: 15px; }
+            .main-card { max-width: 320px; border-radius: 30px; }
+            h1 { font-size: 1rem; }
+            .nav-btn { padding: 12px 20px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Animated Clouds -->
+    <div class="cloud" style="top: 15%; width: 120px; height: 50px; animation-duration: 30s; animation-delay: -5s;"></div>
+    <div class="cloud" style="top: 35%; width: 100px; height: 40px; animation-duration: 45s; animation-delay: -15s;"></div>
+    <div class="cloud" style="top: 10%; width: 150px; height: 60px; animation-duration: 25s; animation-delay: -2s;"></div>
+
+    <header>
+        <div class="header-left">
+            <a href="index.html" class="nav-home">♜</a>
+        </div>
+
+        <h1 id="title-text">መዛመድ (Alphabet Explorer)</h1>
+
+        <select id="langSelect" class="lang-select" onchange="applyLanguage(this.value)">
+            <option value="ti" selected>ትግርኛ (Tigrinya)</option>
+            <option value="am">አማርኛ (Amharic)</option>
+            <option value="en">English (እንግሊዝኛ)</option>
+            <option value="om">Afaan Oromoo</option>
+            <option value="so">Soomaali</option>
+        </select>
+    </header>
+
+    <div class="game-container">
+        <div class="main-card animate__animated animate__fadeInUp" id="main-card">
+            <div class="big-letter" id="display-letter">ሀ</div>
+            <div class="letter-label" id="display-label">ሀ (Ha)</div>
+        </div>
+
+        <div class="forms-strip" id="forms-strip">
+            <!-- Variations injected by JS -->
+        </div>
+
+        <div class="progression-nav">
+            <button class="nav-btn btn-prev" onclick="changeFamily(-1)" id="btn-prev">
+                <span>⬅</span> <span id="prev-label">Back</span>
+            </button>
+            <div class="progress-indicator">
+                <span id="current-pos">1</span> / <span id="total-pos">34</span>
+            </div>
+            <button class="nav-btn btn-next" onclick="changeFamily(1)" id="btn-next">
+                <span id="next-label">Next</span> <span>➡</span>
+            </button>
+        </div>
+    </div>
+
+    <audio id="letter-audio" autoplay></audio>
+
+    <script>
+        // Tigrinya Alphabets (Fidels) - The full collection
+        const families = [
+            ["ሀ", "ሁ", "ሂ", "ሃ", "ሄ", "ህ", "ሆ"],
+            ["ለ", "ሉ", "ሊ", "ላ", "ሌ", "ል", "ሎ"],
+            ["ሐ", "ሑ", "ሒ", "ሓ", "ሔ", "ሕ", "ሖ"],
+            ["መ", "ሙ", "ሚ", "ማ", "ሜ", "ም", "ሞ"],
+            ["ሠ", "ሡ", "ሢ", "ሣ", "ሤ", "ሥ", "ሦ"],
+            ["ረ", "ሩ", "ሪ", "ራ", "ሬ", "ር", "ሮ"],
+            ["ሰ", "ሱ", "ሲ", "ሳ", "ሴ", "ስ", "ሶ"],
+            ["ሸ", "ሹ", "ሺ", "ሻ", "ሼ", "ሽ", "ሾ"],
+            ["ቀ", "ቁ", "ቂ", "ቃ", "ቄ", "ቅ", "ቆ"],
+            ["በ", "ቡ", "ቢ", "ባ", "ቤ", "ብ", "ቦ"],
+            ["ተ", "ቱ", "ቲ", "ታ", "ቴ", "ት", "ቶ"],
+            ["ቸ", "ቹ", "ቺ", "ቻ", "ቼ", "ች", "ቾ"],
+            ["ነ", "ኑ", "ኒ", "ና", "ኔ", "ን", "ኖ"],
+            ["ኘ", "ኙ", "ኚ", "ኛ", "ኜ", "ኝ", "ኞ"],
+            ["አ", "ኡ", "ኢ", "ኣ", "ኤ", "እ", "ኦ"],
+            ["ከ", "ኩ", "ኪ", "ካ", "ኬ", "ክ", "ኮ"],
+            ["ኸ", "ኹ", "ኺ", "ኻ", "ኼ", "ኽ", "ኾ"],
+            ["ወ", "ዉ", "ዊ", "ዋ", "ዌ", "ው", "ዎ"],
+            ["ዐ", "ዑ", "ዒ", "ዓ", "ዔ", "ዕ", "ዖ"],
+            ["ዘ", "ዙ", "ዚ", "ዛ", "ዜ", "ዝ", "ዞ"],
+            ["ዠ", "ኁ", "ዢ", "ዣ", "ዤ", "ዥ", "ዦ"],
+            ["የ", "ዩ", "ዪ", "ያ", "ዬ", "ይ", "ዮ"],
+            ["ደ", "ዱ", "ዲ", "ዳ", "ዴ", "ድ", "ዶ"],
+            ["ጀ", "ጁ", "ጂ", "ጃ", "ጄ", "ጅ", "ጆ"],
+            ["ገ", "ጉ", "ጊ", "ጋ", "ጌ", "ግ", "ጎ"],
+            ["ጠ", "ጡ", "ጢ", "ጣ", "ጤ", "ጥ", "ጦ"],
+            ["ጨ", "ጩ", "ጪ", "ጫ", "ጬ", "ጭ", "ጮ"],
+            ["ጰ", "ጱ", "ጲ", "ጳ", "ጴ", "ጵ", "ጶ"],
+            ["ጸ", "ጹ", "ጺ", "ጻ", "ጼ", "ጽ", "ጾ"],
+            ["ፀ", "ፁ", "ፂ", "ፃ", "ፄ", "ፅ", "ፆ"],
+            ["ፈ", "ፉ", "ፊ", "ፋ", "ፌ", "ፍ", "ፎ"],
+            ["ፐ", "ፑ", "ፒ", "ፓ", "ፔ", "ፕ", "ፖ"]
+        ];
+
+        const translit = ["ä", "u", "i", "a", "e", "ə", "o"];
+        const i18n = {
+            en: { title: "Tigrinya Alphabets", next: "Next", prev: "Back" },
+            ti: { title: "ፊደላት ትግርኛ", next: "ቀጻሊ", prev: "ንድሕሪት" },
+            am: { title: "የትግርኛ ፊደላት", next: "ቀጣይ", prev: "ወደኋላ" },
+            om: { title: "Qubeelee", next: "Itti fufi", prev: "Duubatti" },
+            so: { title: "Xarfaha", next: "Xiga", prev: "Dib" }
+        };
+
+        let currentFamilyIdx = 0;
+        let currentFormIdx = 0;
+        let lang = 'ti';
+
+        function applyLanguage(l) {
+            lang = l;
+            const t = i18n[l] || i18n.en;
+            document.getElementById('title-text').innerText = t.title;
+            document.getElementById('next-label').innerText = t.next;
+            document.getElementById('prev-label').innerText = t.prev;
+        }
+
+        function renderStrip() {
+            const strip = document.getElementById('forms-strip');
+            strip.innerHTML = '';
+            
+            families[currentFamilyIdx].forEach((letter, idx) => {
+                const tile = document.createElement('div');
+                tile.className = `form-tile ${idx === currentFormIdx ? 'active' : ''}`;
+                tile.innerText = letter;
+                tile.onclick = () => selectForm(idx);
+                strip.appendChild(tile);
+            });
+
+            updateDisplay();
+        }
+
+        function selectForm(idx) {
+            currentFormIdx = idx;
+            renderStrip();
+            playSound();
+        }
+
+        function updateDisplay() {
+            const letter = families[currentFamilyIdx][currentFormIdx];
+            const display = document.getElementById('display-letter');
+            const card = document.getElementById('main-card');
+
+            display.innerText = letter;
+            
+            document.getElementById('current-pos').innerText = currentFamilyIdx + 1;
+            document.getElementById('total-pos').innerText = families.length;
+
+            // Simple bounce animation
+            card.classList.remove('animate__pulse');
+            void card.offsetWidth;
+            card.classList.add('animate__pulse');
+        }
+
+        function changeFamily(dir) {
+            currentFamilyIdx += dir;
+            if (currentFamilyIdx < 0) currentFamilyIdx = families.length - 1;
+            if (currentFamilyIdx >= families.length) currentFamilyIdx = 0;
+            
+            currentFormIdx = 0; // Reset to base Ha form when switching root
+            renderStrip();
+            playSound();
+        }
+
+        function playSound() {
+            const letter = families[currentFamilyIdx][currentFormIdx];
+            const audio = document.getElementById('letter-audio');
+            // User will map these to actual audio files
+            // Logic: looking for assets/ሀ.mp3, assets/ሁ.mp3 etc.
+            audio.src = `./assets/${letter}.mp3`;
+            audio.play().catch(e => console.log("Audio not found for: " + letter));
+            
+            // Generate simple synth tap sound as backup/feedback
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.frequency.setValueAtTime(400 + (currentFormIdx * 50), ctx.currentTime);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+            osc.start(); osc.stop(ctx.currentTime + 0.1);
+        }
+
+        window.onload = () => {
+            applyLanguage('ti');
+            renderStrip();
+        };
+
+        // Keyboard shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') changeFamily(1);
+            if (e.key === 'ArrowLeft') changeFamily(-1);
+            if (e.key >= '1' && e.key <= '7') selectForm(parseInt(e.key) - 1);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,583 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Weight Lab - መዐቀኒ ክብደት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #E0F2F1;
+            --primary: #009688;
+            --secondary: #00796B;
+            --accent: #FFAB00;
+            --scale-body: #CFD8DC;
+            --scale-platform: #546E7A;
+            --text-dark: #263238;
+            --white: #ffffff;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(45deg, #B2DFDB 25%, transparent 25%, transparent 75%, #B2DFDB 75%, #B2DFDB),
+                linear-gradient(45deg, #B2DFDB 25%, transparent 25%, transparent 75%, #B2DFDB 75%, #B2DFDB);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* --- Header --- */
+        header {
+            width: 100%;
+            padding: 15px 40px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            border-bottom: 5px solid var(--primary);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            position: sticky; top: 0;
+        }
+
+        .header-item-left { display: flex; justify-content: flex-start; }
+        .header-item-right { display: flex; justify-content: flex-end; }
+
+        .grade-badge {
+            background: var(--accent); color: white; width: 55px; height: 55px;
+            border-radius: 15px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.8rem; border: 3px solid white;
+            box-shadow: 0 5px 0 #b45309; transform: rotate(-5deg);
+        }
+
+        h1 { margin: 0; color: var(--text-dark); font-size: 2rem; font-weight: 900; letter-spacing: -1px; text-align: center; }
+
+        /* Custom Dropdown */
+        .custom-select-wrapper { position: relative; display: inline-block; cursor: pointer; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; font-weight: 800; color: var(--primary);
+            height: 48px; background: white; border-radius: 24px;
+            width: 170px; border: 2px solid var(--primary);
+        }
+        .custom-options {
+            position: absolute; top: 115%; right: 0; left: 0;
+            background: white; opacity: 0; visibility: hidden;
+            pointer-events: none; transform: translateY(-10px);
+            transition: all 0.3s ease; display: flex; flex-direction: column;
+            border-radius: 20px; padding: 6px; box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border: 1px solid #eee; z-index: 200;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; pointer-events: all; transform: translateY(0); }
+        .custom-option { padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 600; color: #444; }
+        .custom-option:hover { background: #f0fdf4; color: var(--primary); }
+
+        /* --- Main Container --- */
+        .container {
+            flex: 1; width: 100%; max-width: 1100px;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 40px 20px; z-index: 10;
+            justify-content: flex-start;
+            gap: 25px;
+        }
+
+        .score-board { display: flex; gap: 20px; }
+        .score-pill {
+            background: white; padding: 12px 30px; border-radius: 35px;
+            font-weight: 900; color: var(--text-dark);
+            border: 3px solid var(--primary);
+            box-shadow: 0 8px 0 rgba(0, 150, 136, 0.1);
+            display: flex; align-items: center; gap: 12px;
+            font-size: 1.4rem;
+        }
+
+        .formula-container {
+            display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px;
+        }
+        .formula-badge {
+            background: var(--primary); color: white;
+            padding: 10px 30px; border-radius: 40px;
+            font-size: 1.2rem; font-weight: 900;
+            box-shadow: 0 6px 0 var(--secondary);
+        }
+
+        /* --- Laboratory Area --- */
+        .lab-workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            width: 100%;
+            align-items: center;
+        }
+
+        /* Question Side */
+        .control-side {
+            background: white; padding: 40px; border-radius: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            border: 6px solid white; text-align: center;
+        }
+        .q-text { font-size: 2.8rem; font-weight: 900; color: var(--text-dark); margin-bottom: 30px; }
+        .highlight { color: var(--primary); background: #f0fdf4; padding: 0 15px; border-radius: 15px; }
+
+        .input-group { display: flex; align-items: center; justify-content: center; gap: 20px; }
+        input[type="number"] {
+            width: 240px; height: 105px; font-size: 4rem;
+            text-align: center; border: 4px solid #e2e8f0;
+            border-radius: 25px; outline: none; font-weight: 900;
+            color: var(--primary); background: #f8fafc;
+        }
+        input:focus { border-color: var(--primary); transform: scale(1.05); background: white; }
+        .unit-lbl { font-size: 2.2rem; font-weight: 900; color: #94a3b8; }
+
+        /* Visual Side: The Scale */
+        .visual-side {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(255,255,255,0.4); border-radius: 50px; padding: 40px;
+            height: 500px;
+        }
+
+        .scale-container {
+            position: relative; width: 280px; height: 260px;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+        }
+
+        .scale-item {
+            font-size: 7rem; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.2));
+            transform-origin: bottom center; position: relative; z-index: 10;
+        }
+        .land-heavy { animation: squash 0.4s ease-out forwards; }
+        @keyframes squash { 
+            0% { transform: translateY(-150px) scale(1, 1); opacity: 0; } 
+            50% { transform: translateY(15px) scale(1.3, 0.7); opacity: 1; }
+            75% { transform: translateY(-8px) scale(0.9, 1.1); }
+            100% { transform: translateY(0) scale(1, 1); }
+        }
+
+        .scale-top {
+            width: 220px; height: 25px; background: var(--scale-platform);
+            border-radius: 12px; box-shadow: 0 6px 0 #37474F; position: relative; top: 8px;
+        }
+        .scale-body {
+            width: 180px; height: 110px; background: var(--scale-body);
+            border-radius: 25px 25px 10px 10px; border: 5px solid #B0BEC5;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .scale-screen {
+            background: #C5E1A5; font-family: 'Courier New', monospace;
+            color: #33691E; font-weight: bold; padding: 12px 25px;
+            border-radius: 8px; border: 3px solid #9CCC65;
+            font-size: 2rem; width: 85%; text-align: right;
+            box-shadow: inset 3px 3px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn-check-main {
+            background: var(--primary); color: white; border: none;
+            padding: 22px 100px; border-radius: 60px; font-size: 2.5rem;
+            font-weight: 900; cursor: pointer; box-shadow: 0 10px 0 var(--secondary);
+            margin-top: 10px;
+        }
+        .btn-check-main:active { transform: translateY(4px); box-shadow: none; }
+
+        /* --- Overlays --- */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(10px); padding: 20px;
+        }
+        .overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+        
+        .modal {
+            background: white; padding: 50px; border-radius: 50px;
+            text-align: center; max-width: 500px; width: 95%;
+            border: 12px solid var(--primary);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        }
+        .modal-icon { font-size: 8rem; display: block; margin-bottom: 25px; }
+        .modal-title { font-size: 3rem; font-weight: 900; color: var(--text-dark); margin-bottom: 15px; }
+        .modal-body { font-size: 1.6rem; color: #555; margin-bottom: 40px; font-weight: bold; }
+        .btn-modal {
+            background: var(--primary); color: white; border: none;
+            padding: 20px 60px; border-radius: 50px; font-weight: 900;
+            font-size: 1.6rem; cursor: pointer; box-shadow: 0 10px 0 var(--secondary);
+        }
+        .btn-modal:active { transform: translateY(6px); box-shadow: none; }
+
+        #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 1100; }
+
+        @media (max-width: 950px) {
+            .lab-workspace { grid-template-columns: 1fr; }
+            h1 { font-size: 1.4rem; }
+            .grade-badge { width: 45px; height: 45px; font-size: 1.4rem; }
+            .q-text { font-size: 2.2rem; }
+            input[type="number"] { width: 190px; height: 80px; font-size: 3rem; }
+            .visual-side { height: auto; padding: 20px; }
+            .score-pill { padding: 8px 20px; font-size: 1.1rem; }
+            .btn-check-main { font-size: 1.8rem; padding: 15px 60px; }
+            header { padding: 10px 15px; grid-template-columns: auto 1fr auto; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+    <div class="header-item-left"><div class="grade-badge">3</div></div>
+    <h1 id="app-title">Weight Lab</h1>
+    <div class="header-item-right">
+        <div class="custom-select-wrapper" id="lang-dropdown">
+            <div class="custom-select">
+                <div class="custom-select__trigger">
+                    <span id="current-lang-text">🗺️ ትግርኛ</span>
+                    <span style="font-size:0.8rem">▼</span>
+                </div>
+                <div class="custom-options">
+                    <div class="custom-option" data-value="ti">ትግርኛ</div>
+                    <div class="custom-option" data-value="am">አማርኛ</div>
+                    <div class="custom-option" data-value="en">English</div>
+                    <div class="custom-option" data-value="om">Afan Oromoo</div>
+                    <div class="custom-option" data-value="so">Soomaali</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="score-board">
+        <div class="score-pill">🏅 <span id="lbl-record">Record</span>: <span id="val-high" style="margin-left:8px">0</span></div>
+        <div class="score-pill">⭐ <span id="lbl-score">Score</span>: <span id="val-score" style="margin-left:8px">0</span></div>
+    </div>
+
+    <div class="formula-container">
+        <div class="formula-badge" id="formula-1">1 ኪ.ግ = 1000 ግ</div>
+        <div class="formula-badge" id="formula-2" style="background:#00796B">1 ኩንታል = 100 ኪ.ግ</div>
+    </div>
+
+    <div class="lab-workspace">
+        <div class="control-side">
+            <div class="q-text" id="q-display">--</div>
+            <div class="input-group">
+                <input type="number" id="user-input" placeholder="?" inputmode="numeric">
+                <span class="unit-lbl" id="lbl-unit-target">ግ</span>
+            </div>
+        </div>
+
+        <div class="visual-side">
+            <div class="scale-container">
+                <div class="scale-item" id="visual-item">🥔</div>
+                <div class="scale-top" id="scale-platform"></div>
+                <div class="scale-body">
+                    <div class="scale-screen" id="scale-val">---</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-check-main" id="btn-check" onclick="checkAnswer()">ፈትሽ (Check) ✔️</button>
+</div>
+
+<!-- Reactions Overlays -->
+<div class="overlay" id="overlay-win">
+    <div class="modal">
+        <span class="modal-icon">⚖️💎</span>
+        <div class="modal-title" id="win-title">ትኽክል!</div>
+        <div class="modal-body" id="win-body">ብጣዕሚ ጽቡቕ! ቀፅል</div>
+        <button class="btn-modal" onclick="nextLevel()" id="btn-next">ቀፃሊ ➡</button>
+    </div>
+</div>
+
+<div class="overlay" id="overlay-fail">
+    <div class="modal" style="border-color: #ef4444;">
+        <span class="modal-icon">🏚️</span>
+        <div class="modal-title" id="fail-title">እንደገና ፈትን!</div>
+        <div class="modal-body">
+            <span id="fail-body">ጸወታ ተወዲኡ።</span><br><br>
+            <span id="lbl-final-score" style="font-weight: 800;">ውፅኢትካ</span>: <span id="final-score-val" style="font-size:4rem; color:#ef4444; font-weight:900;">0</span>
+        </div>
+        <button class="btn-modal" onclick="restartGame()" id="btn-restart" style="background:#ef4444; box-shadow: 0 10px 0 #991b1b;">እንደገና ጀምር 🔄</button>
+    </div>
+</div>
+
+<script>
+    const translations = {
+        ti: {
+            title: "መዐቀኒ ክብደት",
+            formula1: "1 ኪ.ግ = 1000 ግ", formula2: "1 ኩንታል = 100 ኪ.ግ",
+            score: "ነጥቢ", record: "ዝለዓለ", check: "ፈትሽ ✔️",
+            win: "ትኽክል!", winSub: "ብጣዕሚ ጽቡቕ! ቀፅል",
+            fail: "እንደገና ፈትን!", failSub: "ጸወታ ተወዲኡ።", final: "ውፅኢትካ",
+            next: "ቀፃሊ ➡", restart: "እንደገና ጀምር 🔄",
+            units: { kg: "ኪ.ግ", g: "ግ", q: "ኩንታል" },
+            q1: "{v} ኪ.ግ = ", q2: "{v1} ኪ.ግ + {v2} ግ = ", q3: "{v} ኩንታል = "
+        },
+        am: {
+            title: "የክብደት መለኪያ",
+            formula1: "1 ኪ.ግ = 1000 ግ", formula2: "1 ኩንታል = 100 ኪ.ግ",
+            score: "ውጤት", record: "ከፍተኛ", check: "ፈትሽ ✔️",
+            win: "ትክክል!", winSub: "በጣም ጎበዝ! ቀጥል",
+            fail: "እንደገና ሞክር!", failSub: "ጨዋታው ተጠናቋል።", final: "የእርስዎ ውጤት",
+            next: "ቀጣይ ➡", restart: "እንደገና ጀምር 🔄",
+            units: { kg: "ኪ.ግ", g: "ግ", q: "ኩንታል" },
+            q1: "{v} ኪ.ግ = ", q2: "{v1} ኪ.ግ + {v2} ግ = ", q3: "{v} ኩንታል = "
+        },
+        en: {
+            title: "Weight Lab",
+            formula1: "1 kg = 1000 g", formula2: "1 quintal = 100 kg",
+            score: "Score", record: "Record", check: "Check ✔️",
+            win: "Correct!", winSub: "Perfect balance! Keep it up",
+            fail: "Oops!", failSub: "Game Over.", final: "Your Score",
+            next: "Next Level ➡", restart: "Restart Game 🔄",
+            units: { kg: "kg", g: "g", q: "quintal" },
+            q1: "{v} kg = ", q2: "{v1} kg + {v2} g = ", q3: "{v} quintal = "
+        },
+        om: {
+            title: "Safara Ulfaataa",
+            formula1: "1 kg = 1000 g", formula2: "1 kuntalli = 100 kg",
+            score: "Qabxii", record: "Rikardii", check: "Mirkaneessi ✔️",
+            win: "Sirrii!", winSub: "Baay'ee gaariidha! Itti fufi",
+            fail: "Irra deebi'ii!", failSub: "Tapha dhumate.", final: "Qabxii Keessan",
+            next: "Itti Aanu ➡", restart: "Irra deebi'i 🔄",
+            units: { kg: "kg", g: "g", q: "kuntala" },
+            q1: "{v} kg = ", q2: "{v1} kg + {v2} g = ", q3: "{v} kuntala = "
+        },
+        so: {
+            title: "Cabbirka Culayska",
+            formula1: "1 kg = 1000 g", formula2: "1 kintal = 100 kg",
+            score: "Dhibco", record: "Rikoodh", check: "Hubi ✔️",
+            win: "Sax!", winSub: "Shaqo fiican! Horay u soco",
+            fail: "Isku day mar kale!", failSub: "Ciyaartu way dhammaatay.", final: "Dhibcahaaga",
+            next: "Xiga ➡", restart: "Dib u billow 🔄",
+            units: { kg: "kg", g: "g", q: "kintal" },
+            q1: "{v} kg = ", q2: "{v1} kg + {v2} g = ", q3: "{v} kintal = "
+        }
+    };
+
+    const itemIcons = {
+        kg: ['🥔', '🥩', '🏋️', '🍍', '🍈'],
+        q: ['🌾', '🌽', '🪵', '🐘', '🧱']
+    };
+
+    let currentLang = 'ti';
+    let score = 0;
+    let highScore = localStorage.getItem('weightLabHigh_V1') || 0;
+    let currentProblem = {};
+
+    function init() {
+        document.getElementById('val-high').textContent = highScore;
+        updateLanguage();
+        generateProblem();
+    }
+
+    function generateProblem() {
+        const type = Math.floor(Math.random() * 3); // 0: kg->g, 1: kg+g->g, 2: q->kg
+        const t = translations[currentLang];
+        let qText, ans, targetUnit, item, scaleDisp;
+
+        if (type === 0) {
+            let v = Math.floor(Math.random() * 9) + 1;
+            qText = t.q1.replace('{v}', `<span class="highlight">${v}</span>`);
+            ans = v * 1000;
+            targetUnit = t.units.g;
+            item = itemIcons.kg[Math.floor(Math.random() * itemIcons.kg.length)];
+            scaleDisp = v + ".0";
+        } else if (type === 1) {
+            let v1 = Math.floor(Math.random() * 5) + 1;
+            let v2 = (Math.floor(Math.random() * 9) + 1) * 100;
+            qText = t.q2.replace('{v1}', `<span class="highlight">${v1}</span>`).replace('{v2}', `<span class="highlight">${v2}</span>`);
+            ans = (v1 * 1000) + v2;
+            targetUnit = t.units.g;
+            item = itemIcons.kg[0];
+            scaleDisp = v1 + "." + (v2/100);
+        } else {
+            let v = Math.floor(Math.random() * 5) + 1;
+            qText = t.q3.replace('{v}', `<span class="highlight">${v}</span>`);
+            ans = v * 100;
+            targetUnit = t.units.kg;
+            item = itemIcons.q[Math.floor(Math.random() * itemIcons.q.length)];
+            scaleDisp = (v * 100);
+        }
+
+        currentProblem = { ans, targetUnit, type };
+        document.getElementById('q-display').innerHTML = qText;
+        document.getElementById('lbl-unit-target').textContent = targetUnit;
+        document.getElementById('user-input').value = '';
+        
+        // Scale Animation
+        const visItem = document.getElementById('visual-item');
+        visItem.classList.remove('land-heavy');
+        void visItem.offsetWidth; // trigger reflow
+        visItem.innerText = item;
+        visItem.classList.add('land-heavy');
+
+        document.getElementById('scale-val').textContent = '---';
+        setTimeout(() => {
+            document.getElementById('scale-val').textContent = (type === 2) ? '???' : scaleDisp + (type === 0 || type === 1 ? ' ኪ.ግ' : '');
+            playSound('beep');
+        }, 500);
+
+        document.getElementById('user-input').focus();
+    }
+
+    function checkAnswer() {
+        const val = parseInt(document.getElementById('user-input').value);
+        if (isNaN(val)) return;
+
+        if (val === currentProblem.ans) {
+            score += 20;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('weightLabHigh_V1', highScore);
+            }
+            updateScoreUI();
+            playSound('win');
+            triggerConfetti();
+            document.getElementById('overlay-win').classList.add('show');
+        } else {
+            playSound('fail');
+            document.getElementById('final-score-val').textContent = score;
+            document.getElementById('overlay-fail').classList.add('show');
+        }
+    }
+
+    function nextLevel() {
+        document.getElementById('overlay-win').classList.remove('show');
+        generateProblem();
+    }
+
+    function restartGame() {
+        score = 0;
+        updateScoreUI();
+        document.getElementById('overlay-fail').classList.remove('show');
+        generateProblem();
+    }
+
+    function updateScoreUI() {
+        document.getElementById('val-score').textContent = score;
+        document.getElementById('val-high').textContent = highScore;
+    }
+
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('formula-1').textContent = t.formula1;
+        document.getElementById('formula-2').textContent = t.formula2;
+        document.getElementById('lbl-score').textContent = t.score;
+        document.getElementById('lbl-record').textContent = t.record;
+        document.getElementById('btn-check').textContent = t.check;
+        document.getElementById('win-title').textContent = t.win;
+        document.getElementById('win-body').textContent = t.winSub;
+        document.getElementById('btn-next').textContent = t.next;
+        document.getElementById('fail-title').textContent = t.fail;
+        document.getElementById('fail-body').textContent = t.failSub;
+        document.getElementById('lbl-final-score').textContent = t.final;
+        document.getElementById('btn-restart').textContent = t.restart;
+        
+        if (currentProblem.ans) {
+            const sameType = currentProblem.type;
+            const isMixed = document.getElementById('q-display').innerHTML.includes('+');
+            // Quick refresh question
+            const v = currentProblem.ans / (sameType === 2 ? 100 : 1000);
+            if (sameType === 1) {
+                const v1 = Math.floor(v);
+                const v2 = currentProblem.ans % 1000;
+                document.getElementById('q-display').innerHTML = t.q2.replace('{v1}', `<span class="highlight">${v1}</span>`).replace('{v2}', `<span class="highlight">${v2}</span>`);
+            } else if (sameType === 0) {
+                document.getElementById('q-display').innerHTML = t.q1.replace('{v}', `<span class="highlight">${v}</span>`);
+            } else {
+                document.getElementById('q-display').innerHTML = t.q3.replace('{v}', `<span class="highlight">${v}</span>`);
+            }
+            document.getElementById('lbl-unit-target').textContent = currentProblem.targetUnit;
+        }
+    }
+
+    // Dropdown Handling
+    const dropdown = document.getElementById('lang-dropdown');
+    const trigger = dropdown.querySelector('.custom-select__trigger');
+    const options = dropdown.querySelectorAll('.custom-option');
+
+    trigger.addEventListener('click', (e) => {
+        dropdown.querySelector('.custom-select').classList.toggle('open');
+        e.stopPropagation();
+    });
+
+    options.forEach(opt => {
+        opt.addEventListener('click', function(e) {
+            e.stopPropagation();
+            currentLang = this.dataset.value;
+            document.getElementById('current-lang-text').textContent = "🗺️ " + this.textContent;
+            dropdown.querySelector('.custom-select').classList.remove('open');
+            updateLanguage();
+        });
+    });
+
+    window.addEventListener('click', () => dropdown.querySelector('.custom-select').classList.remove('open'));
+
+    function playSound(type) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        if (type === 'win') {
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(523, t); osc.frequency.exponentialRampToValueAtTime(1046, t + 0.1);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+            osc.start(t); osc.stop(t + 0.4);
+        } else if (type === 'beep') {
+            osc.type = 'square'; osc.frequency.setValueAtTime(800, t);
+            gain.gain.setValueAtTime(0.05, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+            osc.start(t); osc.stop(t + 0.1);
+        } else {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); osc.frequency.linearRampToValueAtTime(80, t + 0.4);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.4);
+            osc.start(t); osc.stop(t + 0.4);
+        }
+    }
+
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const pieces = [];
+        for(let i=0; i<80; i++) {
+            pieces.push({
+                x: canvas.width / 2, y: canvas.height / 2,
+                vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20 - 10,
+                color: `hsl(${Math.random()*360}, 100%, 50%)`, size: Math.random() * 10 + 5
+            });
+        }
+        function anim() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            let alive = false;
+            pieces.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.8;
+                if (p.y < canvas.height) {
+                    ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
+                    alive = true;
+                }
+            });
+            if (alive) requestAnimationFrame(anim);
+        }
+        anim();
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>

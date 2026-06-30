@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picture Naming Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <audio id="pudio" src="" style='display: none;'></audio>
+    <audio id="correctSound" src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3" preload="auto"></audio>
+    <audio id="wrongSound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3" preload="auto"></audio>
+    <audio id="emptySound" src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-remove-2578.mp3" preload="auto"></audio>
+    <!-- Completion Modal -->
+    <div id="completionModal" class="modal">
+        <div class="modal-content">
+            <div class="confetti"></div>
+            <div class="trophy">🏆</div>
+            <h2 id="modalTitle">Amazing! You Did It! 🎉</h2>
+            <p class="completion-text" id="modalText">You've successfully named all <span class="highlight">3</span> pictures!</p>
+            <div class="celebration">
+                <span>✨</span>
+                <span>🎉</span>
+                <span>👏</span>
+            </div>
+            <div class="modal-buttons">
+                <button id="restartGame" class="btn btn-primary">
+                    <span id="playAgainLabel">Play Again</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 4V9H4.58152M19.9381 11C19.446 7.05369 16.0796 4 12 4C8.64262 4 5.76829 6.06817 4.58152 9M4.58152 9H9M20 20V15H19.4185M19.4185 15C18.2317 17.9318 15.3574 20 12 20C7.93283 20 4.59245 17.0789 4.07422 13.2249M19.4185 15H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <header class="game-header">
+            <div class="header-top">
+                <h1 id="headerTitle">What's in the Picture?</h1>
+                <div class="lang-select-container">
+                    <label for="langSelect" class="sr-only">Language</label>
+                    <select id="langSelect" aria-label="Language selector">
+                        <option value="en">English</option>
+                        <option value="am">አማርኛ</option>
+                        <option value="ti">ትግርኛ</option>
+                        <option value="om">Afan Oromoo</option>
+                        <option value="so">Soomaali</option>
+                    </select>
+                </div>
+            </div>
+            <p class="instructions" id="instructionsText">Type the name of the object and press Enter or click Submit</p>
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+                <span id="progressText">1/3</span>
+            </div>
+        </header>
+        
+        <div class="game-content">
+            <div class="image-container">
+                <div class="image-frame">
+                    <img onclick="_playAudio()" src="" id="image" alt="Guess the object">
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="textInput" 
+                        placeholder="Type your answer..."
+                        autocomplete="off"
+                        aria-label="Type the name of the object">
+                    <button id="inputButton" class="submit-btn">
+                        <span id="submitLabel">Submit</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let pageTitle = ["Picture Naming Game"];//end-var
+        const i18n = {
+            en: {
+                title: "Picture Naming Game",
+                header: "What's in the Picture?",
+                instructions: "Type the name of the object and press Enter or click Submit",
+                placeholder: "Type your answer...",
+                aria: "Type the name of the object",
+                submit: "Submit",
+                modal_title: "Amazing! You Did It! 🎉",
+                modal_text: (n) => `You've successfully named all <span class="highlight">${n}</span> pictures!`,
+                play_again: "Play Again"
+            },
+            am: {
+                title: "የምስል ስም መጻፍ",
+                header: "በምስሉ ውስጥ ምን አለ?",
+                instructions: "የምስሉ ስም ጻፍ እና Enter ወይም አስገባ ጫን",
+                placeholder: "መልስህን እዚህ ጻፍ...",
+                aria: "የምስሉን ስም ጻፍ",
+                submit: "አስገባ",
+                modal_title: "ጎበዝ! ተሳክተዋል! 🎉",
+                modal_text: (n) => `ሁሉንም <span class="highlight">${n}</span> ምስሎች በትክክል ሰየሙ!`,
+                play_again: "እንደገና ተጫወት"
+            },
+            ti: {
+                title: "ናይ ምስሊ ስም ምጽሓፍ",
+                header: "ኣብ ስዕሊ እንታይ አሎ?",
+                instructions: "ናይቲ ምስሊ ስም ጽሓፍ እና Enter ወይ ኣቐምጥ ጠውቕ",
+                placeholder: "መልስካ ኣእትው...",
+                aria: "ናይቲ ምስሊ ስም ጽሓፍ",
+                submit: "ኣቐምጥ",
+                modal_title: "ጽቡቕ! አሳኪዖካዮ! 🎉",
+                modal_text: (n) => `ብትክክል ኩሉ <span class="highlight">${n}</span> ስእልታት ሰሚካ!`,
+                play_again: "ደጊምካ ተጨወት"
+            },
+            om: {
+                title: "Tapha Maqaa Suuraa",
+                header: "Suuraan maal qaba?",
+                instructions: "Maqaa meeshaa barreessi itti aansuun Enter dhiibi yookaan Galchi cuqaasi",
+                placeholder: "Deebii kee barreessi...",
+                aria: "Maqaa meeshaa barreessi",
+                submit: "Galchi",
+                modal_title: "Bareedaa! Milkaa'e! 🎉",
+                modal_text: (n) => `Suuraalee <span class="highlight">${n}</span> hunda maqaa kaa'atte!`,
+                play_again: "Irra deebi'i"
+            },
+            so: {
+                title: "Ciyaarta Magaca Sawirka",
+                header: "Maxaa ku jira Sawirka?",
+                instructions: "Qor magaca shayga kadibna riix Enter ama guji Gudbi",
+                placeholder: "Qor jawaabtaada...",
+                aria: "Qor magaca shayga",
+                submit: "Gudbi",
+                modal_title: "Cajiib! Waad Ku Guuleysatay! 🎉",
+                modal_text: (n) => `Waxaad si guul leh u magacawday dhammaan <span class=\"highlight\">${n}</span> sawir!`,
+                play_again: "Dib u Ciyaar"
+            }
+        };
+        function applyLanguage(lang) {
+            const dict = i18n[lang] || i18n.en;
+            pageTitle[0] = dict.title;
+            setPageTitle('h1');
+            const htmlEl = document.documentElement;
+            htmlEl.setAttribute('lang', lang);
+            const headerTitle = document.getElementById('headerTitle');
+            if (headerTitle) headerTitle.textContent = dict.header;
+            const instructions = document.getElementById('instructionsText');
+            if (instructions) instructions.textContent = dict.instructions;
+            const input = document.getElementById('textInput');
+            if (input) {
+                input.setAttribute('placeholder', dict.placeholder);
+                input.setAttribute('aria-label', dict.aria);
+            }
+            const submitLabel = document.getElementById('submitLabel');
+            if (submitLabel) submitLabel.textContent = dict.submit;
+            const modalTitle = document.getElementById('modalTitle');
+            if (modalTitle) modalTitle.textContent = dict.modal_title;
+            const modalText = document.getElementById('modalText');
+            if (modalText) modalText.innerHTML = dict.modal_text(totalItems);
+            const playAgain = document.getElementById('playAgainLabel');
+            if (playAgain) playAgain.textContent = dict.play_again;
+        }
+        function setPageTitle(selector) {
+            let title = document.querySelector("title");
+            title.innerText = pageTitle[0];
+        }
+        setPageTitle('h1');
+        // MODIFIED: allItems based on requirements
+        let allItems = ['Chocolate', 'Donute', 'Heart'];
+        let remainingItems = [...allItems];
+        let currentItem = '';
+        let score = 0;
+        let totalItems = allItems.length;
+        function id(id) {
+            return document.getElementById(id);
+        }
+        function clas(clas) {
+            return document.getElementsByClassName(clas);
+        }
+        function storeData(title, ques, ans, status, hint = false) {
+            let data = localStorage.getItem(title);
+            if (!data) {
+                let d = {
+                    title,
+                    data: [{ ques, status, ans, hint, date: Date.now() }]
+                }
+                localStorage.setItem(title, JSON.stringify(d))
+            } else {
+                let d = JSON.parse(data)
+                let s = { ques, ans, status, hint, date: Date.now() }
+                d.data.push(s)
+                localStorage.setItem(title, JSON.stringify(d))
+            }
+        }
+
+        function getNew() {
+            if (remainingItems.length === 0) {
+                showCompletionModal();
+                return;
+            }
+            
+            const randomIndex = Math.floor(Math.random() * remainingItems.length);
+            currentItem = remainingItems[randomIndex];
+            remainingItems.splice(randomIndex, 1);
+            
+            // MODIFIED: Image asset paths (all lowercase .png)
+            id("image").src = `assets/${currentItem.toLowerCase()}.png`;
+            id("textInput").value = '';
+            id("textInput").focus();
+            
+            updateProgress();
+        }
+        
+        function updateProgress() {
+            const progress = ((allItems.length - remainingItems.length) / allItems.length) * 100;
+            id('progressBar').style.width = `${progress}%`;
+            id('progressText').textContent = `${allItems.length - remainingItems.length}/${allItems.length}`;
+        }
+        
+        function showCompletionModal() {
+            const modal = id('completionModal');
+            modal.classList.add('show');
+            id('textInput').disabled = true;
+            id('inputButton').disabled = true;
+        }
+        
+        function restartGame() {
+            remainingItems = [...allItems];
+            score = 0;
+            id('completionModal').classList.remove('show');
+            id('textInput').disabled = false;
+            id('inputButton').disabled = false;
+            updateProgress();
+            getNew();
+        }
+        
+        // Initialize game
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event listener for restart button
+            id('restartGame').addEventListener('click', restartGame);
+            
+            // Hide modal initially
+            id('completionModal').style.display = 'none';
+            
+            // Initialize language from storage (default en)
+            const select = document.getElementById('langSelect');
+            const savedLang = localStorage.getItem('lang') || 'en';
+            if (select) {
+                select.value = savedLang;
+                select.addEventListener('change', (e) => {
+                    const lang = e.target.value;
+                    localStorage.setItem('lang', lang);
+                    applyLanguage(lang);
+                });
+            }
+            applyLanguage(savedLang);
+            
+            // Start the game
+            getNew();
+        });
+
+        // Remove Enter key submission
+        // Prevent form submission on Enter
+        id("textInput").onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                return false;
+            }
+        };
+
+        // Only submit when the button is clicked
+        id("inputButton").onclick = function (e) {
+            e.preventDefault();
+            check();
+        };
+
+        function createConfetti() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            const container = document.createElement('div');
+            container.style.position = 'fixed';
+            container.style.top = '0';
+            container.style.left = '0';
+            container.style.width = '100%';
+            container.style.height = '100%';
+            container.style.pointerEvents = 'none';
+            container.style.zIndex = '100';
+            
+            // Create confetti only in the top 50% of the screen
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.width = '8px';
+                confetti.style.height = '8px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.position = 'absolute';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = Math.random() * 50 + 'vh';
+                confetti.style.borderRadius = '50%';
+                confetti.style.animation = `fall ${Math.random() * 2 + 1}s linear forwards`;
+                container.appendChild(confetti);
+                
+                // Random horizontal movement
+                confetti.style.setProperty('--x', (Math.random() - 0.5) * 100 + 'px');
+            }
+            
+            document.body.appendChild(container);
+            
+            // Remove confetti after animation
+            setTimeout(() => {
+                container.remove();
+            }, 2000);
+        }
+        
+        // Add keyframe animation for confetti
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fall {
+                to {
+                    transform: translateY(calc(100vh + 20px)) translateX(var(--x, 0));
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        function check() {
+            let val = id("textInput").value.trim();
+            if (!val) {
+                showFeedback('empty');
+                return;
+            }
+            
+            // MODIFIED: Compare lowercase user input with lowercase currentItem
+            let normalizedInput = val.toLowerCase();
+            let normalizedCurrentItem = currentItem.toLowerCase();
+            
+            let isCorrect = (
+                normalizedInput === normalizedCurrentItem ||
+                normalizedInput === normalizedCurrentItem.split('_').join(' ')
+            );
+            // Aliases removed as not relevant for new items
+            
+            if (isCorrect) {
+                showFeedback('correct');
+                storeData("eng-pictureName", currentItem, val, "correct"); // Store original casing of currentItem
+                score++;
+                setTimeout(() => {
+                    id("textInput").value = '';
+                    getNew();
+                }, 1500);
+            } else {
+                showFeedback('incorrect');
+                id("textInput").value = '';
+                id("textInput").focus();
+            }
+        }
+        
+        async function playSound(type) {
+            const sounds = {
+                correct: id('correctSound'),
+                wrong: id('wrongSound'),
+                empty: id('emptySound')
+            };
+            
+            try {
+                await sounds[type].play();
+            } catch (e) {
+                console.log('Audio playback failed:', e);
+            }
+        }
+        
+        function showFeedback(type) {
+            // Remove any existing feedback first
+            const existingFeedback = document.querySelector('.feedback');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+
+            const feedback = document.createElement('div');
+            let animationClass = '';
+            let emoji = '';
+            let duration = 1500; // Default duration in ms
+            
+            // Configure feedback based on type
+            if (type === 'correct') {
+                playSound('correct');
+                feedback.className = 'feedback correct';
+                emoji = '🎉';
+                animationClass = 'bounce';
+                duration = 1000; // Shorter duration for correct answers
+                createConfetti();
+            } else if (type === 'incorrect') {
+                playSound('wrong');
+                feedback.className = 'feedback incorrect';
+                emoji = '🤔';
+                animationClass = 'shake';
+                duration = 1500; // Slightly longer for wrong answers
+            } else {
+                playSound('empty');
+                feedback.className = 'feedback empty';
+                emoji = '👆';
+                animationClass = 'pulse';
+                duration = 1000;
+            }
+            
+            feedback.innerHTML = `
+                <div class="feedback-content ${animationClass}">
+                    <span class="emoji">${emoji}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(feedback);
+            
+            // Force reflow to ensure animation plays
+            void feedback.offsetWidth;
+            
+            // Show feedback
+            setTimeout(() => {
+                feedback.classList.add('show');
+                
+                // Hide feedback after duration
+                setTimeout(() => {
+                    feedback.classList.remove('show');
+                    
+                    // Remove from DOM after fade out
+                    setTimeout(() => {
+                        if (document.body.contains(feedback)) {
+                            feedback.remove();
+                        }
+                    }, 300);
+                }, duration);
+            }, 10);
+        }
+        
+        async function _playAudio() {
+            // MODIFIED: Audio asset paths (handling inconsistent casing)
+            let audioFileName = '';
+            if (currentItem === 'Chocolate') {
+                audioFileName = 'chocolate.mp3';
+            } else if (currentItem === 'Donute') { // Note: 'Donue' in requirements was assumed to be 'Donute' based on assets
+                audioFileName = 'Donute.mp3';
+            } else if (currentItem === 'Heart') {
+                audioFileName = 'Heart.mp3';
+            } else {
+                // Fallback or error handling if currentItem doesn't match
+                console.warn(`No specific audio file found for: ${currentItem}`);
+                return; 
+            }
+            id("pudio").src = `assets/${audioFileName}`;
+            await id("pudio").play();
+        }
+
+    </script>
+    <style>
+        :root {
+            --primary-color: #4a6bff;
+            --secondary-color: #6c5ce7;
+            --accent-color: #00cec9;
+            --text-color: #2d3436;
+            --light-bg: #f8f9fa;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-color);
+            padding: 0;
+            line-height: 1.6;
+            overflow: hidden;
+        }
+
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 1rem;
+            flex-shrink: 0;
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+        .header-top {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .game-header h1 {
+            margin: 0;
+            color: #2d3436;
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            padding: 0 1rem;
+        }
+        .lang-select-container {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        #langSelect {
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            background: #ffffff;
+            font-family: 'Poppins', sans-serif;
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .instructions {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+
+        .progress {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 1rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4a6bff, #00cec9);
+            border-radius: 4px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        #progressText {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.85rem;
+            color: #555;
+            padding-right: 10px;
+            opacity: 0.8;
+        }
+
+        .game-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            flex: 1;
+            min-height: 0; /* Allows flex children to shrink below content size */
+        }
+
+        .image-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1rem;
+            box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.05);
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .image-frame {
+            max-width: 100%;
+            max-height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+
+        #image {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 10px;
+            display: block;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 5px solid #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #image {
+            transition: all 0.3s ease, opacity 0.3s ease;
+        }
+        
+        #image:hover {
+            transform: scale(1.02);
+        }
+        
+        #image.pulse {
+            animation: pulse 1s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 20px 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            border: 4px solid transparent;
+            max-width: 90%;
+        }
+        
+        .feedback.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            animation: popIn 0.3s ease-out;
+        }
+        
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            80% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        
+        .feedback-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .modal.show {
+            display: flex;
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .modal h2 {
+            color: #2d3436;
+            margin-bottom: 1rem;
+        }
+        
+        .modal p {
+            margin-bottom: 1.5rem;
+            color: #636e72;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        .emoji {
+            font-size: 4rem;
+            display: block;
+            animation-duration: 0.8s;
+            animation-fill-mode: both;
+            text-align: center;
+            line-height: 1;
+            margin: 0 auto;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-30px);}
+            60% {transform: translateY(-15px);}
+        }
+        
+        .bounce {
+            animation-name: bounce;
+        }
+        
+        @keyframes shake {
+            0%, 100% {transform: translateX(0);}
+            10%, 30%, 50%, 70%, 90% {transform: translateX(-10px);}
+            20%, 40%, 60%, 80% {transform: translateX(10px);}
+        }
+        
+        .shake {
+            animation: shake 0.5s;
+        }
+        
+        .feedback.correct {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+        
+        .feedback.incorrect {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+        
+        .feedback.empty {
+            background: #fff8e1;
+            border-color: #ffc107;
+        }
+        
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: #f44336 !important;
+        }
+        
+        @keyframes shake {
+            10%, 90% { transform: translateX(-1px); }
+            20%, 80% { transform: translateX(2px); }
+            30%, 50%, 70% { transform: translateX(-4px); }
+            40%, 60% { transform: translateX(4px); }
+        }
+
+        .input-section {
+            margin-top: auto;
+            padding: 1rem 0;
+        }
+
+        .input-group {
+            display: flex;
+            max-width: 600px;
+            margin: 0 auto;
+            gap: 10px;
+        }
+
+        #textInput {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            outline: none;
+            transition: var(--transition);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        #textInput:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 107, 255, 0.2);
+        }
+
+        #textInput::placeholder {
+            color: #95a5a6;
+        }
+
+        .submit-btn {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 0 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(74, 107, 255, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 107, 255, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn svg {
+            transition: var(--transition);
+        }
+
+        .submit-btn:hover svg {
+            transform: translateX(3px);
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 15px;
+                margin: 10px;
+            }
+            
+            .game-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .header-top {
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            .lang-select-container {
+                position: static;
+                transform: none;
+                margin-top: 6px;
+            }
+            #langSelect {
+                width: 100%;
+                max-width: 220px;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .submit-btn {
+                justify-content: center;
+                padding: 12px;
+            }
+            
+            #image {
+                max-height: 250px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .game-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .instructions {
+                font-size: 0.9rem;
+            }
+            
+            #textInput {
+                padding: 12px 15px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</body>
+
+</html>

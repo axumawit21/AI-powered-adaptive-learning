@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Multiplication Master | ብበዓል ክልተ ሆሄ ምርባሕ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --emerald-deep: #064e3b;
+            --emerald-neon: #10b981;
+            --lime-glow: #a3e635;
+            --cyber-black: #020617;
+            --glass-emerald: rgba(16, 185, 129, 0.1);
+            --glass-border: rgba(163, 230, 53, 0.2);
+            --step-glow: #facc15;
+            --danger: #f43f5e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--cyber-black);
+            /* Unique Cyber Emerald Mesh Background */
+            background-image: 
+                radial-gradient(at 0% 0%, #064e3b 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #14532d 0px, transparent 50%),
+                radial-gradient(at 100% 100%, #064e3b 0px, transparent 50%),
+                radial-gradient(at 0% 100%, #022c22 0px, transparent 50%),
+                radial-gradient(at 50% 50%, #065f46 0px, transparent 50%);
+            background-size: 200% 200%;
+            animation: emeraldFlow 20s infinite alternate linear;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden;
+            color: #fff;
+        }
+
+        @keyframes emeraldFlow { 0% { background-position: 0% 0%; } 100% { background-position: 100% 100%; } }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4000; }
+
+        header {
+            width: 100%; max-width: 1200px; padding: 20px 30px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            flex-wrap: wrap; gap: 15px;
+        }
+
+        .badges { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .stat-pill { 
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(15px);
+            padding: 10px 22px; border-radius: 15px; font-weight: 800; font-size: 0.95rem; color: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid var(--glass-border);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .stat-val { color: var(--lime-glow); text-shadow: 0 0 10px rgba(163, 230, 53, 0.4); }
+        .level-pill { border-color: var(--emerald-neon); }
+        .high-score-pill { border-color: var(--step-glow); }
+        .high-score-pill .stat-val { color: var(--step-glow); }
+
+        .lang-select {
+            padding: 10px 18px; border-radius: 15px; border: 2px solid var(--glass-border); font: inherit; font-weight: bold; cursor: pointer;
+            background: rgba(6, 78, 59, 0.6); color: white; outline: none; transition: 0.3s;
+        }
+        .lang-select:hover { border-color: var(--lime-glow); background: rgba(6, 78, 59, 0.9); }
+
+        .container {
+            flex: 1; width: 100%; max-width: 1200px; display: flex; flex-direction: column; 
+            padding: 10px; gap: 20px; z-index: 10; justify-content: center;
+        }
+
+        .game-card {
+            background: rgba(6, 78, 59, 0.15); backdrop-filter: blur(50px);
+            border-radius: 50px; padding: 40px; 
+            border: 4px solid var(--glass-border);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+            width: fit-content; margin: 0 auto; text-align: center; display: flex; flex-direction: column; gap: 20px;
+            animation: cardAppear 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        @keyframes cardAppear { from { transform: translateY(60px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+        .math-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 60px); 
+            gap: 10px;
+            font-family: 'Fredoka', serif;
+            align-items: center;
+            justify-items: center;
+            position: relative;
+        }
+
+        .box-base {
+            width: 58px; height: 82px; border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3.2rem; font-weight: 900; transition: 0.3s;
+        }
+
+        .digit-text { color: #fff; text-shadow: 0 0 15px rgba(255, 255, 255, 0.1); }
+        .digit-text.highlight { 
+            color: var(--step-glow); 
+            text-shadow: 0 0 20px var(--step-glow); 
+            transform: scale(1.15); 
+            background: rgba(250, 204, 21, 0.1);
+        }
+
+        .op-sign { font-size: 3.8rem; color: var(--emerald-neon); font-weight: 900; text-shadow: 0 0 15px var(--emerald-neon); }
+        
+        .math-line { 
+            grid-column: 1 / span 7; 
+            width: 100%; height: 8px; background: rgba(255,255,255,0.8); border-radius: 5px; margin: 10px 0;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+
+        .digit-input {
+            background: rgba(255,255,255,0.03);
+            border: 3px dashed rgba(255,255,255,0.15);
+            color: var(--lime-glow);
+            cursor: pointer;
+        }
+        .digit-input.active { 
+            background: white; border-style: solid; border-color: var(--lime-glow); 
+            color: var(--cyber-black); transform: scale(1.1); box-shadow: 0 0 45px rgba(163, 230, 53, 0.5);
+        }
+        .digit-input.wrong { border-color: var(--danger); background: rgba(244, 63, 94, 0.3); animation: shake 0.4s; }
+        .digit-input.highlight { border-color: var(--step-glow); color: var(--step-glow); background: rgba(250, 204, 21, 0.05); }
+
+        .zero-filler {
+            width: 58px; height: 82px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3.2rem; font-weight: 900; color: rgba(255, 255, 255, 0.4);
+        }
+        .zero-filler.highlight { color: var(--step-glow); text-shadow: 0 0 20px var(--step-glow); }
+
+        .keypad-section {
+            width: 100%; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; align-items: center;
+        }
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; }
+        .key {
+            height: 68px; background: rgba(255,255,255,0.05); border: 2px solid var(--glass-border); border-radius: 20px;
+            font-size: 2.1rem; font-weight: 800; color: #fff; cursor: pointer;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.4); transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.4); }
+        .key:hover { background: rgba(255,255,255,0.1); border-color: var(--lime-glow); }
+        .key.del { background: rgba(244, 63, 94, 0.1); color: var(--danger); border-color: rgba(244, 63, 94, 0.2); }
+        
+        .key.check { 
+            grid-column: 1 / -1; 
+            background: linear-gradient(135deg, var(--emerald-neon), #065f46); 
+            color: white; 
+            box-shadow: 0 10px 0 #022c22; font-size: 2.4rem; height: 90px; margin-top: 10px;
+            text-transform: uppercase; letter-spacing: 4px; border-radius: 25px; font-weight: 900;
+        }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-12px); } 75% { transform: translateX(12px); } }
+
+        #success-overlay {
+            position: fixed; inset: 0; background: rgba(2, 44, 34, 0.95);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 3000; color: white; text-align: center;
+            backdrop-filter: blur(25px);
+        }
+        #success-overlay h2 { font-size: 5rem; margin-top: 20px; color: var(--lime-glow); text-shadow: 0 0 30px rgba(163, 230, 53, 0.5); }
+
+        @media (max-width: 600px) {
+            .math-grid { grid-template-columns: repeat(7, 45px); gap: 6px; }
+            .box-base, .zero-filler { width: 44px; height: 64px; font-size: 2.1rem; }
+            .op-sign { font-size: 2.6rem; }
+            .key { height: 58px; font-size: 1.6rem; }
+            .key.check { height: 75px; font-size: 1.7rem; }
+            .game-card { padding: 30px 15px; border-radius: 40px; }
+            h2#pageTitle { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+
+    <header>
+        <div class="badges">
+            <div class="stat-pill level-pill">🆙 <span id="lblLvl">Level</span>: <span id="valLvl" class="stat-val">1</span></div>
+            <div class="stat-pill high-score-pill">👑 <span id="lblHigh">High</span>: <span id="valHigh" class="stat-val">0</span></div>
+            <div class="stat-pill">⭐ <span id="lblScore">Score</span>: <span id="valScore" class="stat-val">0</span></div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center;">
+            <button class="lang-select" id="muteBtn" onclick="toggleMute()">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="game-card" id="gameCard">
+            <h2 id="pageTitle" style="color: var(--lime-glow); font-weight: 900; text-transform: uppercase; letter-spacing: 2px;">ብክልተ ሆሄ ምርባሕ</h2>
+            
+            <div class="math-grid" id="mathGrid">
+                <!-- Grid content generated by JS -->
+            </div>
+        </div>
+
+        <div class="keypad-section">
+            <div class="keypad" id="keypad"></div>
+            <button class="key check" id="btnCheck" onclick="checkAnswer()">ኣረጋግፅ (Check)</button>
+        </div>
+    </div>
+
+    <div id="success-overlay">
+        <div style="font-size: 9rem; animation: rotate 4s linear infinite;">🌿</div>
+        <h2 id="txtWin">ንኡድ ስራሕ!</h2>
+        <p style="font-size: 1.8rem;" id="txtWinSub">ብትኽክል ተመሊሱ!</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { title: "ብክልተ ሆሄ ምርባሕ (ኣለኒ ዘይብሉ)", check: "ኣረጋግፅ", win: "ፅቡቅ ስራሕ!", winsub: "ብትኽክል ተመሊሱ!", score: "ነጥቢ", high: "ዝለዓለ", level: "ደረጃ" },
+            am: { title: "ባለ ሁለት ሆሄ ማባዛት (ኣለኝ የሌለበት)", check: "አረጋግጥ", win: "ድንቅ ስራ!", winsub: "በትክክል መልሰዋል!", score: "ነጥብ", high: "ከፍተኛ", level: "ደረጃ" },
+            en: { title: "2-Digit Multiplication (No Carry)", check: "Check", win: "Great Job!", winsub: "You solved it correctly!", score: "Score", high: "High", level: "Level" },
+            om: { title: "Bocoota 2n Baayʼisuu", check: "Mirkaneessi", win: "Guddina!", winsub: "Sirriitti deebisteetta!", score: "Qabxii", high: "Olaanaa", level: "Sadarkaa" },
+            so: { title: "Isku-dhufasho (2-Xaraf)", check: "Hubi", win: "Shaqo Fiican!", winsub: "Si sax ah ayaad u jawaabtay!", score: "Dhibco", high: "Sare", level: "Heerka" }
+        };
+
+        let score = 0, level = 1, lang = 'ti', muted = false;
+        let highScore = parseInt(localStorage.getItem('multi_2digit_full_high')) || 0;
+        let currentQ = null;
+        let activeFocus = { row: 'p1', idx: 0 }; 
+        let userInputs = { p1: [], p2: [], ans: [] };
+        let particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(600, n); o.frequency.exponentialRampToValueAtTime(300, n + 0.1);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.8);
+                o.start(); o.stop(n + 0.8);
+            } else {
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.linearRampToValueAtTime(50, n + 0.4);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.4);
+                o.start(); o.stop(n + 0.4);
+            }
+        }
+
+        function toggleMute() {
+            muted = !muted;
+            document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊';
+        }
+
+        function generateQuestion() {
+            level = Math.floor(score / 50) + 1;
+            let dArr, mArr, p1, p2, ans;
+            let attempts = 0;
+            
+            // Adjust multiplicand digits based on level
+            let multiplicandDigits = level === 1 ? 2 : (level === 2 ? 3 : 4);
+
+            while (attempts < 100) {
+                dArr = Array.from({length: multiplicandDigits}, () => Math.floor(Math.random() * 4)); 
+                if(dArr[0] === 0) dArr[0] = 1;
+                
+                mArr = Array.from({length: 2}, () => Math.floor(Math.random() * 3) + 1);
+                const n1 = parseInt(dArr.join(''));
+                const mTens = mArr[0];
+                const mOnes = mArr[1];
+                
+                const check1 = dArr.every(d => d * mOnes < 10);
+                const check2 = dArr.every(d => d * mTens < 10);
+                
+                if (check1 && check2) {
+                    p1 = n1 * mOnes;
+                    p2 = n1 * mTens * 10;
+                    ans = p1 + p2;
+                    const p1S = p1.toString().split('').reverse();
+                    const p2S = p2.toString().split('').reverse();
+                    const maxL = Math.max(p1S.length, p2S.length);
+                    let sumCheck = true;
+                    for(let i=0; i<maxL; i++) {
+                        if ((parseInt(p1S[i] || 0) + parseInt(p2S[i] || 0)) >= 10) sumCheck = false;
+                    }
+                    if (sumCheck) break;
+                }
+                attempts++;
+            }
+            const p1Str = p1.toString();
+            const p2Str = p2.toString();
+            const ansStr = ans.toString();
+            currentQ = { n1: parseInt(dArr.join('')), mArr, dArr, p1, p2, ans, p1Str, p2Str, ansStr };
+            userInputs = { 
+                p1: new Array(p1Str.length).fill("?"), 
+                p2: new Array(p2Str.length).fill("?"), 
+                ans: new Array(ansStr.length).fill("?") 
+            };
+            activeFocus = { row: 'p1', idx: 0 };
+            renderUI();
+        }
+
+        function renderUI() {
+            const q = currentQ;
+            if (!q) return;
+            const t = i18n[lang];
+            
+            document.getElementById('valLvl').innerText = level;
+            document.getElementById('lblLvl').innerText = t.level;
+            document.getElementById('lblHigh').innerText = t.high;
+            document.getElementById('lblScore').innerText = t.score;
+            document.getElementById('valScore').innerText = score;
+            document.getElementById('valHigh').innerText = highScore;
+            document.getElementById('btnCheck').innerText = t.check;
+            document.getElementById('pageTitle').innerText = t.title;
+
+            const grid = document.getElementById('mathGrid');
+            grid.innerHTML = '';
+            const COLS = 7;
+
+            const fill = (count) => { for(let i=0; i<count; i++) grid.appendChild(createBox("", "")); };
+
+            // Row 1: Multiplicand
+            fill(COLS - q.dArr.length);
+            q.dArr.forEach((d, i) => {
+                const isStepHighlight = (activeFocus.row === 'p1' && (q.dArr.length - 1 - activeFocus.idx) === i) || 
+                                      (activeFocus.row === 'p2' && activeFocus.idx > 0 && (q.dArr.length - 1 - (activeFocus.idx - 1)) === i);
+                grid.appendChild(createBox(d, 'digit-text' + (isStepHighlight ? ' highlight' : '')));
+            });
+
+            // Row 2: Multiplier
+            fill(COLS - 4);
+            grid.appendChild(createBox("×", "op-sign"));
+            fill(1);
+            q.mArr.forEach((m, i) => {
+                const isStepHighlight = (activeFocus.row === 'p1' && i === 1) || (activeFocus.row === 'p2' && i === 0);
+                grid.appendChild(createBox(m, 'digit-text' + (isStepHighlight ? ' highlight' : '')));
+            });
+
+            grid.appendChild(Object.assign(document.createElement('div'), { className: 'math-line' }));
+
+            // Row 3: Partial 1
+            fill(COLS - q.p1Str.length);
+            for(let i = q.p1Str.length - 1; i >= 0; i--) {
+                const isFocus = (activeFocus.row === 'p1' && activeFocus.idx === i);
+                const isFinalGuide = (activeFocus.row === 'ans' && activeFocus.idx === i);
+                const box = createBox(userInputs.p1[i], 'digit-input');
+                if (isFocus) box.classList.add('active');
+                if (isFinalGuide) box.classList.add('highlight');
+                box.onclick = () => { sfx('tap'); activeFocus = { row: 'p1', idx: i }; renderUI(); };
+                grid.appendChild(box);
+            }
+
+            // Row 4: Partial 2
+            const plusCell = createBox("+", "op-sign");
+            plusCell.style.fontSize = "2.2rem";
+            grid.appendChild(plusCell);
+            fill(COLS - 1 - q.p2Str.length);
+            for(let i = q.p2Str.length - 1; i >= 0; i--) {
+                const isFocus = (activeFocus.row === 'p2' && activeFocus.idx === i);
+                const isFinalGuide = (activeFocus.row === 'ans' && activeFocus.idx === i);
+                
+                if (i === 0) {
+                    const zeroEl = document.createElement('div');
+                    zeroEl.className = 'zero-filler';
+                    zeroEl.innerText = "0";
+                    if (isFinalGuide) zeroEl.classList.add('highlight');
+                    grid.appendChild(zeroEl);
+                } else {
+                    const box = createBox(userInputs.p2[i], 'digit-input');
+                    if (isFocus) box.classList.add('active');
+                    if (isFinalGuide) box.classList.add('highlight');
+                    box.onclick = () => { sfx('tap'); activeFocus = { row: 'p2', idx: i }; renderUI(); };
+                    grid.appendChild(box);
+                }
+            }
+
+            grid.appendChild(Object.assign(document.createElement('div'), { className: 'math-line' }));
+
+            // Row 5: Final Sum
+            fill(COLS - q.ansStr.length);
+            for(let i = q.ansStr.length - 1; i >= 0; i--) {
+                const isFocus = (activeFocus.row === 'ans' && activeFocus.idx === i);
+                const box = createBox(userInputs.ans[i], 'digit-input');
+                if (isFocus) box.classList.add('active');
+                box.onclick = () => { sfx('tap'); activeFocus = { row: 'ans', idx: i }; renderUI(); };
+                grid.appendChild(box);
+            }
+        }
+
+        function createBox(val, className) {
+            const div = document.createElement('div');
+            div.className = 'box-base ' + className;
+            div.innerText = val;
+            return div;
+        }
+
+        function press(k) {
+            sfx('tap');
+            const { row, idx } = activeFocus;
+            if (k === 'bk') {
+                userInputs[row][idx] = "?";
+                if (idx > 0) activeFocus.idx--;
+                else if (row === 'p2') { activeFocus = { row: 'p1', idx: userInputs.p1.length - 1 }; }
+                else if (row === 'ans') { activeFocus = { row: 'p2', idx: userInputs.p2.length - 1 }; }
+            } else {
+                userInputs[row][idx] = k;
+                if (idx < userInputs[row].length - 1) {
+                    activeFocus.idx++;
+                } else {
+                    if (row === 'p1') { activeFocus = { row: 'p2', idx: 1 }; } 
+                    else if (row === 'p2') { activeFocus = { row: 'ans', idx: 0 }; }
+                }
+            }
+            renderUI();
+        }
+
+        function checkAnswer() {
+            const q = currentQ;
+            const p1U = parseInt(userInputs.p1.slice().reverse().join(''));
+            const p2U = parseInt(userInputs.p2.slice().reverse().join('').replace(/\?/g, '0'));
+            const ansU = parseInt(userInputs.ans.slice().reverse().join(''));
+            if (p1U === q.p1 && p2U === q.p2 && ansU === q.ans) {
+                score += 10;
+                if (score > highScore) { highScore = score; localStorage.setItem('multi_2digit_full_high', highScore); }
+                sfx('win'); burst(500);
+                document.getElementById('success-overlay').style.display = 'flex';
+                setTimeout(() => { document.getElementById('success-overlay').style.display = 'none'; generateQuestion(); }, 2500);
+            } else {
+                sfx('err');
+                document.getElementById('gameCard').classList.add('shake');
+                document.querySelectorAll('.digit-input').forEach(b => b.classList.add('wrong'));
+                setTimeout(() => {
+                    document.getElementById('gameCard').classList.remove('shake');
+                    document.querySelectorAll('.digit-input').forEach(b => b.classList.remove('wrong'));
+                }, 600);
+            }
+        }
+
+        function changeLang(l) { lang = l; renderUI(); }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random()*c.width, y: c.height+20, vx: (Math.random()-0.5)*35, vy: (Math.random()-0.8)*50,
+                s: Math.random()*12+6, c: ['#10b981','#a3e635','#ffffff','#facc15','#34d399'][Math.floor(Math.random()*5)], l: 1.5, r: Math.random()*360, rv: (Math.random()-0.5)*15
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.vx *= 0.98; p.l-=0.012; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => {
+            const kp = document.getElementById('keypad');
+            [1,2,3,4,5,6,7,8,9,0].forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key'; b.innerText = k; b.onclick = () => press(k); kp.appendChild(b);
+            });
+            const del = document.createElement('button');
+            del.className = 'key del'; del.innerText = '⌫'; del.onclick = () => press('bk'); kp.appendChild(del);
+            generateQuestion();
+        };
+    </script>
+</body>
+</html>

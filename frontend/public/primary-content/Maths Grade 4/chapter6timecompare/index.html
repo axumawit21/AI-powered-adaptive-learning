@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Time Navigator | ምውድዳር ኣሃድታት ግዘ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sky-top: #0ea5e9;
+            --sky-bottom: #fb923c;
+            --balloon-red: #ef4444;
+            --basket-brown: #78350f;
+            --gold: #facc15;
+            --white: #ffffff;
+            --ink: #0f172a;
+            --danger: #f43f5e;
+            --success: #22c55e;
+            --hint: #8b5cf6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+            color: var(--white); overflow-x: hidden; position: relative;
+        }
+
+        /* Moving Clouds */
+        .cloud {
+            position: fixed; background: white; border-radius: 50px; opacity: 0.8; z-index: 1;
+            animation: moveCloud linear infinite;
+        }
+        .cloud::before, .cloud::after { content: ''; position: absolute; background: white; border-radius: 50%; }
+        .cloud1 { width: 120px; height: 40px; top: 15%; left: -150px; animation-duration: 35s; }
+        .cloud2 { width: 180px; height: 60px; top: 40%; left: -200px; animation-duration: 55s; }
+        @keyframes moveCloud { from { left: -250px; } to { left: 110vw; } }
+
+        header {
+            width: 100%; max-width: 1400px; padding: 10px 30px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            gap: 10px; flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(8px);
+            padding: 8px 16px; border-radius: 12px; border: 1.5px solid rgba(255, 255, 255, 0.4);
+            display: flex; align-items: center; gap: 8px; font-weight: 800; 
+            font-size: clamp(0.75rem, 1.2vw, 1rem);
+        }
+        .stat-val { color: var(--gold); }
+
+        .container {
+            flex: 1; width: 100%; max-width: 1400px; display: flex; flex-direction: column;
+            justify-content: flex-start; /* Keeps crates and signs near the top */
+            align-items: center; padding: 0 10px 40px 10px; z-index: 10; 
+            gap: 40px; /* Added significant gap between question and signs on desktop */
+        }
+
+        /* Balloon Section */
+        .stage {
+            position: relative; width: 100%; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-top: 10px;
+        }
+
+        .balloon {
+            font-size: clamp(6rem, 12vw, 10rem); 
+            position: relative;
+            animation: sway 4s infinite ease-in-out;
+            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.2));
+            margin-bottom: 15px;
+        }
+        @keyframes sway { from { transform: rotate(-3deg) translateY(0); } to { transform: rotate(3deg) translateY(-15px); } }
+
+        .cargo-container {
+            display: flex; gap: clamp(30px, 10vw, 150px); align-items: center;
+            justify-content: center; width: 100%;
+        }
+
+        .crate {
+            background: #d97706; border: clamp(4px, 1vw, 10px) solid #78350f; border-radius: clamp(15px, 2vw, 35px);
+            padding: clamp(30px, 6vw, 70px); min-width: clamp(180px, 35vw, 420px); text-align: center;
+            box-shadow: 0 15px 0 #78350f, 0 20px 40px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column; gap: 10px; color: white;
+            font-weight: 900; position: relative;
+        }
+        .crate::before { content: '📦'; position: absolute; top: -35px; left: 50%; transform: translateX(-50%); font-size: clamp(2rem, 4vw, 3.5rem); }
+        
+        .crate-val { font-size: clamp(2.5rem, 8vw, 6.5rem); line-height: 1; }
+        .crate-unit { font-size: clamp(1.2rem, 2.5vw, 2.2rem); opacity: 0.95; text-transform: uppercase; }
+
+        .symbol-slot {
+            width: clamp(120px, 18vw, 240px); height: clamp(120px, 18vw, 240px); 
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%; border: clamp(6px, 1.2vw, 16px) dashed var(--ink);
+            display: flex; align-items: center; justify-content: center;
+            font-size: clamp(5rem, 12vw, 12rem); font-weight: 900; color: var(--ink);
+            box-shadow: 0 0 50px rgba(0,0,0,0.2);
+            transition: transform 0.1s, background 0.3s;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex; gap: clamp(20px, 3vw, 50px); width: 100%; max-width: 900px;
+        }
+        .btn-comp {
+            flex: 1; height: clamp(120px, 18vh, 190px); background: white; border: none; 
+            border-radius: clamp(30px, 4vw, 60px);
+            font-size: clamp(5rem, 12vw, 10rem); font-weight: 900; color: var(--ink); cursor: pointer;
+            box-shadow: 0 18px 0 #cbd5e1; transition: 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-comp:active { transform: translateY(6px); box-shadow: 0 6px 0 #cbd5e1; }
+        .btn-comp:hover { background: var(--gold); }
+
+        /* Overlays */
+        .overlay {
+            position: fixed; inset: 0; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 5000;
+            background: rgba(255, 255, 255, 0.98); color: var(--ink); text-align: center; padding: 20px;
+        }
+
+        .big-x { 
+            font-size: clamp(15rem, 50vw, 40rem); 
+            font-weight: 950; font-family: 'Arial Black', sans-serif;
+            color: var(--danger); text-shadow: 0 0 50px rgba(0,0,0,0.2);
+            animation: xImpact 0.5s infinite; line-height: 1;
+        }
+        @keyframes xImpact {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1) rotate(5deg); }
+            100% { transform: scale(1); }
+        }
+
+        .big-icon { font-size: clamp(10rem, 20vw, 22rem); margin-bottom: 30px; animation: bounce 1s infinite alternate; }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        .lang-select {
+            padding: 8px 12px; border-radius: 12px; border: 2.5px solid white;
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
+            font-weight: bold; cursor: pointer; color: white; font-size: clamp(0.8rem, 1.2vw, 1rem);
+        }
+        .lang-select option { color: black; }
+
+        @media (max-width: 640px) {
+            header { padding: 15px 20px; }
+            .cargo-container { 
+                flex-direction: column; 
+                gap: 25px; 
+                margin-top: 0; 
+                padding: 20px 0;
+            }
+            .crate {
+                width: 90%;
+                max-width: 380px;
+                padding: 30px;
+            }
+            .crate::before { top: -25px; font-size: 2.5rem; }
+            .stage { margin-top: 0; justify-content: flex-start; }
+            .balloon { display: none; }
+            .symbol-slot {
+                order: 2;
+                width: clamp(120px, 35vw, 160px);
+                height: clamp(120px, 35vw, 160px);
+                border-style: solid;
+                font-size: 5rem;
+            }
+            #crateLeft { order: 1; }
+            #crateRight { order: 3; }
+            .container { 
+                justify-content: space-around; 
+                gap: 15px;
+                padding-bottom: 20px;
+                padding-top: 0;
+            }
+            .controls { margin-top: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+
+    <canvas id="confetti-canvas" style="position:fixed; inset:0; pointer-events:none; z-index:6000;"></canvas>
+
+    <header>
+        <div style="display: flex; gap: 8px;">
+            <div class="stat-pill">⭐ <span id="lblScore">Score</span>: <span id="valScore" class="stat-val">0</span></div>
+            <div class="stat-pill">👑 <span id="lblHigh">High</span>: <span id="valHigh" class="stat-val">0</span></div>
+            <div class="stat-pill">🆙 <span id="lblLvl">Lvl</span>: <span id="valLvl" class="stat-val">1</span></div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="stat-pill" style="width: 42px; height: 42px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; padding:0; justify-content:center;" onclick="toggleMute()" id="muteBtn">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="setLanguage(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="stage" id="stage">
+            <div class="balloon">🎈</div>
+            <div class="cargo-container">
+                <div class="crate" id="crateLeft">
+                    <div class="crate-val" id="valLeft">1</div>
+                    <div class="crate-unit" id="unitLeft">ሰዓት</div>
+                </div>
+                <div class="symbol-slot" id="symbolSlot">?</div>
+                <div class="crate" id="crateRight">
+                    <div class="crate-val" id="valRight">60</div>
+                    <div class="crate-unit" id="unitRight">ደቒቓ</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-comp" onclick="checkAnswer('<')">&lt;</button>
+            <button class="btn-comp" onclick="checkAnswer('=')">=</button>
+            <button class="btn-comp" onclick="checkAnswer('>')">&gt;</button>
+        </div>
+    </div>
+
+    <!-- Feedback Overlays -->
+    <div id="success-overlay" class="overlay">
+        <div class="big-icon">🌅</div>
+        <h2 id="txtWin" style="font-size: clamp(3rem, 10vw, 7rem); color: var(--success);">ንፉዕ!</h2>
+        <p style="font-size: clamp(1.5rem, 5vw, 3.5rem); color: #64748b;" id="txtWinSub">Correct!</p>
+    </div>
+
+    <div id="error-overlay" class="overlay" style="background: #fee2e2;">
+        <div class="big-x">✕</div>
+        <h2 id="txtFail" style="font-size: clamp(3rem, 10vw, 7rem); color: var(--danger);">ጌጋ!</h2>
+        <p style="font-size: clamp(1.5rem, 5vw, 3.5rem); color: var(--danger);" id="txtFailSub">Try Again</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { title: "ምውድዳር ኣሃድታት ግዘ", win: "ንፉዕ!", winsub: "ልክዕ እዩ!", fail: "ጌጋ!", failsub: "እንደገና ፈትን", score: "ውፅኢት", high: "ዝለዓለ", level: "ደረጃ", units: { d: "መዓልቲ", h: "ሰዓት", m: "ደቒቓ", s: "ሰከንድ" } },
+            am: { title: "የጊዜ መለኪያዎችን ማወዳደር", win: "ድንቅ ስራ!", winsub: "ትክክል ነው!", fail: "ስህተት!", failsub: "እንደገና ይሞክሩ", score: "ውጤት", high: "ከፍተኛ", level: "ደረጃ", units: { d: "ቀን", h: "ሰዓት", m: "ደቂቃ", s: "ሰከንድ" } },
+            en: { title: "Time Comparison", win: "Excellent!", winsub: "Correct!", fail: "Wrong!", failsub: "Try Again", score: "Score", high: "High", level: "Level", units: { d: "day", h: "hr", m: "min", s: "sec" } },
+            om: { title: "Yeroo Wal-dorgomsiisuu", win: "Hojii Gaarii!", winsub: "Sirriidha!", fail: "Dogoggora!", failsub: "Irra deebi'i yaali", score: "Qabxii", high: "Olaanaa", level: "Sadarkaa", units: { d: "guyyaa", h: "sa'a", m: "daq", s: "sek" } },
+            so: { title: "Isbarbardhigga Waqtiga", win: "Shaqo Fiican!", winsub: "Waa sax!", fail: "Khalad!", failsub: "Markale isku day", score: "Dhibco", high: "Sare", level: "Heerka", units: { d: "maal", h: "saac", m: "daq", s: "ilb" } }
+        };
+
+        let score = 0, lang = 'ti', currentTask = null, busy = false, muted = false;
+        let highScore = parseInt(localStorage.getItem('time_compare_63_high')) || 0;
+        let particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function toggleMute() { muted = !muted; document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊'; }
+
+        function sfx(type) {
+            if (muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if (type === 'tap') { o.type = 'sine'; o.frequency.setValueAtTime(800, n); g.gain.setValueAtTime(0.05, n); o.start(); o.stop(n + 0.05); }
+            else if (type === 'win') { o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1)); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.5); }
+            else if (type === 'err') { o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.exponentialRampToValueAtTime(40, n + 0.3); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.3); }
+        }
+
+        function setLanguage(l) {
+            lang = l;
+            localStorage.setItem('time_compare_lang', lang);
+            updateUI();
+        }
+
+        function updateUI() {
+            const t = i18n[lang];
+            document.getElementById('lblScore').innerText = t.score;
+            document.getElementById('lblHigh').innerText = t.high;
+            document.getElementById('lblLvl').innerText = t.level;
+            document.getElementById('txtWin').innerText = t.win;
+            document.getElementById('txtWinSub').innerText = t.winsub;
+            document.getElementById('txtFail').innerText = t.fail;
+            document.getElementById('txtFailSub').innerText = t.failsub;
+            document.getElementById('valScore').innerText = score;
+            document.getElementById('valHigh').innerText = highScore;
+            document.getElementById('valLvl').innerText = Math.floor(score / 200) + 1;
+            if (currentTask) renderTask();
+        }
+
+        function generateTask() {
+            busy = false;
+            document.getElementById('symbolSlot').innerText = '?';
+            const level = Math.floor(score / 200) + 1;
+            const factorMap = { s: 1, m: 60, h: 3600, d: 86400 };
+            
+            let u1, u2, v1, v2;
+            let v1_total_s = null;
+            let currentTaskDisplayLeft = null;
+
+            if (level === 1) {
+                u1 = u2 = 'm';
+                v1 = Math.floor(Math.random() * 50) + 2;
+                v2 = Math.random() > 0.5 ? v1 : Math.floor(Math.random() * 50) + 2;
+            } else if (level === 2) {
+                u1 = 'm'; u2 = 's';
+                v1 = Math.floor(Math.random() * 10) + 1;
+                v2 = Math.random() > 0.6 ? v1 * 60 : Math.floor(Math.random() * 600);
+            } else if (level === 3) {
+                u1 = 'h'; u2 = 'm';
+                v1 = Math.floor(Math.random() * 5) + 1;
+                const m_extra = Math.random() > 0.5 ? 0 : Math.floor(Math.random() * 59);
+                currentTaskDisplayLeft = m_extra > 0 ? `${v1}h ${m_extra}m` : `${v1}h`;
+                v1_total_s = (v1 * 3600) + (m_extra * 60);
+                v2 = Math.random() > 0.5 ? v1_total_s / 60 : Math.floor(Math.random() * 300);
+                u2 = 'm';
+            } else {
+                const units = ['s', 'm', 'h', 'd'];
+                u1 = units[Math.floor(Math.random() * 4)];
+                u2 = units[Math.floor(Math.random() * 4)];
+                v1 = Math.floor(Math.random() * 20) + 1;
+                v2 = Math.floor(Math.random() * 100) + 1;
+                if (Math.random() > 0.7) {
+                    v2 = (v1 * factorMap[u1]) / factorMap[u2];
+                    if (!Number.isInteger(v2)) v2 = Math.floor(v2) + 1;
+                }
+            }
+
+            const w1 = (v1_total_s || (v1 * factorMap[u1]));
+            const w2 = v2 * factorMap[u2];
+            const correct = w1 === w2 ? '=' : (w1 > w2 ? '>' : '<');
+
+            currentTask = { v1: currentTaskDisplayLeft || v1, u1, v2, u2, w1, w2, correct };
+            renderTask();
+        }
+
+        function renderTask() {
+            const t = i18n[lang];
+            document.getElementById('valLeft').innerText = currentTask.v1;
+            document.getElementById('unitLeft').innerText = t.units[currentTask.u1] || '';
+            document.getElementById('valRight').innerText = currentTask.v2;
+            document.getElementById('unitRight').innerText = t.units[currentTask.u2] || '';
+        }
+
+        function checkAnswer(op) {
+            if (busy) return;
+            busy = true;
+            sfx('tap');
+            const slot = document.getElementById('symbolSlot');
+            slot.innerText = op;
+            slot.style.transform = 'scale(1.25)';
+
+            setTimeout(() => {
+                slot.style.transform = 'scale(1)';
+                if (op === currentTask.correct) {
+                    score += 30;
+                    if (score > highScore) { highScore = score; localStorage.setItem('time_compare_63_high', highScore); }
+                    handleWin();
+                } else {
+                    handleErr();
+                }
+            }, 300);
+        }
+
+        function handleWin() {
+            sfx('win'); burst(300);
+            const overlay = document.getElementById('success-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                generateTask();
+                updateUI();
+            }, 1800);
+        }
+
+        function handleErr() {
+            sfx('err');
+            const overlay = document.getElementById('error-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.getElementById('symbolSlot').innerText = '?'; // Reset choice but keep task
+                busy = false; 
+            }, 1800);
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#ef4444', '#facc15', '#22c55e', '#ffffff'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random()*c.width, y: c.height+20, vx: (Math.random()-0.5)*40, vy: (Math.random()-1.2)*65,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 2.5, r: Math.random()*360, rv: (Math.random()-0.5)*20
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => {
+            const savedLang = localStorage.getItem('time_compare_lang') || 'ti';
+            setLanguage(savedLang);
+            generateTask();
+        };
+    </script>
+</body>
+</html>

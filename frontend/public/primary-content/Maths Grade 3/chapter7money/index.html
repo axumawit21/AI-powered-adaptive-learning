@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Market Wallet - Grade 3 Math</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --wood-dark: #5D4037;
+            --wood-light: #8D6E63;
+            --awning-red: #e53935;
+            --awning-white: #f5f5f5;
+            --counter-bg: #3E2723;
+            --wallet-bg: #263238;
+            --text-color: #333;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background-color: #81D4FA;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+            touch-action: none;
+        }
+
+        /* Header */
+        header {
+            width: 100%; padding: 10px 20px;
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: grid; grid-template-columns: auto 1fr auto; align-items: center;
+            box-sizing: border-box; z-index: 100; flex-shrink: 0;
+        }
+        h1 { margin: 0; font-size: 1.4rem; color: var(--wood-dark); text-align: center; }
+
+        .header-item-left { display: flex; justify-content: flex-start; }
+        .header-item-right { display: flex; justify-content: flex-end; }
+
+        .grade-badge {
+            background: var(--wood-dark); color: white; width: 42px; height: 42px;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.4rem; border: 2px solid white;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.25); transform: rotate(-5deg);
+        }
+
+        /* Custom language dropdown */
+        .custom-select-wrapper { position: relative; display: inline-block; cursor: pointer; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 12px; font-weight: 700; color: var(--wood-dark);
+            height: 38px; background: white; border-radius: 20px;
+            width: 150px; border: 2px solid var(--wood-dark);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .custom-options {
+            position: absolute; top: 110%; right: 0; left: 0;
+            background: white; opacity: 0; visibility: hidden;
+            pointer-events: none; transform: translateY(-8px);
+            transition: all 0.25s ease; display: flex; flex-direction: column;
+            border-radius: 12px; padding: 4px; box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+            border: 1px solid #ddd; z-index: 200;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; pointer-events: all; transform: translateY(0); }
+        .custom-option { padding: 8px 10px; border-radius: 8px; cursor: pointer; font-weight: 600; color: #444; font-size: 0.9rem; }
+        .custom-option:hover { background: #fff3e0; color: var(--wood-dark); }
+
+        /* Game Area */
+        #market-stall {
+            flex: 1; width: 100%; max-width: 800px;
+            display: flex; flex-direction: column;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        /* Awning */
+        .awning {
+            width: 100%; height: 40px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--awning-red),
+                var(--awning-red) 40px,
+                var(--awning-white) 40px,
+                var(--awning-white) 80px
+            );
+            box-shadow: 0 10px 10px rgba(0,0,0,0.2);
+            z-index: 10;
+            border-bottom: 5px solid #c62828;
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* The Shelf (Target Item) */
+        .shelf-area {
+            background: #D7CCC8;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 10px solid var(--wood-dark);
+            position: relative;
+            height: 180px;
+        }
+        
+        .item-display {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: rotate(-2deg);
+            transition: transform 0.3s;
+        }
+        .item-icon { font-size: 4rem; margin-bottom: 5px; filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.1)); }
+        .price-tag {
+            background: #FFEB3B;
+            color: #D84315;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            border: 2px solid #FBC02D;
+            transform: rotate(2deg);
+        }
+
+        /* The Counter (Drop Zone) */
+        .counter-top {
+            flex: 1;
+            background: #5D4037;
+            /* Wood texture */
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 8px);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .drop-zone {
+            width: 95%;
+            height: 100%;
+            border: 4px dashed rgba(255,255,255,0.3);
+            border-radius: 20px;
+            position: relative;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            justify-content: center;
+            padding: 10px;
+            gap: 5px;
+            overflow-y: auto;
+        }
+        
+        .total-display {
+            position: absolute;
+            top: -25px;
+            background: #263238;
+            color: #69F0AE;
+            padding: 5px 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: 2px solid #455A64;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* The Wallet (Source) */
+        .wallet-area {
+            height: 160px;
+            background: var(--wallet-bg);
+            border-top: 5px solid #455A64;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            z-index: 20;
+        }
+        
+        .wallet-label { color: #90A4AE; font-size: 0.8rem; margin-bottom: 5px; text-align: center; }
+        
+        .currency-scroll {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 10px 20px;
+            align-items: center;
+            scrollbar-width: none; /* Firefox */
+        }
+        .currency-scroll::-webkit-scrollbar { display: none; }
+
+        /* Currency Styling */
+        .money {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: grab;
+            transition: transform 0.1s;
+            flex-shrink: 0;
+            box-shadow: 0 4px 5px rgba(0,0,0,0.3);
+            user-select: none;
+        }
+        .money:active { cursor: grabbing; transform: scale(1.1); }
+
+        /* Notes */
+        .note {
+            width: 90px; height: 45px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.2);
+            font-size: 1rem;
+            color: white;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+        }
+        .note::after { content: 'Birr'; font-size: 0.6rem; position: absolute; bottom: 2px; right: 5px; opacity: 0.8; }
+        .note::before { content: 'ETH'; font-size: 0.6rem; position: absolute; top: 2px; left: 5px; opacity: 0.8; }
+
+        .note-100 { background: linear-gradient(135deg, #2E7D32, #66BB6A); }
+        .note-50 { background: linear-gradient(135deg, #E65100, #FF9800); }
+        .note-10 { background: linear-gradient(135deg, #4E342E, #8D6E63); }
+        .note-5 { background: linear-gradient(135deg, #1565C0, #42A5F5); }
+
+        /* Coins */
+        .coin {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            border: 2px solid rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+            color: #333;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+        }
+        .coin-1 { background: radial-gradient(circle at 30% 30%, #CFD8DC, #90A4AE); width: 55px; height: 55px; font-size: 1rem;}
+        .coin-50 { background: radial-gradient(circle at 30% 30%, #FFD54F, #FFB300); } /* Gold-ish */
+        .coin-25 { background: radial-gradient(circle at 30% 30%, #ECEFF1, #B0BEC5); } /* Silver */
+        .coin-10 { background: radial-gradient(circle at 30% 30%, #A1887F, #6D4C41); color: white; text-shadow: none;} /* Copper */
+        .coin-5 { background: radial-gradient(circle at 30% 30%, #CFD8DC, #78909C); width: 40px; height: 40px; font-size: 0.7rem; }
+
+        /* Controls */
+        .action-bar {
+            position: absolute; bottom: 20px; right: 20px;
+            display: flex; gap: 10px;
+        }
+        .btn {
+            width: 60px; height: 60px; border-radius: 50%;
+            border: none; font-size: 1.5rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.9); }
+        .btn-check { background: #00E676; color: white; }
+        .btn-reset { background: #FF1744; color: white; }
+
+        /* Draggable clone */
+        .dragging-clone {
+            position: fixed; pointer-events: none; z-index: 1000; opacity: 0.9; transform: scale(1.1);
+        }
+
+        /* Feedback Modal */
+        #feedback-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 200; opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        #feedback-modal.show { opacity: 1; pointer-events: all; }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 20px;
+            text-align: center; width: 80%; max-width: 300px;
+            transform: scale(0.8); transition: 0.3s;
+            border: 5px solid #FFD54F;
+        }
+        #feedback-modal.show .modal-content { transform: scale(1); }
+        .modal-icon { font-size: 4rem; display: block; margin-bottom: 10px; animation: bounce 1s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* Confetti canvas */
+        #confetti-canvas {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 250;
+        }
+
+        @media (max-width: 600px) {
+            .shelf-area { height: 140px; padding: 10px; }
+            .item-display { transform: scale(0.9) rotate(-2deg); }
+            .note { width: 70px; height: 35px; font-size: 0.8rem; }
+            .coin { width: 40px; height: 40px; font-size: 0.8rem; }
+            .wallet-area { height: 130px; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <header>
+        <div class="header-item-left"><div class="grade-badge">3</div></div>
+        <h1 id="app-title">ገንዘብ (Money)</h1>
+        <div class="header-item-right">
+            <div class="custom-select-wrapper" id="lang-dropdown">
+                <div class="custom-select">
+                    <div class="custom-select__trigger">
+                        <span id="current-lang-text">🗺️ ትግርኛ</span>
+                        <span style="font-size:0.8rem">▼</span>
+                    </div>
+                    <div class="custom-options">
+                        <div class="custom-option" data-value="ti">ትግርኛ</div>
+                        <div class="custom-option" data-value="am">አማርኛ</div>
+                        <div class="custom-option" data-value="en">English</div>
+                        <div class="custom-option" data-value="om">Afan Oromoo</div>
+                        <div class="custom-option" data-value="so">Soomaali</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="awning"></div>
+
+    <div id="market-stall">
+        <div class="shelf-area">
+            <div class="item-display" id="target-item">
+                <div class="item-icon">🍎</div>
+                <div class="price-tag"><span id="price-val">0</span> ብር</div>
+            </div>
+        </div>
+
+        <div class="counter-top">
+            <div class="total-display"><span id="lbl-total">Total:</span> <span id="current-total">0.00</span></div>
+            <div class="drop-zone" id="counter-zone">
+                <span style="width:100%; text-align:center; color:rgba(255,255,255,0.3); margin-top:20px; pointer-events:none;">Drag money here</span>
+            </div>
+            
+            <div class="action-bar">
+                <button class="btn btn-reset" onclick="clearCounter()">✕</button>
+                <button class="btn btn-check" onclick="checkAnswer()">✓</button>
+            </div>
+        </div>
+
+        <div class="wallet-area">
+            <div class="wallet-label" id="wallet-label">Wallet (Drag to pay)</div>
+            <div class="currency-scroll">
+                <!-- Notes -->
+                <div class="money note note-100" data-val="100">100</div>
+                <div class="money note note-50" data-val="50">50</div>
+                <div class="money note note-10" data-val="10">10</div>
+                <div class="money note note-5" data-val="5">5</div>
+                <!-- Coins -->
+                <div class="money coin coin-1" data-val="1">1</div>
+                <div class="money coin coin-50" data-val="0.50">50c</div>
+                <div class="money coin coin-25" data-val="0.25">25c</div>
+                <div class="money coin coin-10" data-val="0.10">10c</div>
+                <div class="money coin coin-5" data-val="0.05">5c</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="feedback-modal">
+        <div class="modal-content">
+            <span class="modal-icon" id="fb-icon">🛍️</span>
+            <h2 id="fb-title">Sold!</h2>
+            <p id="fb-text">Exact change!</p>
+            <button class="nav-btn" id="fb-btn" style="background:#2E7D32; width:100%; font-size:1.2rem; margin-top:10px;" onclick="nextLevel()">Next Customer ➜</button>
+        </div>
+    </div>
+
+    <script>
+        const moneyTranslations = {
+            ti: {
+                title: "ገንዘብ (Money)",
+                total: "ጠቕላላ:",
+                wallet: "ቦርሳ ገንዘብ (ጎትት ንምክፋል)",
+                dragHere: "ነቲ ገንዘብ ናብዚ ጎትት",
+                soldTitle: "ተሽይጡ!",
+                soldExact: (price) => `ትክክለኛ መጠን ክፍሊት እዩ። ${price} ብር።`,
+                moreText: (total) => `እዚ ${total} ብር ብቻ እዩ። ገንዘብ ወስክ!`,
+                lessText: (total) => `ብዙሕ እዩ (${total} ብር)። ትክክለኛ መጠን አይኮነን!`,
+                btnNext: "ቀፃሊ ተአንጋዲ ➜",
+                btnRetry: "እንደገና ፈትን"
+            },
+            am: {
+                title: "ገንዘብ (Money)",
+                total: "ድምር:",
+                wallet: "የገንዘብ ቦርሳ (ለመክፈል ጎትት)",
+                dragHere: "ገንዘብን ወደዚህ አሳስር",
+                soldTitle: "ተሸጠ!",
+                soldExact: (price) => `ትክክለኛ መጠን ነው። ${price} ብር።`,
+                moreText: (total) => `ይህ ${total} ብር ብቻ ነው። ገንዘብ ጨምር!`,
+                lessText: (total) => `ብዙ ነው (${total} ብር)። ትክክለኛ መጠን እባክህ!`,
+                btnNext: "ቀጣይ ደንበኛ ➜",
+                btnRetry: "እንደገና ፈትሽ"
+            },
+            en: {
+                title: "Money Market",
+                total: "Total:",
+                wallet: "Wallet (Drag to pay)",
+                dragHere: "Drag money here",
+                soldTitle: "Sold!",
+                soldExact: (price) => `You paid exactly ${price} Birr.`,
+                moreText: (total) => `That's only ${total}. I need more!`,
+                lessText: (total) => `That's too much (${total}). Exact change please!`,
+                btnNext: "Next Customer ➜",
+                btnRetry: "Try Again"
+            },
+            om: {
+                title: "Maallaqa Suuqii",
+                total: "Waliigala:",
+                wallet: "Borsa Maallaqaa (fayyadami)",
+                dragHere: "Maallaqa asitti harkisi",
+                soldTitle: "Gurgurame!",
+                soldExact: (price) => `${price} Birrii guutumaan guutuutti kaffalte.`,
+                moreText: (total) => `${total} qofa. Maallaqa dabalataa barbaachisa!`,
+                lessText: (total) => `Baay'ee ta'eera (${total}). Maallaqa sirrii qofa kenni!`,
+                btnNext: "Mijuu Itti Aanu ➜",
+                btnRetry: "Irra deebi'ii yaali"
+            },
+            so: {
+                title: "Suuqa Lacagta",
+                total: "Wadar:",
+                wallet: "Boorsada lacagta (si aad u bixiso)",
+                dragHere: "Lacagta halkaan keen",
+                soldTitle: "La iibiyay!",
+                soldExact: (price) => `Si sax ah ayaad u bixisay ${price} Birr.`,
+                moreText: (total) => `Kani waa kaliya ${total}. Lacag dheeraad ah ayaan u baahanahay!`,
+                lessText: (total) => `Waa badan tahay (${total}). Fadlan keen lacag sax ah!`,
+                btnNext: "Macmiilka xiga ➜",
+                btnRetry: "Mar kale isku day"
+            }
+        };
+
+        let currentLang = 'ti';
+
+        const items = [
+            { icon: '🍎', name: 'Apple' }, { icon: '🍌', name: 'Banana' },
+            { icon: '🥤', name: 'Juice' }, { icon: '📚', name: 'Book' },
+            { icon: '✏️', name: 'Pencil' }, { icon: '⚽', name: 'Ball' },
+            { icon: '🧢', name: 'Hat' }, { icon: '🍬', name: 'Candy' }
+        ];
+
+        let targetPrice = 0;
+        let currentTotal = 0;
+        
+        const counterZone = document.getElementById('counter-zone');
+        const totalDisplay = document.getElementById('current-total');
+        const moneySources = document.querySelectorAll('.currency-scroll .money');
+
+        function initMoneyGame() {
+            setupLanguageDropdown();
+            updateLanguage();
+            generateLevel();
+        }
+
+        function generateLevel() {
+            // Generate price: e.g. 12.50, 5.25, 100.00
+            // Logic: Random integer + Random coin fraction
+            const base = Math.floor(Math.random() * 50) + 1; 
+            const fraction = [0, 0.25, 0.50, 0.75, 0.10, 0.05][Math.floor(Math.random() * 6)];
+            targetPrice = base + fraction;
+            
+            // Set Item
+            const item = items[Math.floor(Math.random() * items.length)];
+            document.querySelector('.item-icon').textContent = item.icon;
+            document.getElementById('price-val').textContent = targetPrice.toFixed(2);
+
+            clearCounter();
+            document.getElementById('feedback-modal').classList.remove('show');
+        }
+
+        function clearCounter() {
+            const t = moneyTranslations[currentLang];
+            const place = t ? t.dragHere : 'Drag money here';
+            counterZone.innerHTML = `<span style="width:100%; text-align:center; color:rgba(255,255,255,0.3); margin-top:20px; pointer-events:none;">${place}</span>`;
+            currentTotal = 0;
+            updateTotalDisplay();
+        }
+
+        function updateTotalDisplay() {
+            totalDisplay.textContent = currentTotal.toFixed(2);
+            // Visual feedback if over
+            if(currentTotal > targetPrice) totalDisplay.style.color = '#FF5252'; // Red
+            else if (Math.abs(currentTotal - targetPrice) < 0.001) totalDisplay.style.color = '#69F0AE'; // Green
+            else totalDisplay.style.color = '#69F0AE';
+        }
+
+        function updateLanguage() {
+            const t = moneyTranslations[currentLang] || moneyTranslations.en;
+            document.getElementById('app-title').textContent = t.title;
+            document.getElementById('lbl-total').textContent = t.total;
+            document.getElementById('wallet-label').textContent = t.wallet;
+
+            // If placeholder is visible, refresh it through clearCounter
+            if (counterZone.children.length && counterZone.children[0].tagName === 'SPAN') {
+                clearCounter();
+            }
+
+            // If feedback modal is open, refresh button/title roughly based on last state
+            const modal = document.getElementById('feedback-modal');
+            if (modal.classList.contains('show')) {
+                const btn = document.getElementById('fb-btn');
+                const title = document.getElementById('fb-title');
+                const text = document.getElementById('fb-text');
+                // Simple heuristic: if button currently says Next, treat as correct state
+                if (btn.textContent.includes('Next') || btn.textContent.includes('➜')) {
+                    title.textContent = t.soldTitle;
+                    text.textContent = t.soldExact(targetPrice.toFixed(2));
+                    btn.textContent = t.btnNext;
+                } else {
+                    btn.textContent = t.btnRetry;
+                }
+            }
+        }
+
+        function setupLanguageDropdown() {
+            const dropdown = document.getElementById('lang-dropdown');
+            if (!dropdown) return;
+            const trigger = dropdown.querySelector('.custom-select__trigger');
+            const options = dropdown.querySelectorAll('.custom-option');
+
+            trigger.addEventListener('click', (e) => {
+                dropdown.querySelector('.custom-select').classList.toggle('open');
+                e.stopPropagation();
+            });
+
+            options.forEach(opt => {
+                opt.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    currentLang = this.dataset.value;
+                    document.getElementById('current-lang-text').textContent = "🗺️ " + this.textContent;
+                    dropdown.querySelector('.custom-select').classList.remove('open');
+                    updateLanguage();
+                });
+            });
+
+            window.addEventListener('click', () => dropdown.querySelector('.custom-select').classList.remove('open'));
+        }
+
+        function addToCounter(val, typeClass, text) {
+            // Remove placeholder if exists
+            if(counterZone.children.length > 0 && counterZone.children[0].tagName === 'SPAN') {
+                counterZone.innerHTML = '';
+            }
+
+            const el = document.createElement('div');
+            el.className = `money ${typeClass}`;
+            el.textContent = text;
+            el.setAttribute('data-val', val);
+            
+            // Click to remove logic
+            el.onclick = function() {
+                // Animate out
+                el.style.transform = 'scale(0)';
+                setTimeout(() => {
+                    el.remove();
+                    currentTotal -= parseFloat(val);
+                    // Fix float precision
+                    currentTotal = Math.round(currentTotal * 100) / 100;
+                    updateTotalDisplay();
+                }, 100);
+                playSound('pop');
+            };
+
+            counterZone.appendChild(el);
+            
+            currentTotal += parseFloat(val);
+            // Fix float precision
+            currentTotal = Math.round(currentTotal * 100) / 100;
+            updateTotalDisplay();
+            playSound('coin');
+        }
+
+        // Drag Logic
+        let activeDragEl = null;
+        let cloneEl = null;
+        let touchOffsetX = 0;
+        let touchOffsetY = 0;
+
+        moneySources.forEach(source => {
+            const startDrag = (e) => {
+                e.preventDefault();
+                const touch = e.type === 'touchstart' ? e.touches[0] : e;
+                
+                // Create clone
+                cloneEl = source.cloneNode(true);
+                cloneEl.classList.add('dragging-clone');
+                document.body.appendChild(cloneEl);
+                
+                const rect = source.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                
+                // Center the clone on finger/mouse
+                cloneEl.style.left = (touch.clientX - rect.width/2) + 'px';
+                cloneEl.style.top = (touch.clientY - rect.height/2) + 'px';
+                
+                activeDragEl = source;
+            };
+
+            source.addEventListener('mousedown', startDrag);
+            source.addEventListener('touchstart', startDrag);
+        });
+
+        const moveDrag = (e) => {
+            if (!activeDragEl || !cloneEl) return;
+            e.preventDefault();
+            const touch = e.type === 'touchmove' ? e.touches[0] : e;
+            
+            cloneEl.style.left = (touch.clientX - cloneEl.offsetWidth/2) + 'px';
+            cloneEl.style.top = (touch.clientY - cloneEl.offsetHeight/2) + 'px';
+        };
+
+        const endDrag = (e) => {
+            if (!activeDragEl || !cloneEl) return;
+            
+            // Check drop target
+            const touch = e.type === 'touchend' ? e.changedTouches[0] : e;
+            const counterRect = counterZone.getBoundingClientRect();
+            
+            if (touch.clientX > counterRect.left && touch.clientX < counterRect.right &&
+                touch.clientY > counterRect.top && touch.clientY < counterRect.bottom) {
+                
+                // Get data
+                const val = activeDragEl.getAttribute('data-val');
+                // Extract class for styling (note-100, coin-5 etc)
+                const classes = activeDragEl.className.split(' ').filter(c => c !== 'money').join(' ');
+                const text = activeDragEl.textContent;
+                
+                addToCounter(val, classes, text);
+            }
+
+            cloneEl.remove();
+            activeDragEl = null;
+            cloneEl = null;
+        };
+
+        document.addEventListener('mousemove', moveDrag);
+        document.addEventListener('touchmove', moveDrag, {passive: false});
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+
+        // Check Logic
+        function checkAnswer() {
+            const diff = Math.abs(currentTotal - targetPrice);
+            if (diff < 0.01) {
+                showFeedback(true);
+            } else {
+                showFeedback(false);
+            }
+        }
+
+        function showFeedback(isCorrect) {
+            const modal = document.getElementById('feedback-modal');
+            const icon = document.getElementById('fb-icon');
+            const title = document.getElementById('fb-title');
+            const text = document.getElementById('fb-text');
+            const btn = document.getElementById('fb-btn');
+            const tr = moneyTranslations[currentLang] || moneyTranslations.en;
+
+            if (isCorrect) {
+                icon.textContent = '🛍️';
+                title.textContent = tr.soldTitle;
+                title.style.color = '#2E7D32';
+                text.textContent = tr.soldExact(targetPrice.toFixed(2));
+                btn.textContent = tr.btnNext;
+                btn.onclick = nextLevel;
+                playSound('cash');
+                triggerConfetti();
+            } else {
+                icon.textContent = '🤔';
+                title.textContent = '';
+                title.style.color = '#E65100';
+                if (currentTotal < targetPrice) {
+                    text.textContent = tr.moreText(currentTotal.toFixed(2));
+                } else {
+                    text.textContent = tr.lessText(currentTotal.toFixed(2));
+                }
+                btn.textContent = tr.btnRetry;
+                btn.onclick = () => modal.classList.remove('show');
+                playSound('wrong');
+            }
+            modal.classList.add('show');
+        }
+
+        function nextLevel() {
+            generateLevel();
+        }
+
+        function playSound(type) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            const t = ctx.currentTime;
+
+            if (type === 'coin') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(2000, t);
+                osc.frequency.exponentialRampToValueAtTime(500, t + 0.1);
+                gain.gain.setValueAtTime(0.1, t);
+                gain.gain.linearRampToValueAtTime(0, t + 0.1);
+                osc.start(t); osc.stop(t + 0.1);
+            } else if (type === 'cash') {
+                // Cha-ching simulation
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, t);
+                osc.frequency.setValueAtTime(1200, t + 0.1);
+                gain.gain.setValueAtTime(0.1, t);
+                gain.gain.linearRampToValueAtTime(0, t + 0.4);
+                osc.start(t); osc.stop(t + 0.4);
+            } else if (type === 'pop') {
+                osc.frequency.setValueAtTime(400, t);
+                osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
+                gain.gain.setValueAtTime(0.1, t);
+                gain.gain.linearRampToValueAtTime(0, t + 0.1);
+                osc.start(t); osc.stop(t + 0.1);
+            } else {
+                // Wrong
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, t);
+                osc.frequency.linearRampToValueAtTime(100, t + 0.3);
+                gain.gain.setValueAtTime(0.1, t);
+                gain.gain.linearRampToValueAtTime(0, t + 0.3);
+                osc.start(t); osc.stop(t + 0.3);
+            }
+        }
+
+        // Simple top-down confetti rain used on correct answers
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const pieces = [];
+            for (let i = 0; i < 150; i++) {
+                pieces.push({
+                    x: Math.random() * canvas.width,
+                    y: -Math.random() * canvas.height,
+                    vy: 2 + Math.random() * 4,
+                    vx: (Math.random() - 0.5) * 2,
+                    size: 4 + Math.random() * 6,
+                    color: `hsl(${Math.random() * 360}, 100%, 65%)`
+                });
+            }
+
+            let frame = 0;
+            function animate() {
+                frame++;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                pieces.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.y - p.size > canvas.height) {
+                        p.y = -10;
+                        p.x = Math.random() * canvas.width;
+                    }
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                });
+                if (frame < 120) {
+                    requestAnimationFrame(animate);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            animate();
+        }
+
+        window.onload = initMoneyGame;
+
+    </script>
+</body>
+</html>

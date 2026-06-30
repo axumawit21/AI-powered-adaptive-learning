@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="am">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>የፊደል ቤተሰብ | Amharic Letter Families</title>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="main-div">
+    <div class="q-div">
+      <div class="q-header">
+        <span class="q-text"></span>
+        <div class="language-select">
+          <select id="language-select">
+            <option value="ti">ትግርኛ</option>
+            <option value="am">አማርኛ</option>
+            <option value="en">English</option>
+            <option value="om">Afan Oromoo</option>
+            <option value="so">Soomaali</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="game-div"></div>
+  </div>
+  
+  <!-- Celebration Popup -->
+  <div id="celebration" class="celebration">
+    <div class="celebration-content">
+      <h2>በጣም ጥሩ! 🎉</h2>
+      <p>በትክክል ፈጸምክ!</p>
+      <button onclick="nextRound()">የቀጣዩን ይሞክሩ</button>
+    </div>
+  </div>
+  
+  <audio src="https://assets.mixkit.co/active_storage/sfx/2/2054/large.mp3" class="win"></audio>
+  <audio src="https://assets.mixkit.co/active_storage/sfx/2/2042/large.mp3" class="correct-sound"></audio>
+  <audio src="assets/wrong.mp3" class="wrong-sound"></audio>
+  <audio src="assets/click1.mp3" class="click-sound"></audio>
+</body>
+<script>
+  console.log('Hello from utils mod');
+
+  let log = console.log;
+  let table = console.table;
+
+  let punctuations = /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~.]/ig;
+
+  function getElement(selector) {
+      return document.querySelector(selector);
+  }
+
+  function getElements(selector) {
+      return document.querySelectorAll(selector);
+  }
+
+  function createElement(_elem, _class="", _id="") {
+      let elem = document.createElement(_elem);
+      if(_class) {
+          elem.className = _class;
+      }
+      if(_id) {
+          elem.id = _id;
+      }
+      return elem;
+  }
+
+  function applyStyle(elem, style) { 
+      return elem.setAttribute("style", style);
+  }
+
+  async function playAudio(elem, src) {
+      elem.src = src;
+      await elem.play();
+  }
+
+  function pandaNews(state=1) { 
+      let bg = createElement("div", "pandaBg", "");
+      bg.style = {
+          width: `${window.innerWidth}px`,
+          height: `${window.innerHeight}px`,
+          background: "rgb(0, 0, 0, 0.9)"
+      };
+      let panda = createElement("img", "ok_panda", "");
+      if(state) panda.src = "images/numbers/win.png";
+      else panda.src = "images/numbers/null.png";
+      panda.animationName = "ok_panda";
+      panda.animationDuration = "2s";
+      return bg.appendChild(panda);
+  }
+
+  function celebrateStarfish(audioClassName) {
+      getElement(`.${audioClassName}`).src = './assets/allCorrect.mp3'
+      let bg = createElement("div", "bg")
+      bg.style.position = "absolute"
+      bg.style.backgroundImage = "url('./assets/starFish.png')"
+      bg.style.top = "0px"
+      bg.style.width = "100%"
+      bg.style.height = "100vh"
+      bg.style.backgroundColor = "#0000007a"
+      bg.style.backgroundPosition = "center"
+      bg.style.backgroundRepeat = "no-repeat"
+      getElement("body").appendChild(bg)
+      setTimeout(function () {
+          getElement("body").removeChild(bg)
+      }, 2000)
+  }
+
+  function randInt(min, max) {
+      return Math.floor(min + Math.random() * (max + 1 - min));
+  }
+
+  function myRandom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function takePartialRandom(arr, amount) {
+      let copyOfArr = arr.slice(0,)
+      let partialArray = []
+      for(let i=0; i<amount;i++){
+          let rand = randInt(0, copyOfArr.length-1)
+          let spliced = copyOfArr.splice(rand, 1)
+          partialArray.push(spliced)
+      }
+      return partialArray
+  }
+
+  function getArrOfInt(start=0, end=0, inclusive=0) {
+      let arr = [];
+      for(let i=start; i<end+inclusive; i++) {
+          arr.push(i);
+      }
+      return arr;
+  }
+
+  function arrify(coll) {
+      return Array.prototype.slice.call(coll);
+  }
+
+  function getRandomHexColor() {
+      let hexes = ["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"]
+      let hex = "#";
+      for(let i=0; i<6; i++) {
+          hex += myRandom(hexes);
+      }
+      return hex;
+  }
+
+  HTMLCollection.prototype.clone = function () {
+      let elems = [];
+      for (let i = 0; i < this.length; i++) {
+          elems.push(this[i]);
+      }
+      return elems;
+  }
+
+  NodeList.prototype.clone = function () {
+      let elems = [];
+      for (let i = 0; i < this.length; i++) {
+          elems.push(this[i]);
+      }
+      return elems;
+  }
+
+  // NOTE: Keeping only one Array.prototype.randomize implementation.
+  // This one uses the randint helper function defined below.
+  Array.prototype.randomize = function () {
+    let letters = [].concat(this);
+    letters.forEach((item, indx, arr) => {
+      let rand = randint(arr); // Use the global randint
+      let temp = letters[rand];
+      letters[indx] = temp;
+      letters[rand] = item;
+    });
+    return letters;
+  };
+
+  String.prototype.forEachStr = function (func) {
+      for(let i=0; i<this.length; i++) {
+          func(this.slice(i, i+1));
+      }
+  }
+
+  let currentLanguage = 'ti';
+  const languageStrings = {
+    ti: {
+      title: "ዘርኢፊደል",
+      question: "ዘርኢ \"{letter}\" ምረፁ",
+      celebrationTitle: "ብጣዕሚ ጽቡቅ! 🎉",
+      celebrationText: "ብትክክል ተመሊሱ!",
+      celebrationButton: "ቀጻሊ ይሞክሩ"
+    },
+    am: {
+      title: "የፊደል ቤተሰብ",
+      question: "የ \"{letter}\" ቤተሰብ ፊደሎችን ይምረጡ",
+      celebrationTitle: "በጣም ጥሩ! 🎉",
+      celebrationText: "በትክክል ፈጸምህ!",
+      celebrationButton: "ቀጣዩን ይሞክሩ"
+    },
+    en: {
+      title: "Letter Families",
+      question: "Select the family of \"{letter}\"",
+      celebrationTitle: "Great job! 🎉",
+      celebrationText: "You completed it correctly!",
+      celebrationButton: "Try next one"
+    },
+    om: {
+      title: "Maatii qubee",
+      question: "Maatii \"{letter}\" filadhu",
+      celebrationTitle: "Baayʼee gaari! 🎉",
+      celebrationText: "Sirriitti xumurte!",
+      celebrationButton: "Kan itti aanu yaali"
+    },
+    so: {
+      title: "Qoysaska xarafka",
+      question: "Dooro qoyska xarafka \"{letter}\"",
+      celebrationTitle: "Shaqo fiican! 🎉",
+      celebrationText: "Si sax ah ayaad u dhammaysay!",
+      celebrationButton: "Isku day kan xiga"
+    }
+  };
+
+  let pageTitle = [languageStrings[currentLanguage].title];//end-var
+  function setPageTitle(selector) {
+    let titleElt = document.querySelector(selector);
+    let title = document.querySelector("title");
+    title.innerText = pageTitle[0];
+    if (titleElt) {
+      titleElt.innerText = pageTitle[0];
+    }
+  }
+  setPageTitle('.header')
+
+  function setLanguageUI() {
+    const strings = languageStrings[currentLanguage];
+    if (!strings) return;
+    pageTitle[0] = strings.title;
+    setPageTitle('.header');
+
+    const celebrationTitle = document.querySelector('#celebration h2');
+    if (celebrationTitle) celebrationTitle.innerText = strings.celebrationTitle;
+    const celebrationText = document.querySelector('#celebration p');
+    if (celebrationText) celebrationText.innerText = strings.celebrationText;
+    const celebrationButton = document.querySelector('#celebration button');
+    if (celebrationButton) celebrationButton.innerText = strings.celebrationButton;
+  }
+
+  // Function to generate a letter family from a start and end character
+  function generateLetterFamily(startChar, endChar) {
+    const family = [];
+    let currentCharCode = startChar.charCodeAt(0);
+    const endCharCode = endChar.charCodeAt(0);
+    while (currentCharCode <= endCharCode) {
+      family.push(String.fromCharCode(currentCharCode));
+      currentCharCode++;
+    }
+    return family;
+  }
+
+  // Parse the requirement string to create letterFamilies
+  const requirementLetterFamiliesString = "ቀ-ቆ,በ-ቦ,ተ-ቶ,ቸ-ቾ"; // From REQUIREMENTS
+  const familyDefinitions = requirementLetterFamiliesString.split(',');
+  const letterFamilies = familyDefinitions.map(def => {
+    const [start, end] = def.split('-');
+    return generateLetterFamily(start, end);
+  });
+  
+  let currentFamilyIndex = -1; // Initialize to -1 so the first call to setLetterFamily sets it to 0
+  let arrOfStr = [];
+  let arrOfStr2 = [];
+  let correctlyAnswered = 0;
+  
+  // Helper function for random integer (used by Array.prototype.randomize)
+  function randint(arr) {
+    return Math.floor(Math.random() * arr.length);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const langSelect = document.getElementById('language-select');
+    if (langSelect) {
+      langSelect.value = currentLanguage;
+      langSelect.addEventListener('change', (e) => {
+        currentLanguage = e.target.value;
+        setLanguageUI();
+        createTotal(); // Re-render current family with new language
+      });
+    }
+    setLanguageUI();
+    setLetterFamily(); // Initial call to setup the first game round
+  });
+
+  function checkAns() {
+    if (this.classList.contains('answered')) return;
+    if (this.className.includes("answer")) {
+      // Correct answer
+      const clickSound = document.querySelector('.click-sound');
+      if (clickSound) {
+        clickSound.currentTime = 0;
+        clickSound.play().catch(e => console.log('Audio play failed:', e));
+      }
+      
+      this.removeEventListener("click", checkAns);
+      this.classList.add('correct', 'answered');
+      
+      // Play correct sound
+      const correctSound = document.querySelector('.correct-sound');
+      if (correctSound) {
+        correctSound.currentTime = 0;
+        correctSound.play().catch(e => console.log('Audio play failed:', e));
+      }
+      
+      correctlyAnswered++;
+      
+      if (correctlyAnswered === arrOfStr.length) {
+        // All correct answers found
+        const winSound = document.querySelector('.win');
+        if (winSound) {
+          winSound.currentTime = 0;
+          winSound.play().catch(e => console.log('Audio play failed:', e));
+        }
+        
+        // Show celebration
+        document.getElementById('celebration').classList.add('show');
+        
+        // Disable all click events
+        document.querySelectorAll('.game-div > div').forEach(div => {
+          div.style.pointerEvents = 'none';
+        });
+      }
+    } else {
+      // Incorrect answer
+      this.classList.add('incorrect');
+      
+      // Play wrong sound
+      const wrongSound = document.querySelector('.wrong-sound');
+      if (wrongSound) {
+        wrongSound.currentTime = 0;
+        wrongSound.play().catch(e => console.log('Audio play failed:', e));
+      }
+      
+      // Reset animation after it completes
+      setTimeout(() => {
+        this.classList.remove('incorrect');
+      }, 500);
+    }
+  }
+
+  function createLetters(fidels, className) {
+    let divs = [];
+    fidels.forEach((fidel) => {
+      let div = document.createElement("div");
+      div.className = className;
+      div.innerText = fidel;
+      div.addEventListener("click", checkAns);
+      divs.push(div);
+    });
+    return divs;
+  }
+
+  function cleanOut(className) {
+    let mainDiv = document.querySelector(className);
+    Array.prototype.slice
+      .call(mainDiv.children)
+      .forEach((item) => item.remove());
+  }
+
+  // Removed the redundant index parameter from setLetterFamily
+  function setLetterFamily() {
+    // Cycle through the letter families
+    currentFamilyIndex = (currentFamilyIndex + 1) % letterFamilies.length;
+    const family = letterFamilies[currentFamilyIndex];
+    
+    // Set the current family and generate decoys
+    arrOfStr = [...family];
+    
+    // Generate decoys from all families
+    let allLetters = [].concat(...letterFamilies);
+    arrOfStr2 = allLetters.filter(letter => !arrOfStr.includes(letter));
+    arrOfStr2 = arrOfStr2.randomize().slice(0, Math.max(0, 14 - arrOfStr.length)); // Ensure max 14 total letters
+    
+    // Update the display
+    createTotal();
+  }
+  
+  function nextRound() {
+    // Hide celebration popup
+    document.getElementById('celebration').classList.remove('show');
+    
+    // Re-enable click events on all letters
+    document.querySelectorAll('.game-div > div').forEach(div => {
+      div.style.pointerEvents = 'auto';
+    });
+    
+    // Set the next letter family
+    setLetterFamily(); // Call without argument
+  }
+  
+  function createTotal() {
+    // Clear previous game state
+    cleanOut(".game-div");
+    correctlyAnswered = 0;
+    
+    // Create new game elements
+    let _arrOfStr = createLetters(arrOfStr, "answer");
+    let _arrOfStr2 = createLetters(arrOfStr2, "decoy");
+    let qDiv = document.querySelector(".q-text");
+    const strings = languageStrings[currentLanguage] || languageStrings['ti'];
+    if (qDiv) {
+      qDiv.innerText = strings.question.replace('{letter}', arrOfStr[0]);
+    }
+    let mainDiv = document.querySelector(".game-div");
+    _arrOfStr2 = _arrOfStr2.concat(_arrOfStr).randomize();
+    _arrOfStr2.forEach((item) => mainDiv.appendChild(item));
+  }
+</script>
+<style>
+  :root {
+    --primary-color: #4A90E2;
+    --secondary-color: #357ABD;
+    --accent-color: #FFC107;
+    --success-color: #2ECC71;
+    --error-color: #E74C3C;
+    --light-bg: #F0F7FF;
+    --dark-bg: #2C3E50;
+    --text-light: #FFFFFF;
+    --text-dark: #333333;
+    --shadow-color: rgba(74, 144, 226, 0.3);
+    --button-shadow: #3498DB;
+    --gradient-start: #4A90E2;
+    --gradient-end: #57B5ED;
+  }
+  
+  * {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: 'Baloo 2', 'Noto Sans Ethiopic', cursive, sans-serif;
+  }
+
+  body {
+    background: linear-gradient(135deg, var(--light-bg), #E1F0FF);
+    min-height: 100vh;
+    padding: 20px;
+    overflow-x: hidden;
+    font-family: 'Baloo 2', 'Noto Sans Ethiopic', cursive, sans-serif;
+  }
+  
+  .main-div {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 30px;
+    box-shadow: 0 15px 35px var(--shadow-color);
+    position: relative;
+    overflow: hidden;
+    border: 2px solid rgba(255, 107, 156, 0.1);
+    min-height: 520px;
+  }
+  
+  .q-div {
+    font-size: 1.8rem;
+    color: var(--text-dark);
+    margin: 0 0 25px 0;
+    padding: 15px;
+    background: white;
+    border-radius: 25px;
+    font-weight: bold;
+    box-shadow: 0 6px 0 var(--button-shadow),
+              0 8px 15px var(--shadow-color);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .q-div::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  }
+
+  .q-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .q-text {
+    flex: 1;
+    text-align: center;
+    color: rgb(138, 77, 207);
+  }
+
+  .language-select {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+  }
+
+  .language-select label {
+    color: var(--text-dark);
+    font-weight: 600;
+  }
+
+  .language-select select {
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--primary-color);
+    background: #f5f9ff;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+  }
+  
+  .game-div {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 15px;
+    max-width: 600px;
+    margin: 0 auto;
+    perspective: 1000px;
+  }
+  
+  .game-div div {
+    cursor: pointer;
+    font-size: 2.5rem;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    aspect-ratio: 1;
+    box-shadow: 0 4px 0 var(--button-shadow),
+              0 6px 12px var(--shadow-color);
+    position: relative;
+    overflow: hidden;
+    width: 80px;
+    height: 80px;
+    margin: 0;
+    float: none;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    padding: 0;
+    color: var(--text-dark);
+    transform-style: preserve-3d;
+  }
+
+  .game-div div::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, var(--primary-color) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .game-div div::before,
+  .game-div div::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    animation: float 4s infinite;
+  }
+  
+  .game-div div::before {
+    width: 15px;
+    height: 15px;
+    top: 10%;
+    right: 15%;
+  }
+  
+  .game-div div::after {
+    width: 10px;
+    height: 10px;
+    bottom: 15%;
+    left: 10%;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+  
+  .game-div div:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 var(--button-shadow),
+              0 8px 16px var(--shadow-color);
+    filter: brightness(1.1);
+  }
+
+  .game-div div:hover::before {
+    opacity: 0.1;
+  }
+  
+  .game-div div:active {
+    transform: translateY(2px) scale(0.95);
+    box-shadow: 0 5px 15px var(--shadow-color);
+  }
+  
+  .answer, .decoy {
+    background: white !important;
+    position: relative;
+  }
+  
+  .answer.correct::after {
+    content: '⭐';
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    color: var(--accent-color);
+    font-size: 2rem;
+    filter: drop-shadow(0 3px 3px rgba(0,0,0,0.2));
+    animation: starPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1;
+    transform-origin: center;
+  }
+  
+  @keyframes starPop {
+    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+    50% { transform: scale(1.2) rotate(20deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  
+  .correct {
+    animation: correct 0.8s ease-in-out forwards;
+    background-color: #2ECC71 !important;
+    color: #ffffff;
+  }
+  
+  .incorrect {
+    animation: shake 0.5s ease-in-out;
+    background-color: #E74C3C !important;
+    color: #ffffff;
+  }
+  
+  @keyframes correct {
+    0% { transform: scale(1); background: white; }
+    25% { transform: scale(1.1); background: #e8f5e9; }
+    50% { transform: scale(1.2); background: white; }
+    75% { transform: scale(1.1); background: #e8f5e9; }
+    100% { transform: scale(1); background: white; border-color: var(--success-color); }
+  }
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-5px); }
+    40%, 80% { transform: translateX(5px); }
+  }
+  
+  @keyframes confetti {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  .celebration {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .celebration.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+  
+  .celebration-content {
+    background: white;
+    padding: 40px;
+    border-radius: 30px;
+    text-align: center;
+    max-width: 90%;
+    width: 450px;
+    transform: scale(0.8) translateY(30px);
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    border: 3px solid var(--primary-color);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .celebration-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  }
+  
+  .celebration.show .celebration-content {
+    transform: scale(1) translateY(0);
+  }
+  
+  .celebration h2 {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 0 rgba(255, 107, 156, 0.2);
+  }
+  
+  .celebration p {
+    font-size: 1.4rem;
+    margin-bottom: 25px;
+    color: var(--text-dark);
+  }
+  
+  .celebration button {
+    background: linear-gradient(45deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.3rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 15px;
+    box-shadow: 0 6px 0 var(--button-shadow),
+              0 8px 15px var(--shadow-color);
+    position: relative;
+    overflow: hidden;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+  }
+  
+  .celebration button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: 0.5s;
+  }
+  
+  .celebration button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 12px 25px var(--shadow-color);
+  }
+  
+  .celebration button:active {
+    transform: translateY(2px) scale(0.95);
+    box-shadow: 0 5px 15px var(--shadow-color);
+  }
+  
+  .celebration button:hover::before {
+    left: 100%;
+  }
+  
+  @media (max-width: 768px) {
+    .q-div {
+      font-size: 1.5rem;
+      padding: 12px;
+    }
+    
+    .game-div {
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 10px;
+    }
+    
+    .game-div div {
+      font-size: 2.5rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .q-div {
+      font-size: 1.3rem;
+    }
+    
+    .game-div {
+      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      gap: 8px;
+    }
+    
+    .game-div div {
+      font-size: 2rem;
+    }
+  }
+</style>
+
+</html>

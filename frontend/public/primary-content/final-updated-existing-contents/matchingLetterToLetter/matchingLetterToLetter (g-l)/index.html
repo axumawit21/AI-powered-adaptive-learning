@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Azamid</title>
+</head>
+
+<body>
+  <div class="header-container">
+    <div class="header">Matching</div>
+  </div>
+  <div style="margin: 0 auto;" id="main-div">
+    <div class="left-div"></div><br>
+    <div class="right-div"></div>
+  </div>
+  <div class="score">Score: 0</div>
+  <div class="language">
+    <label for="lang-select" class="sr-only">Language</label>
+    <select id="lang-select">
+      <option value="en" selected>English</option>
+      <option value="am">አማርኛ</option>
+      <option value="ti">ትግርኛ</option>
+      <option value="om">Afan Oromoo</option>
+      <option value="so">Soomaali</option>
+    </select>
+  </div>
+  <div class="timer">Time: 200</div>
+  <audio src="" autoplay></audio>
+</body>
+<script>
+  const i18n = {
+    en: { name: 'English', matching: 'Matching', score: 'Score', time: 'Time', langCode: 'en' },
+    am: { name: 'አማርኛ', matching: 'መዛመድ', score: 'ነጥብ', time: 'ጊዜ', langCode: 'am' },
+    ti: { name: 'ትግርኛ', matching: 'መመሳሰል', score: 'ነጥብ', time: 'ጊዜ', langCode: 'ti' },
+    om: { name: 'Afan Oromoo', matching: 'Walsimsiisuu', score: "Bu'aa", time: 'Yeroo', langCode: 'om' },
+    so: { name: 'Soomaali', matching: 'Isku beegid', score: 'Dhibco', time: 'Waqti', langCode: 'so' },
+  };
+  let currentLang = 'en';
+
+  let pageTitle = ["Matching"]; //end-var
+  function setPageTitle(selector) {
+    let titleElt = document.querySelector(selector);
+    let title = document.querySelector("title");
+    title.innerText = pageTitle[0];
+    if (titleElt) {
+      titleElt.innerText = pageTitle[0];
+    }
+  }
+  setPageTitle('.header');
+  let letters = ["g", "h", "i", "j", "k", "l"]; // Letters to match
+  let arrOfStr = [];
+  let arrOfStr2 = [];
+
+  // Create two shuffled copies of the letters for matching
+  arrOfStr = [...letters].sort(() => Math.random() - 0.5);
+  arrOfStr2 = [...letters].sort(() => Math.random() - 0.5);
+
+  document.getElementById("main-div").style.maxWidth = `${(arrOfStr.length * 1.7 * (window.innerWidth / (16*12)))}em`;
+  // Vibrant, kid-friendly color palette with good contrast
+  let colors = [
+    "#FF3B30", // Vivid Red
+    "#FF9500", // Bright Orange
+    "#FFCC00", // Vivid Yellow
+    "#34C759", // Vivid Green
+    "#007AFF", // Vivid Blue
+    "#AF52DE"  // Vivid Purple
+  ];
+
+  Array.prototype.randomize = function () {
+    let letters = [].concat(this);
+    letters.forEach((item, indx, arr) => {
+      let rand = randint(arr);
+      let temp = letters[rand];
+      letters[indx] = temp;
+      letters[rand] = item;
+    });
+    return letters;
+  };
+
+  let pendingFidel = null;
+  let pendingClass = null;
+  let ans = 0;
+  let sco = 0;
+  let score = document.getElementsByClassName("score")[0]
+  let timerElt = document.getElementsByClassName("timer")[0]
+  let langSelect = null;
+
+  function applyTranslations() {
+    const t = i18n[currentLang];
+    pageTitle[0] = t.matching;
+    setPageTitle('.header');
+    document.documentElement.setAttribute('lang', t.langCode);
+    score.innerText = t.score + ": " + sco;
+    timerElt.innerText = t.time + ": " + time;
+  }
+
+  function randint(arr) {
+    return Math.floor(Math.random() * arr.length);
+  }
+
+  (function () {
+    createQues(arrOfStr, ".left-div");
+    createQues(arrOfStr2, ".right-div");
+  })();
+
+  function nullize() {
+    pendingFidel = null;
+    pendingClass = null;
+  }
+
+  function checkAns(elt) {
+    // Check if the letters match (a-a, b-b, etc.)
+    if (pendingFidel.innerText === elt.innerText) {
+      document.getElementsByTagName("audio")[0].src = `./assets/correct.mp3`;
+      elt.className = "done";
+      pendingFidel.className = "done";
+      pendingClass = null;
+      pendingFidel = null;
+      if (!document.querySelector(".left-elt")) {
+        document.getElementsByTagName("audio")[0].src = `./assets/win.mp3`;
+        // Game completed, wait for sound to play before reloading
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500)
+      }
+    } else {
+      setTimeout(() => {
+        elt.style.border = "none";
+        elt.style.color = colors[arrOfStr2.indexOf(elt.innerText)];
+        elt.style.background = "white";
+        elt.style.borderRadius = "10px";
+        pendingFidel.style.border = "none";
+        pendingFidel.style.color = colors[arrOfStr.indexOf(pendingFidel.innerText)];
+        pendingFidel.style.background = "white";
+        pendingFidel.style.borderRadius = "10px";
+        document.getElementsByTagName("audio")[0].src = `./assets/wrong.wav`
+        pendingClass = null;
+        pendingFidel = null;
+      }, 666);
+    }
+  }
+
+  function vent() {
+    if (this.className === "left-elt" && pendingClass !== this.className) {
+      pendingClass = this.className;
+      pendingFidel = this;
+      this.style.borderRadius = "50%";
+      this.style.background = colors[arrOfStr.indexOf(this.innerText)];
+      this.style.color = "white";
+    } else if (pendingClass && this.className === "right-elt" && pendingClass != this.className) {
+      this.style.borderRadius = "50%";
+      checkAns(this);
+    }
+
+  }
+
+  function cleanOut(className) {
+    let mainDiv = document.querySelector(className);
+    Array.prototype.slice
+      .call(mainDiv.children)
+      .forEach((item) => item.remove());
+  }
+
+  let time = 200
+  let timer = setInterval(function () {
+    time--
+    timerElt.innerText = i18n[currentLang].time + ": " + time
+    if (time == 0) {
+      clearInterval(timer)
+      sco = 0
+      score.innerText = i18n[currentLang].score + ": " + sco
+    }
+  }, 1000)
+
+  function createQues(_fidels, className) {
+    let fidelDiv = [];
+    let divLeft = document.querySelector(className);
+    let i = 0;
+    _fidels.forEach((fidel) => {
+      let div = document.createElement("div");
+      div.id = fidel;
+      div.className = className === '.left-div' ? 'left-elt' : 'right-elt';
+      div.innerText = fidel;
+      div.style.background = "white"
+      div.style.margin = ".3em"
+      div.style.width = "1.1em"
+      div.style.height = "1.1em"
+      div.style.float = "left"
+      div.style.boxShadow = `0 0 10px 10px ${colors[i]}`
+      div.style.color = colors[i]
+      div.style.borderRadius = "10px"
+      div.addEventListener("click", vent);
+      divLeft.appendChild(div);
+      i++
+    });
+  }
+  langSelect = document.getElementById('lang-select');
+  if (langSelect) {
+    langSelect.addEventListener('change', function () {
+      currentLang = this.value in i18n ? this.value : 'en';
+      applyTranslations();
+    });
+  }
+  applyTranslations();
+</script>
+<style>
+  * {
+    padding: 0;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  ::selection {
+    background: transparent;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+
+  body {
+    background: linear-gradient(135deg, #e0f7fa, #b2ebf2, #80deea);
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    font-family: 'Fredoka One', 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif;
+  }
+
+  .header {
+    color: #2e7d32;
+    font-size: min(3.5vw, 2.5rem);
+    text-align: center;
+    text-shadow: 2px 2px 0 #aed581;
+    margin: 1vh auto 3vh;
+    padding: 1.5vh 3vw;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    display: inline-block;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px dashed #81c784;
+    background-clip: padding-box;
+    white-space: nowrap;
+    max-width: 95%;
+    box-sizing: border-box;
+    z-index: 90;
+  }
+  
+  .header-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .left-div, .right-div {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 2vh auto;
+    font-size: min(4vw, 3rem);
+    text-align: center;
+    border-radius: 25px;
+    cursor: pointer;
+    padding: 1.5vh 1vw;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    width: 95%;
+    max-width: 1000px;
+    border: 3px solid #fff;
+    transition: all 0.3s ease;
+    gap: 1vw;
+    box-sizing: border-box;
+  }
+
+  .left-div:hover, .right-div:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+  }
+
+  .right-div {
+    display: flex;
+    justify-content: center;
+    flex-wrap: nowrap;
+    margin: 20px auto 0;
+    font-size: 4vw;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 20px;
+    cursor: pointer;
+    padding: 15px 10px;
+    background: white;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    max-width: 95%;
+    overflow-x: auto;
+  }
+
+  .score, .timer {
+    position: fixed;
+    top: 20px;
+    color: #1a237e;
+    font-size: min(2vw, 1.2rem);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1vh 2vw;
+    border-radius: 50px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    z-index: 100;
+    border: 2px solid #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    min-width: 120px;
+    text-align: center;
+  }
+
+  .score:hover, .timer:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+  }
+
+  .score {
+    right: 20px;
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  }
+
+  .timer {
+    right: 200px;
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  }
+
+  .language {
+    position: fixed;
+    top: 20px;
+    right: 380px;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #fff;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    padding: 6px 10px;
+    border-radius: 50px;
+    min-width: 120px;
+  }
+  .language select {
+    border: none;
+    background: transparent;
+    font-size: min(2vw, 1.1rem);
+    color: #1a237e;
+    outline: none;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .left-elt, .right-elt {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin: 0.5vh 0.5vw;
+    padding: 1.5vh 1.5vw;
+    min-width: 50px;
+    min-height: 50px;
+    text-align: center;
+    border-radius: 15px;
+    cursor: pointer;
+    background: white;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #2e7d32;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #fff;
+    flex: 1 0 auto;
+    max-width: 100px;
+    box-sizing: border-box;
+  }
+
+  .left-elt:hover, .right-elt:hover {
+    transform: scale(1.1) rotate(2deg);
+    z-index: 10;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+
+  .left-elt:active, .right-elt:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+  .done {
+    opacity: 0.7;
+    transform: scale(0.9);
+    animation: pulse 1.5s infinite;
+    position: relative;
+  }
+
+  .done::after {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #4caf50;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+  @media (max-width: 768px) {
+    .header {
+      font-size: 1.8rem;
+      margin: 1vh auto 2vh;
+      padding: 1vh 5vw;
+      position: static;
+      transform: none;
+      left: auto;
+      display: block;
+      width: auto;
+    }
+    
+    .header-container {
+      padding-top: 60px;
+      margin-bottom: 10px;
+    }
+    
+    .left-div, .right-div {
+      padding: 1vh 0.5vw;
+      gap: 0.5vw;
+      width: 98%;
+    }
+    
+    .left-elt, .right-elt {
+      padding: 1vh 1vw;
+      min-width: 40px;
+      min-height: 40px;
+      font-size: 1.5rem;
+      margin: 0.3vh 0.3vw;
+      border-radius: 12px;
+    }
+    
+    .score, .timer {
+      font-size: 1rem;
+      padding: 0.8vh 3vw;
+      min-width: 100px;
+    }
+    
+    .timer {
+      right: 160px;
+    }
+    .language { right: 320px; top: 12px; padding: 5px 8px; }
+    .language select { font-size: 1rem; }
+  }
+  
+  @media (max-width: 480px) {
+    .done::after {
+      width: 16px;
+      height: 16px;
+      font-size: 10px;
+      top: -6px;
+      right: -6px;
+    }
+    
+    .header {
+      font-size: 1.5rem;
+      padding: 0.8vh 4vw;
+      margin: 0.5vh auto 1.5vh;
+      position: static;
+      transform: none;
+      left: auto;
+      display: block;
+      width: auto;
+    }
+    
+    .header-container {
+      padding-top: 50px;
+      margin-bottom: 5px;
+    }
+    
+    .left-div, .right-div {
+      padding: 1vh 0.5vw;
+      gap: 0.5vw;
+      width: 99%;
+    }
+    
+    .left-elt, .right-elt {
+      padding: 0.8vh 0.8vw;
+      min-width: 35px;
+      min-height: 35px;
+      font-size: 1.3rem;
+      margin: 0.2vh 0.2vw;
+      border-radius: 10px;
+    }
+    
+    .score, .timer {
+      font-size: 0.9rem;
+      padding: 0.6vh 2vw;
+      min-width: 90px;
+      position: fixed;
+      top: 10px;
+    }
+    
+    .score {
+      left: 10px;
+      right: auto;
+    }
+    
+    .timer {
+      right: 10px;
+      left: auto;
+    }
+    .language { right: 180px; top: 10px; }
+    .language select { font-size: 0.95rem; }
+  }
+</style>
+
+</html>

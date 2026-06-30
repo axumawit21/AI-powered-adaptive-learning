@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Time Explorer | ናይ ሰዓት ኣቆፃፅራ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #ec4899;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg-grad: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #fb923c 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--bg-grad);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #1e293b;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bg-decor {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .emoji-float {
+            position: absolute;
+            font-size: 3rem;
+            opacity: 0.2;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-40px) rotate(20deg); }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px; /* Reduced from 1200px */
+            margin: 0 auto;
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border-radius: 40px; /* Reduced from 50px */
+            padding: 40px 30px; /* Reduced from 60px 40px */
+            border: 10px solid white;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            width: 100%;
+            text-align: center;
+            position: relative;
+            animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px; /* Reduced from 30px */
+        }
+
+        @keyframes bounceIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        h1 {
+            font-size: 3rem; /* Reduced from 4rem */
+            color: var(--primary);
+            text-shadow: 3px 3px 0 white;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 1.4rem; /* Reduced from 1.6rem */
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .progress-wrapper {
+            width: 100%;
+            max-width: 600px;
+            height: 24px;
+            background: #f1f5f9;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 4px solid white;
+            box-shadow: inset 0 3px 6px rgba(0,0,0,0.05);
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            width: 0%;
+            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .clock-svg {
+            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.15));
+            width: 100%;
+            max-width: 350px; /* Reduced from 450px */
+            height: auto;
+            transition: transform 0.5s ease;
+        }
+
+        .btn {
+            cursor: pointer;
+            border: none;
+            border-radius: 25px;
+            padding: 15px 40px;
+            font-size: 1.5rem; /* Reduced from 1.8rem */
+            font-weight: 800;
+            transition: all 0.2s;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.1);
+            font-family: inherit;
+        }
+
+        .btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.1);
+        }
+
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 8px 0 #3730a3; }
+        .btn-pink { background: var(--secondary); color: white; box-shadow: 0 8px 0 #be185d; }
+        .btn-accent { background: var(--accent); color: white; box-shadow: 0 8px 0 #d97706; }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .option-btn {
+            background: white;
+            border: 4px solid #f1f5f9;
+            border-radius: 30px;
+            padding: 20px;
+            font-size: 2rem; /* Reduced from 2.8rem */
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 8px 0 #e2e8f0;
+            font-family: inherit;
+            color: #334155;
+        }
+
+        .option-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-5px); }
+        .option-btn:active { transform: translateY(8px); box-shadow: 0 2px 0 #e2e8f0; }
+        .option-btn.correct { background: var(--success); color: white; border-color: #059669; box-shadow: 0 8px 0 #059669; }
+        .option-btn.wrong { background: var(--danger); color: white; border-color: #dc2626; box-shadow: 0 8px 0 #dc2626; animation: shake 0.4s; }
+
+        .top-nav {
+            position: fixed;
+            top: 20px; left: 20px; right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .nav-group { display: flex; gap: 12px; }
+
+        .nav-btn {
+            background: white;
+            padding: 12px 25px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 0 #cbd5e1;
+            transition: all 0.1s;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+        .nav-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #cbd5e1; }
+
+        .streak-pill {
+            background: var(--accent);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 40px;
+            font-weight: 900;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 0 #d97706;
+        }
+
+        .lang-select {
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 3px solid var(--primary);
+            background: white;
+            font-family: inherit;
+            font-weight: bold;
+            color: var(--primary);
+            outline: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .feedback-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.4s;
+        }
+        .feedback-icon { font-size: 8rem; margin-bottom: 15px; }
+        .feedback-text { font-size: 3.5rem; font-weight: 900; margin-bottom: 40px; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-15px); }
+            75% { transform: translateX(15px); }
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 2000;
+        }
+
+        @media (max-width: 850px) {
+            .glass-card { padding: 30px 20px; border-radius: 30px; border-width: 8px; }
+            h1 { font-size: 2.5rem; }
+            .clock-svg { max-width: 250px; }
+            .option-btn { font-size: 1.5rem; padding: 15px; }
+            .options-grid { grid-template-columns: 1fr; gap: 12px; }
+            .top-nav { padding: 0; position: static; margin: 15px; flex-direction: column; gap: 15px; }
+            .container { padding-top: 10px; }
+            .btn { font-size: 1.3rem; padding: 12px 30px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="bg-decor">
+        <div class="emoji-float" style="top: 15%; left: 8%;">🕒</div>
+        <div class="emoji-float" style="top: 45%; right: 12%;">⏰</div>
+        <div class="emoji-float" style="bottom: 18%; left: 22%;">🕰️</div>
+        <div class="emoji-float" style="top: 25%; left: 48%;">☁️</div>
+    </div>
+
+    <div class="top-nav">
+        <div class="nav-group">
+            <a href="index.html" class="nav-btn">🏠 <span id="txt-home-nav">መነሻ</span></a>
+            <select id="lang-select" class="lang-select" onchange="setLang(this.value)">
+                <option value="ti" selected>ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Afaan Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+        <div class="nav-group">
+            <div class="streak-pill">🔥 <span id="streak-count">0</span></div>
+            <button class="nav-btn" id="sound-btn" onclick="toggleSound()">🔊</button>
+        </div>
+    </div>
+
+    <div class="container" id="main-content"></div>
+
+    <div class="feedback-overlay" id="feedback-overlay">
+        <div class="feedback-icon" id="fb-icon">🌟</div>
+        <div class="feedback-text" id="fb-text">ጎበዝ!</div>
+    </div>
+
+    <script>
+        const LANGUAGES = {
+            en: { home: 'Home', title: 'Time Explorer', subtitle: 'Learn time the fun way!', startQuiz: 'Start Quiz!', questionText: 'What time is it?', nextQuestion: 'Next!', correctMessage: 'Great Job! 🌟', incorrectMessage: 'Try again! 💪', tryAgain: 'Try Again 🔄', finishTitle: 'All Done! 🏆', finishMsg: 'You completed all 20 questions!', replay: 'Play Again', randomize: 'Random Time' },
+            am: { home: 'መነሻ', title: 'የሰዓት አቆጣጠር', subtitle: 'ሰዓት መቁጠርን በደስታ ይማሩ!', startQuiz: 'ፈተና ይጀምሩ!', questionText: 'አሁን ሰዓቱ ስንት ነው?', nextQuestion: 'ቀጣይ!', correctMessage: 'ጎበዝ! 🌟', incorrectMessage: 'እንደገና ይሞክሩ! 💪', tryAgain: 'እንደገና ይሞክሩ 🔄', finishTitle: 'ተጠናቀቀ! 🏆', finishMsg: 'ሁሉንም 20 ጥያቄዎች ጨርሰዋል!', replay: 'እንደገና ተጫወት', randomize: 'ቀይር' },
+            ti: { home: 'ገዛ', title: 'ናይ ሰዓት ኣቆፃፅራ', subtitle: 'ሰዓት ምቁፃር ብተሓጓስ ይምሃሩ!', startQuiz: 'ፈተና ጀምር!', questionText: 'ሕዚ ሰዓት ክንደይ እኒኦ?', nextQuestion: 'ቀፃሊ!', correctMessage: 'ጎበዝ! 🌟', incorrectMessage: 'ደጊምካ ሞክር! 💪', tryAgain: 'ደጊምካ ሞክር! 🔄', finishTitle: 'ተወዲኡ! 🏆', finishMsg: 'ንኹሎም 20 ሕቶታት ወዲእኩም!', replay: 'ደጊምካ ተጻወት', randomize: 'ቀይር' },
+            om: { home: 'Mana', title: 'Explorer Yeroo', subtitle: 'Yeroo gammachuun baradhu!', startQuiz: 'Qormaata Jalqabi!', questionText: 'Yeroon amma meeqa?', nextQuestion: 'Itti Aanu!', correctMessage: 'Baay’ee Gaariidha! 🌟', incorrectMessage: 'Ammas yaali! 💪', tryAgain: 'Ammas yaali 🔄', finishTitle: 'Xumurameera! 🏆', finishMsg: 'Gaaffiiwwan 20 hunda xumurteetta!', replay: 'Irra deebi’i taphadhu', randomize: 'Jijjiiri' },
+            so: { home: 'Hoyga', title: 'Baadhaha Wakhtiga', subtitle: 'Baro saacadda si xiiso leh!', startQuiz: 'Bilow Kediska!', questionText: 'Waa imisa saacaddu?', nextQuestion: 'Ku xigta!', correctMessage: 'Shaqo wanaagsan! 🌟', incorrectMessage: 'Mar kale isku day! 💪', tryAgain: 'Mar kale isku day 🔄', finishTitle: 'Dhammaystiray! 🏆', finishMsg: 'Waxaad dhamaysay dhammaan 20-ka su’aalood!', replay: 'Mar kale ciyaar', randomize: 'Beddel' }
+        };
+
+        const CLOCK_EXAMPLES = [
+            { h: 12, m: 0 }, { h: 3, m: 30 }, { h: 6, m: 15 }, { h: 9, m: 45 }, { h: 1, m: 0 }, { h: 10, m: 10 }
+        ];
+
+        let state = {
+            lang: 'ti',
+            view: 'lessons',
+            exampleIdx: 0,
+            sound: true,
+            streak: 0,
+            quiz: [],
+            quizIdx: 0,
+            answering: false,
+            particles: []
+        };
+
+        let audioCtxInstance = null;
+
+        function playSfx(type) {
+            if (!state.sound) return;
+            if (!audioCtxInstance) {
+                audioCtxInstance = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtxInstance.state === 'suspended') audioCtxInstance.resume();
+            
+            const osc = audioCtxInstance.createOscillator();
+            const gain = audioCtxInstance.createGain();
+            osc.connect(gain); gain.connect(audioCtxInstance.destination);
+            const now = audioCtxInstance.currentTime;
+
+            if (type === 'correct') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.3);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                osc.start(); osc.stop(now + 0.5);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.3);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+                osc.start(); osc.stop(now + 0.3);
+            } else {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
+            }
+        }
+
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function startBurst(count = 200) {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            const colors = ['#f43f5e', '#3b82f6', '#fbbf24', '#10b981', '#ec4899', '#a78bfa', '#60a5fa'];
+            for (let i = 0; i < count; i++) {
+                state.particles.push({
+                    x: window.innerWidth / 2, y: window.innerHeight / 2,
+                    vx: (Math.random() - 0.5) * 30, vy: (Math.random() - 0.8) * 35,
+                    size: Math.random() * 10 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1.0, rot: Math.random() * 360, rv: (Math.random() - 0.5) * 20
+                });
+            }
+            if (!window.animatingConfetti) {
+                window.animatingConfetti = true;
+                requestAnimationFrame(loopConfetti);
+            }
+        }
+
+        function loopConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let alive = false;
+            for (let i = state.particles.length - 1; i >= 0; i--) {
+                const p = state.particles[i];
+                if (p.life > 0) {
+                    alive = true;
+                    p.x += p.vx; p.y += p.vy; p.vy += 0.8; p.vx *= 0.98;
+                    p.life -= 0.015; p.rot += p.rv;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.life;
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                } else {
+                    state.particles.splice(i, 1);
+                }
+            }
+            if (alive) requestAnimationFrame(loopConfetti);
+            else window.animatingConfetti = false;
+        }
+
+        function getClockSVG(h, m) {
+            const hDeg = ((h % 12) / 12) * 360 + (m / 60) * 30;
+            const mDeg = (m / 60) * 360;
+            let numbers = '';
+            for (let i = 1; i <= 12; i++) {
+                const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
+                const x = 50 + 38 * Math.cos(angle);
+                const y = 50 + 38 * Math.sin(angle);
+                numbers += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="900" fill="#1e40af">${i}</text>`;
+            }
+            return `
+                <svg viewBox="0 0 100 100" class="clock-svg">
+                    <circle cx="50" cy="50" r="48" fill="white" stroke="#fbbf24" stroke-width="3" />
+                    ${numbers}
+                    <line x1="50" y1="50" x2="50" y2="28" stroke="black" stroke-width="4" stroke-linecap="round" transform="rotate(${hDeg} 50 50)" />
+                    <line x1="50" y1="50" x2="50" y2="18" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" transform="rotate(${mDeg} 50 50)" />
+                    <circle cx="50" cy="50" r="3.5" fill="#333" />
+                </svg>
+            `;
+        }
+
+        function setLang(c) {
+            state.lang = c;
+            render();
+        }
+
+        function toggleSound() {
+            state.sound = !state.sound;
+            document.getElementById('sound-btn').innerText = state.sound ? '🔊' : '🔇';
+            playSfx('click');
+        }
+
+        function render() {
+            const t = LANGUAGES[state.lang];
+            const content = document.getElementById('main-content');
+            document.getElementById('streak-count').innerText = state.streak;
+            document.getElementById('txt-home-nav').innerText = t.home;
+            document.getElementById('lang-select').value = state.lang;
+
+            if (state.view === 'lessons') {
+                const ex = CLOCK_EXAMPLES[state.exampleIdx];
+                content.innerHTML = `
+                    <div class="glass-card">
+                        <h1>${t.title}</h1>
+                        <p class="subtitle">${t.subtitle}</p>
+                        ${getClockSVG(ex.h, ex.m)}
+                        <div style="background: #eff6ff; border: 6px solid var(--accent); border-radius: 30px; padding: 15px 40px; display: inline-block; margin: 5px 0;">
+                            <div style="font-size: 3.5rem; font-weight: 900; color: var(--primary);">${ex.h}:${ex.m.toString().padStart(2,'0')}</div>
+                        </div>
+                        <div style="display: flex; gap: 15px;">
+                            <button class="btn btn-accent" onclick="randomizeLesson()">${t.randomize}</button>
+                            <button class="btn btn-pink" id="btn-start-quiz" onclick="startQuiz()">${t.startQuiz}</button>
+                        </div>
+                    </div>
+                `;
+            } else if (state.view === 'quiz') {
+                const q = state.quiz[state.quizIdx];
+                const progress = (state.quizIdx / state.quiz.length) * 100;
+                content.innerHTML = `
+                    <div class="glass-card" id="quiz-card">
+                        <div class="progress-wrapper">
+                            <div class="progress-bar" style="width: ${progress}%"></div>
+                        </div>
+                        <div style="color: var(--primary); font-weight: 900; font-size: 1.2rem;">
+                            ${state.quizIdx + 1} / ${state.quiz.length}
+                        </div>
+                        ${getClockSVG(q.h, q.m)}
+                        <h2 style="font-size: 2.2rem; color: #334155; margin-bottom: 5px;">${t.questionText}</h2>
+                        <div class="options-grid">
+                            ${q.opts.map(o => `<button class="option-btn" onclick="checkAnswer('${o}', this)">${o}</button>`).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (state.view === 'finish') {
+                content.innerHTML = `
+                    <div class="glass-card">
+                        <h1 style="color: var(--success); font-size: 5rem;">${t.finishTitle}</h1>
+                        <p class="subtitle" style="font-size: 1.8rem;">${t.finishMsg}</p>
+                        <div style="font-size: 8rem; margin: 30px 0; animation: bounceIn 1s infinite alternate;">🏆</div>
+                        <button class="btn btn-pink" onclick="resetToLessons()">${t.replay}</button>
+                    </div>
+                `;
+            }
+        }
+
+        function randomizeLesson() {
+            playSfx('click');
+            state.exampleIdx = Math.floor(Math.random() * CLOCK_EXAMPLES.length);
+            render();
+        }
+
+        function startQuiz() {
+            playSfx('click');
+            state.quiz = [];
+            for (let i = 0; i < 20; i++) {
+                const h = Math.floor(Math.random() * 12) + 1;
+                const m = [0, 5, 10, 15, 20, 30, 45, 50][Math.floor(Math.random() * 8)];
+                const ans = `${h}:${m.toString().padStart(2, '0')}`;
+                let opts = [ans];
+                while(opts.length < 4) {
+                    const rh = Math.floor(Math.random() * 12) + 1;
+                    const rm = [0, 5, 10, 15, 20, 30, 45, 50][Math.floor(Math.random() * 8)];
+                    const r = `${rh}:${rm.toString().padStart(2, '0')}`;
+                    if(!opts.includes(r)) opts.push(r);
+                }
+                state.quiz.push({ h, m, ans, opts: opts.sort(() => Math.random() - 0.5) });
+            }
+            state.quizIdx = 0;
+            state.view = 'quiz';
+            render();
+        }
+
+        function checkAnswer(val, el) {
+            if (state.answering) return;
+            state.answering = true;
+            const t = LANGUAGES[state.lang];
+            const correct = val === state.quiz[state.quizIdx].ans;
+            
+            const overlay = document.getElementById('feedback-overlay');
+            const fbText = document.getElementById('fb-text');
+            const fbIcon = document.getElementById('fb-icon');
+
+            if (correct) {
+                el.classList.add('correct');
+                playSfx('correct');
+                state.streak++;
+                startBurst(120);
+                fbIcon.innerText = '🌟';
+                fbText.innerText = t.correctMessage;
+                fbText.style.color = 'var(--success)';
+            } else {
+                el.classList.add('wrong');
+                playSfx('wrong');
+                state.streak = 0;
+                fbIcon.innerText = '🤔';
+                fbText.innerText = t.incorrectMessage;
+                fbText.style.color = 'var(--danger)';
+                const card = document.getElementById('quiz-card');
+                if (card) {
+                    card.style.animation = 'none';
+                    void card.offsetWidth;
+                    card.style.animation = 'shake 0.4s';
+                }
+            }
+
+            overlay.style.display = 'flex';
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                state.answering = false;
+                if (correct) {
+                    if (state.quizIdx < state.quiz.length - 1) {
+                        state.quizIdx++;
+                        render();
+                    } else {
+                        state.view = 'finish';
+                        playSfx('correct');
+                        startBurst(400);
+                        render();
+                    }
+                } else {
+                    render();
+                }
+            }, 1600);
+        }
+
+        function resetToLessons() {
+            state.view = 'lessons';
+            state.streak = 0;
+            playSfx('click');
+            render();
+        }
+
+        // Automatic carousel for lesson mode (only if user hasn't clicked recently)
+        let carouselInterval = setInterval(() => {
+            if (state.view === 'lessons') {
+                state.exampleIdx = (state.exampleIdx + 1) % CLOCK_EXAMPLES.length;
+                render();
+            }
+        }, 8000);
+
+        window.onload = render;
+    </script>
+</body>
+</html>

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Document</title>
+    <style>
+*{
+    padding: 0;
+    margin: 0;
+}
+body{
+    background: url('./assets/under.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+/* Feedback image overlay */
+#feedback{
+    position: fixed;
+    left: 50%;
+    top: 45%;
+    transform: translate(-50%, -50%);
+    max-width: 60vw;
+    max-height: 60vh;
+    width: auto;
+    height: auto;
+    z-index: 1000;
+    pointer-events: none;
+}
+.container{
+    position: fixed;
+    inset: 0;
+    min-height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+.header {
+    font-size: 2.5vw;
+    color: rgb(31, 58, 207);
+    text-align: center;
+    margin-top: 1vw;
+    font-weight: bolder;
+}
+.balloon{
+    position: absolute;
+    top: 40%;
+    left: 45%;
+    width: 7.4vw;
+    height: 7.4vw;
+    background: url('./assets/fish.png') no-repeat;
+    background-size: 100%;
+    transition: 4s;
+    text-align: center;
+    color: rgb(255, 255, 255);
+    font-size: 6vw;
+    font-family: sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#balloon1, #balloon2{
+    width: 14.7vw;
+    height: 14.7vw;
+    background: url('./assets/shark.png');
+    background-size: 100%;
+}
+#balloon3{
+    width: 4.4vw;
+    height: 4.4vw;
+    background: url('./assets/fish2.png') no-repeat;
+    background-size: 100%;
+}
+#balloon4, #balloon5{
+    width: 7.4vw;
+    height: 7.4vw;
+    background: url('./assets/jellyfish.png') no-repeat;
+    background-size: 100%;
+}
+#balloon6, #balloon7{
+    width: 5.9vw;
+    height: 5.9vw;
+    background: url('./assets/starfish.png') no-repeat;
+    background-size: 100%;
+}
+.fishs{
+    position: absolute;
+    top: 40%;
+    left: 45%;
+    width: 8.5vw;
+    height: 11.4vw;
+    background-size: 100%;
+    transition: 5s;
+    text-align: center;
+    color: rgb(255, 255, 255);
+    font-size: 5vw;
+    font-family: sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.bubble{
+    position: absolute;
+    top: 100%;
+    left: 45%;
+    width: 1.47vw;
+    height: 1.47vw;
+    border-radius: 50%;
+    background: url('./assets/bubble.png') no-repeat;
+    background-size: 100%;
+    transition: 4s;
+    text-align: center;
+    color: rgb(255, 255, 255);
+    font-size: 6vw;
+    font-family: sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#bubble1, #bubble2{
+    width: 3.7vw;
+    height: 3.7vw;
+}
+.question{
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background: white;
+    border-top: solid rgb(81, 255, 0) 5px;
+    color: black;
+    font-size: 6vw;
+    text-align: center;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 20;
+}
+#dash{
+    border: none;
+    outline: none;
+    width: 8.8vw;
+    height: 6.6vw;
+    font-size: 6vw;
+    border-bottom: blue 4px solid;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 0.5vw;
+}
+.questionText{
+    display: inline;
+}
+.btn{
+    background: rgba(255,255,255,0.9);
+    border: 2px solid #0aa;
+    color: #034;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    line-height: 1;
+}
+.btn[disabled]{
+    opacity: 0.8;
+}
+/* Top-right language / volume / score controls, pushed a bit toward the center */
+.nav-controls{
+    position: fixed;
+    top: calc(0.5rem + env(safe-area-inset-top));
+    right: 6rem;
+    display: flex;
+    gap: 0.75rem;
+    z-index: 40;
+}
+.btn.nav{
+    background: rgba(255,255,255,0.9);
+    border: 2px solid #0aa;
+    color: #034;
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1;
+}
+.btn.streak{
+    background: rgba(255, 215, 0, 0.95);
+    border-color: #ff9800;
+    color: #5a2c00;
+    font-weight: 700;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.8);
+}
+.lang-select{
+    background: rgba(255,255,255,0.9);
+    border: 2px solid #0aa;
+    color: #034;
+    padding: 0.3rem 0.4rem;
+    border-radius: 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1;
+}
+/* Responsive styles for mobile */
+@media (max-width: 600px) {
+    body {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+    .header {
+        font-size: 6vw;
+        margin-top: 14vw; /* a bit lower on mobile */
+    }
+    .balloon {
+        width: 16vw;
+        height: 16vw;
+        font-size: 10vw;
+    }
+    #balloon1, #balloon2 {
+        width: 28vw;
+        height: 28vw;
+    }
+    #balloon3 {
+        width: 10vw;
+        height: 10vw;
+    }
+    #balloon4, #balloon5 {
+        width: 16vw;
+        height: 16vw;
+    }
+    #balloon6, #balloon7 {
+        width: 12vw;
+        height: 12vw;
+    }
+    .fishs {
+        width: 18vw;
+        height: 22vw;
+        font-size: 8vw;
+    }
+    .bubble {
+        width: 4vw;
+        height: 4vw;
+        font-size: 8vw;
+    }
+    #bubble1, #bubble2 {
+        width: 8vw;
+        height: 8vw;
+    }
+    .question {
+        font-size: 8vw;
+        height: 24vw;
+    }
+    #dash {
+        width: 18vw;
+        height: 10vw;
+        font-size: 8vw;
+    }
+}
+/* Responsive styles for large desktop */
+@media (min-width: 1200px) {
+    .header {
+        font-size: 2vw;
+        font-weight: bolder;
+    }
+    .balloon {
+        width: 5vw;
+        height: 5vw;
+        font-size: 4vw;
+    }
+    #balloon1, #balloon2 {
+        width: 10vw;
+        height: 10vw;
+    }
+    #balloon3 {
+        width: 3vw;
+        height: 3vw;
+    }
+    #balloon4, #balloon5 {
+        width: 5vw;
+        height: 5vw;
+    }
+    #balloon6, #balloon7 {
+        width: 4vw;
+        height: 4vw;
+    }
+    .fishs {
+        width: 6vw;
+        height: 8vw;
+        font-size: 3vw;
+    }
+    .bubble {
+        width: 1vw;
+        height: 1vw;
+        font-size: 3vw;
+    }
+    #bubble1, #bubble2 {
+        width: 2vw;
+        height: 2vw;
+    }
+    .question {
+        font-size: 3vw;
+        height: 10vw;
+    }
+    #dash {
+        width: 6vw;
+        height: 4vw;
+        font-size: 3vw;
+    }
+}
+    </style>
+    <script src="./assets/celebrate.js"></script>
+</head>
+
+
+<body>
+    <div class="container">
+        <div class="header">ሰዓባይ ፊደል ፀሓፉ</div>
+        <div class="itemWrapper"></div>
+        <div class="question"><p class="questionText"></p><input type="text" name="" id="dash" autofocus><p class="questionText"></p></div>
+        <div class="nav-controls" role="navigation" aria-label="Page navigation">
+            <select class="lang-select" aria-label="Language">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Afan Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+            <button class="btn mute-toggle" aria-pressed="false" title="Mute/Unmute">🔊</button>
+            <button class="btn streak" disabled title="Streak">
+                🔥 <span class="streak-label">Score</span> <span class="streak-count">0</span>
+            </button>
+        </div>
+        <audio id="bg-water" src="./assets/water.mp3" preload="auto" autoplay muted playsinline loop></audio>
+        <audio class="result" autoplay></audio>
+        <img id="feedback" alt="" style="display:none;" src="" />
+    </div>
+
+</body>
+
+<script>
+    var arrOfStr = ["ሀ", "ሁ", "ሂ", "ሃ", "ሄ", "ህ", "ሆ"];//end-var
+    
+        const itemWrapper = document.getElementsByClassName("itemWrapper")[0]
+        const balloon = document.getElementsByClassName("balloon");
+        const fishs = document.getElementsByClassName("fishs");
+        const bubble = document.getElementsByClassName("bubble");
+    
+        const colors = ['red', 'yellow', 'rgb(0, 102, 255)', 'rgb(81, 255, 0)', 'rgb(217, 0, 236)',]
+        let randomX;
+        let randomY;
+    
+        createElements()
+        assignLetters();
+        checkAnswer()
+    
+        let dynamicsIntervalId, dynamics2IntervalId;
+        document.getElementsByTagName("body")[0].onload = function(){
+            dynamics();
+            dynamics2();
+            dynamicsIntervalId = setInterval(dynamics,3000)
+            dynamics2IntervalId = setInterval(dynamics2,4000)
+        }
+        function createElements(){
+            for(let i=0;i<8;i++){
+                const balloon = document.createElement("div")
+                balloon.className = "balloon"
+                balloon.id = "balloon" + (i+1)
+                itemWrapper.appendChild(balloon)
+                const bubble = document.createElement("div")
+                bubble.className = "bubble"
+                itemWrapper.appendChild(bubble)
+            }
+            document.getElementsByClassName("bubble")[0].id = "bubble1"
+            document.getElementsByClassName('bubble')[1].id = "bubble2"
+            for(let i=0;i<6;i++){ // 6 fish elements for options
+                const fish = document.createElement("div")
+                fish.className = "fishs"
+                itemWrapper.appendChild(fish)
+            }
+        }
+    
+        function dynamics(){
+            for(let i=0;i<balloon.length;i++){
+                const bottomSafe = (window.innerWidth <= 600) ? 30 : 18; // percent of viewport height reserved for bottom UI
+                randomX = Math.floor(Math.random()*80)
+                randomY = Math.floor(Math.random()*(80 - bottomSafe))
+                balloon[i].style.top = randomY + "%";
+                balloon[i].style.left = randomX + "%";
+                if(parseFloat(balloon[i].style.left) > 70){
+                    balloon[i].style.transform = "rotateY(180deg)"
+                }
+            }
+            for(let i=0;i<bubble.length;i++){
+                const bottomSafe = (window.innerWidth <= 600) ? 30 : 18;
+                randomX = Math.floor(Math.random()*100)
+                randomY = Math.max(0, Math.floor(Math.random()*(70 - bottomSafe)))
+                bubble[i].style.top = randomY + "%";
+                bubble[i].style.left = randomX + "%";
+            }
+
+        }
+        function dynamics2(){
+            for(let i=0;i<fishs.length;i++){
+                const bottomSafe = (window.innerWidth <= 600) ? 30 : 18;
+                randomX = Math.floor(Math.random()*80)
+                randomY = Math.floor(Math.random()*(80 - bottomSafe))
+                fishs[i].style.top = randomY + "%";
+                fishs[i].style.left = randomX + "%";
+                fishs[i].style.background = "url(./assets/balloon" + (Math.floor(Math.random()*7)+1) + ".png"
+                fishs[i].style.backgroundSize = "100%"
+            }
+        }
+    
+    
+        var pickedFidel; // The letter displayed in the question
+        var nextFidel;   // The correct next letter
+
+        function assignLetters(){
+            // Clear previous input field
+            document.getElementById("dash").value = "";
+
+            // Pick a random letter from arrOfStr, ensuring it's not the last one
+            // because we need a "next" letter
+            let pickedFidelIndex;
+            do {
+                pickedFidelIndex = Math.floor(Math.random() * arrOfStr.length);
+            } while (pickedFidelIndex === arrOfStr.length - 1); // Avoid picking the last letter
+
+            pickedFidel = arrOfStr[pickedFidelIndex];
+            nextFidel = arrOfStr[pickedFidelIndex + 1];
+
+            document.getElementsByClassName("questionText")[0].innerText = pickedFidel;
+            document.getElementsByClassName("questionText")[1].innerText = ''; // Clear the second questionText, if it was used
+
+            // Prepare options for the fishs
+            let options = [nextFidel]; // Start with the correct answer
+
+            // Add incorrect letters to fill the remaining fishs (total 6 fishs)
+            let incorrectLetters = [];
+            while (incorrectLetters.length < 5) { // Need 5 incorrect letters
+                let randomIndex = Math.floor(Math.random() * arrOfStr.length);
+                let randomLetter = arrOfStr[randomIndex];
+
+                // Ensure incorrect letters are unique and not the pickedFidel or nextFidel
+                if (randomLetter !== pickedFidel && randomLetter !== nextFidel && !incorrectLetters.includes(randomLetter)) {
+                    incorrectLetters.push(randomLetter);
+                }
+            }
+            options = options.concat(incorrectLetters);
+
+            // Shuffle the options
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            // Assign options to fishs and mark the correct one
+            for (let i = 0; i < fishs.length; i++) {
+                fishs[i].innerText = options[i];
+                fishs[i].correctAnswer = (options[i] === nextFidel); // Store if this fish holds the correct answer
+            }
+        }
+
+        function checkAnswer() {
+            for(let i=0;i<fishs.length;i++){
+                fishs[i].onclick = function(){
+                    document.getElementById("dash").value = fishs[i].innerText // Display clicked letter in dash
+                    randomX = Math.floor(Math.random()*1000)
+                    randomY = Math.floor(Math.random()*500)
+                    fishs[i].style.top = randomY + "px";
+                    fishs[i].style.left = randomX + "px";
+                    fishs[i].style.background = colors[Math.floor(Math.random()*colors.length)]
+                    
+                    if (fishs[i].correctAnswer) { // Check the stored correctness
+                        document.getElementsByClassName("question")[0].style.color = "rgb(81, 255, 0)"
+                        document.getElementById("dash").style.color = "rgb(81, 255, 0)"
+                        streakCount += 1;
+                        updateStreakDisplay();
+                        celebrateDog(); // Assuming celebrate.js provides this function
+                        setTimeout(function(){
+                            document.getElementById("dash").value = ""
+                            document.getElementsByClassName("question")[0].style.color = "black"
+                            document.getElementById("dash").style.color = "black"
+                            assignLetters()
+                        },1500)
+                    }
+                    else{
+                        let wrong = ['a_aa'] // Assuming this audio asset exists for wrong answers
+                        randomApplause = Math.floor(Math.random()*wrong.length)
+                        document.getElementsByClassName("question")[0].style.color = "red"
+                        document.getElementById("dash").style.color = "red"
+                        const resAudio = document.getElementsByClassName("result")[0];
+                        resAudio.muted = isMuted;
+                        resAudio.volume = isMuted ? 0 : 1;
+                        resAudio.src = "./assets/" + wrong[randomApplause] +  ".mp3"
+                        const feedback = document.getElementById('feedback');
+                        if (feedback) {
+                            feedback.src = './assets/wrong.jpg'; // Assuming wrong.jpg exists
+                            feedback.style.display = 'block';
+                            setTimeout(()=>{ feedback.style.display = 'none'; }, 1200);
+                        }
+                        streakCount = 0;
+                        updateStreakDisplay();
+                    }
+                }
+            }
+        }
+
+        // Audio mute/unmute and streak UI
+        let isMuted = false;
+        let streakCount = 0;
+        let currentLang = 'ti';
+        const i18n = {
+            ti: { header: 'ሰዓባይ ፊደል ፀሓፉ', mute: 'Mute', unmute: 'Unmute', streak: 'ነጥቢ' },
+            am: { header: 'የሚቀጥለው ፊደል ጻፉ', mute: 'Mute', unmute: 'Unmute', streak: 'ነጥብ' },
+            en: { header: 'Write the next letter', mute: 'Mute', unmute: 'Unmute', streak: 'Score' },
+            om: { header: 'Write the next letter', mute: 'Mute', unmute: 'Unmute', streak: 'Streak' },
+            so: { header: 'Write the next letter', mute: 'Mute', unmute: 'Unmute', streak: 'Streak' },
+        };
+        const applyLang = (lang) => {
+            currentLang = lang;
+            try { localStorage.setItem('lang', lang); } catch(e) {}
+            try { document.documentElement.lang = lang; } catch(e) {}
+            const t = i18n[lang] || i18n.en;
+            const headerEl = document.querySelector('.header');
+            if(headerEl) headerEl.textContent = t.header;
+            const streakBtn = document.querySelector('.streak');
+            if(streakBtn){ streakBtn.title = t.streak; }
+            const streakLabelEl = document.querySelector('.streak .streak-label');
+            if(streakLabelEl){ streakLabelEl.textContent = t.streak; }
+            const muteBtn = document.querySelector('.mute-toggle');
+            if(muteBtn){ muteBtn.title = isMuted ? t.unmute : t.mute; }
+            const langSel = document.querySelector('.lang-select');
+            if(langSel){ langSel.value = lang; }
+        };
+        // Monkey-patch Audio() so any dynamically created sounds follow mute state
+        (function wrapAudio(){
+            try{
+                window.__dynamicAudios = window.__dynamicAudios || [];
+                const OriginalAudio = window.Audio;
+                function PatchedAudio(){
+                    const a = new OriginalAudio();
+                    try{
+                        a.muted = !!window.__muted;
+                        a.volume = window.__muted ? 0 : 1;
+                        window.__dynamicAudios.push(a);
+                    }catch(e){}
+                    return a;
+                }
+                PatchedAudio.prototype = OriginalAudio.prototype;
+                window.Audio = PatchedAudio;
+            }catch(e){}
+        })();
+        (function initBgAudio(){
+            try{
+                const water = document.getElementById('bg-water');
+                if(!water) return;
+                function startBg(){
+                    try { water.muted = !!window.__muted; } catch(e) {}
+                    const p = water.play && water.play();
+                    if (p && p.catch) p.catch(()=>{});
+                    cleanup();
+                }
+                function gate(){
+                    if (document.visibilityState === 'hidden') return;
+                    startBg();
+                }
+                function cleanup(){
+                    ['pointerdown','touchstart','keydown','visibilitychange'].forEach(ev =>
+                        window.removeEventListener(ev, gate)
+                    );
+                }
+                // Try immediately if user already active
+                if (navigator.userActivation && navigator.userActivation.hasBeenActive) {
+                    startBg();
+                }
+                // Otherwise wait for first interaction
+                ['pointerdown','touchstart','keydown','visibilitychange'].forEach(ev =>
+                    window.addEventListener(ev, gate, { passive: true })
+                );
+            }catch(e){}
+        })();
+        const updateStreakDisplay = () => {
+            const el = document.querySelector('.streak .streak-count');
+            if(el){ el.textContent = String(streakCount); }
+        };
+        const setMuted = (muted) => {
+            isMuted = muted;
+            window.__muted = muted;
+            window.__dynamicAudios = window.__dynamicAudios || [];
+            const audios = document.querySelectorAll('audio');
+            audios.forEach(a => { 
+                a.muted = muted; 
+                a.volume = muted ? 0 : 1; 
+            });
+            // also mute any dynamically created Audio() instances
+            try {
+                window.__dynamicAudios.forEach(a => { if(a){ a.muted = muted; a.volume = muted ? 0 : 1; } });
+            } catch(e) {}
+            const btn = document.querySelector('.mute-toggle');
+            if(btn){
+                btn.setAttribute('aria-pressed', muted ? 'true' : 'false');
+                btn.textContent = muted ? '🔇' : '🔊';
+                const t = (i18n[currentLang] || i18n.en);
+                btn.title = muted ? t.unmute : t.mute;
+            }
+        };
+        // Initialize controls immediately (script is at the end of body, DOM is ready)
+        (function initControls(){
+            const muteBtn = document.querySelector('.mute-toggle');
+            if(muteBtn){
+                muteBtn.addEventListener('click', function(){ setMuted(!isMuted); });
+            }
+            const langSel = document.querySelector('.lang-select');
+            let saved = 'ti';
+            try { saved = localStorage.getItem('lang') || 'ti'; } catch(e) {}
+            if(langSel){
+                langSel.value = saved;
+                langSel.addEventListener('change', function(e){ applyLang(e.target.value); });
+            }
+            applyLang(saved);
+            setMuted(isMuted);
+            updateStreakDisplay();
+        })();
+</script>
+</html>

@@ -1,0 +1,610 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Name The Picture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <style>
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    :root {
+      --primary-color: #ff5722;
+      --secondary-color: #ff9800;
+      --accent-color: #4cc9f0;
+      --success-color: #4caf50;
+      --error-color: #f44336;
+      --light-color: #f8f9fa;
+      --dark-color: #212529;
+      --shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      font-family: 'Nunito', sans-serif;
+      color: var(--dark-color);
+      min-height: 100vh;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    body.error-flash {
+      background: #ffcdd2 !important;
+      transition: background 0.1s;
+    }
+
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2000;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px; /* Larger desktop space */
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 40px;
+      padding: 30px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+      position: relative;
+      backdrop-filter: blur(15px);
+      border: 8px solid white;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #header {
+      text-align: center;
+      padding: 20px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      border-radius: 25px;
+      box-shadow: var(--shadow);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #header h1 {
+      font-family: 'Fredoka', cursive;
+      font-size: 2.2rem;
+      margin: 0;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .header-controls {
+      display: flex;
+      width: 100%;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .score-container {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-weight: 800;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #score { color: #fff; }
+
+    #langSelect {
+      appearance: none;
+      background: white;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #ddd;
+    }
+
+    .game-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .image-container {
+      width: 100%;
+      aspect-ratio: 1/1;
+      background: white;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 10px solid #f0f4f8;
+    }
+    
+    #pic {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      transition: var(--transition);
+    }
+
+    .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #textField {
+      width: 100%;
+      padding: 20px;
+      font-size: 1.8rem;
+      border: 4px solid #eee;
+      border-radius: 25px;
+      outline: none;
+      text-align: center;
+      font-weight: 800;
+      color: var(--primary-color);
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+      transition: var(--transition);
+      text-transform: uppercase;
+    }
+    
+    #textField:focus {
+      border-color: var(--secondary-color);
+      background: #fffdf9;
+    }
+
+    #textField.wrong {
+      border-color: var(--error-color);
+      background: #ffebee;
+      animation: shake 0.4s;
+    }
+
+    #textField.correct {
+      border-color: var(--success-color);
+      background: #e8f5e9;
+      animation: pulse 0.5s;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      border-radius: 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.1s;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+    }
+
+    .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+
+    .btn-clear { background: #e0e0e0; color: #555; box-shadow: 0 6px 0 #bdbdbd; }
+    .btn-submit { background: var(--success-color); color: white; box-shadow: 0 6px 0 #2e7d32; }
+
+    .keyboardCon {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 30px;
+      border: 4px solid white;
+    }
+
+    .key {
+      min-width: 55px;
+      height: 55px;
+      background: white;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.1s;
+      box-shadow: 0 5px 0 #ddd;
+      color: #333;
+    }
+
+    .key:hover { background: #f0f0f0; }
+    .key:active { transform: translateY(3px); box-shadow: 0 2px 0 #ddd; }
+
+    .key.special { width: 100px; background: #e3f2fd; color: #1976d2; box-shadow: 0 5px 0 #bbdefb; }
+    .key.icon { width: 80px; background: #fff3e0; color: #f57c00; box-shadow: 0 5px 0 #ffe0b2; }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 3000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 40px;
+      border-radius: 40px;
+      text-align: center;
+      max-width: 450px;
+      width: 100%;
+      border: 10px solid var(--secondary-color);
+      animation: bounceIn 0.8s;
+    }
+
+    .modal-content h2 { font-family: 'Fredoka', cursive; font-size: 2.2rem; color: #333; margin: 15px 0; }
+    .score-value { font-size: 4rem; font-weight: 900; color: var(--primary-color); }
+    .modal-btn {
+      background: var(--success-color);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 50px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #2e7d32;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 850px) {
+      .game-area { grid-template-columns: 1fr; gap: 20px; }
+      .container { padding: 15px; border-width: 5px; }
+      .image-container { max-width: 300px; margin: 0 auto; }
+      .key { min-width: 45px; height: 45px; font-size: 1.2rem; }
+      .key.special { width: 80px; }
+    }
+
+    @media (max-width: 480px) {
+      #header h1 { font-size: 1.6rem; }
+      .score-container { font-size: 1.1rem; }
+      .image-container { max-width: 220px; }
+      #textField { font-size: 1.4rem; padding: 15px; }
+      .key { min-width: 38px; height: 38px; font-size: 1.1rem; border-radius: 10px; }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="container">
+    <div id="header">
+      <div class="header-controls">
+        <select id="langSelect">
+          <option value="en">English</option>
+          <option value="ti">ትግርኛ</option>
+          <option value="am">አማርኛ</option>
+          <option value="om">Afan Oromo</option>
+          <option value="so">Soomaali</option>
+        </select>
+        <div class="score-container">
+          <span id="scoreLabel">Score:</span>
+          <span id="score">0</span>
+        </div>
+      </div>
+      <h1 id="headerTitle">Name The Picture</h1>
+    </div>
+
+    <div class="game-area">
+      <div id="picture">
+        <div class="image-container">
+          <img id="pic" src="" alt="Guess the word" />
+        </div>
+      </div>
+      <div class="right-column">
+        <input type="text" id="textField" placeholder="Type here..." autocomplete="off" autofocus />
+        <div class="button-group">
+          <button class="btn btn-clear" id="clear">
+            <i class="fas fa-eraser"></i> <span id="clearLabel">Clear</span>
+          </button>
+          <button class="btn btn-submit" id="ok">
+            <i class="fas fa-check"></i> <span id="submitLabel">Submit</span>
+          </button>
+        </div>
+      </div>
+      <div class="keyboardCon"></div>
+    </div>
+  </div>
+
+  <div id="gameOverModal" class="modal">
+    <div class="modal-content">
+      <div style="font-size: 5rem;">🏆</div>
+      <h2 id="modalTitle">Great Job!</h2>
+      <p id="modalCongrats">You finished all words!</p>
+      <div class="score-value" id="finalScore">0</div>
+      <button id="restartBtn" class="modal-btn">Play Again</button>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    var arrOfStr2 = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
+    var arrOfStr = ["APPLE", "BALL", "CUP", "DOG", "ELEPHANT", "FROG", "GOAT", "HAT", "Ink", "JUICE", "KING", "LAMB", "MONKEY", "NOSE", "OAR", "PARROT", "QUEEN", "RAT", "SUN", "TAP", "UMBRELLA", "VIOLIN", "WATER", "XYLOPHONE", "YACHT", "ZEBRA"];
+    var currentIndex = 0;
+    var score = 0;
+    var isCaps = true;
+    const LANG_STORAGE_KEY = 'NameThePicture_lang';
+    var currentLang = localStorage.getItem(LANG_STORAGE_KEY) || 'en';
+    var particles = [];
+
+    const translations = {
+      en: { appTitle: 'Name The Picture', scoreLabel: 'Score:', clearLabel: 'Clear', submitLabel: 'Submit', playAgain: 'Play Again', placeholder: 'Type here...', correct: 'Correct!', wrong: 'Try Again' },
+      am: { appTitle: 'የስእሉን ስም ጻፉ', scoreLabel: 'ነጥብ:', clearLabel: 'አጥፋ', submitLabel: 'አስገባ', playAgain: 'እንደገና ተጫወት', placeholder: 'እዚህ ጻፍ...', correct: 'ትክክል!', wrong: 'እንደገና ሞክር' },
+      ti: { appTitle: 'ናይቲ ስእሊ ሽም ጸሓፉ', scoreLabel: 'ነጥቢ:', clearLabel: 'ሰርዝ', submitLabel: 'መልስ', playAgain: 'ደጊምካ ተጫወት', placeholder: 'ኣብዚ ጽሓፍ...', correct: 'ትክክል!', wrong: 'ደጊምካ ፈትን' },
+      om: { appTitle: 'Suuraa Maqaa', scoreLabel: "Bu'aa:", clearLabel: 'Haqi', submitLabel: 'Galchi', playAgain: "Irra deebi'ii taphadhu", placeholder: 'Asitti barreessi...', correct: 'Sirrii!', wrong: "Irra deebi'i" },
+      so: { appTitle: 'Magaca Sawirka', scoreLabel: 'Dhibco:', clearLabel: 'Tirtir', submitLabel: 'Gudbi', playAgain: 'Ciyaar mar kale', placeholder: 'Halkan ku qor...', correct: 'Saxan!', wrong: 'Mar kale isku day' }
+    };
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const now = audioCtx.currentTime;
+
+      if (type === 'tap') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
+      } else if (type === 'correct') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+        osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.5);
+        osc.start(now); osc.stop(now + 0.5);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.linearRampToValueAtTime(50, now + 0.3);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+      }
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+    }
+
+    function applyTranslations() {
+      const t = translations[currentLang] || translations.en;
+      document.getElementById('headerTitle').textContent = t.appTitle;
+      document.getElementById('scoreLabel').textContent = t.scoreLabel;
+      document.getElementById('clearLabel').textContent = t.clearLabel;
+      document.getElementById('submitLabel').textContent = t.submitLabel;
+      document.getElementById('restartBtn').textContent = t.playAgain;
+      document.getElementById('textField').placeholder = t.placeholder;
+      document.getElementById('langSelect').value = currentLang;
+    }
+
+    function initKeyboard() {
+      const container = document.querySelector('.keyboardCon');
+      container.innerHTML = '';
+
+      const caps = document.createElement('div');
+      caps.className = 'key special';
+      caps.textContent = 'Caps';
+      caps.onclick = () => {
+        isCaps = !isCaps;
+        playSound('tap');
+        initKeyboard();
+      };
+      container.appendChild(caps);
+
+      const bs = document.createElement('div');
+      bs.className = 'key icon';
+      bs.innerHTML = '<i class="fas fa-backspace"></i>';
+      bs.onclick = () => {
+        const inp = document.getElementById('textField');
+        inp.value = inp.value.slice(0, -1);
+        playSound('tap');
+        inp.focus();
+      };
+      container.appendChild(bs);
+
+      arrOfStr2.forEach(l => {
+        const key = document.createElement('div');
+        key.className = 'key';
+        const char = isCaps ? l.toUpperCase() : l.toLowerCase();
+        key.textContent = char;
+        key.onclick = () => {
+          playSound('tap');
+          const inp = document.getElementById('textField');
+          inp.value += char;
+          inp.focus();
+        };
+        container.appendChild(key);
+      });
+    }
+
+    function displayImage() {
+      const currentWord = arrOfStr[currentIndex];
+      const firstLetter = currentWord.charAt(0).toLowerCase();
+      document.getElementById("pic").src = `./assets/${firstLetter}.png`;
+      document.getElementById('textField').className = '';
+      document.getElementById('textField').value = '';
+      document.getElementById('textField').focus();
+    }
+
+    function submit() {
+      const inp = document.getElementById('textField');
+      const input = inp.value.trim().toUpperCase();
+      const currentWord = arrOfStr[currentIndex].toUpperCase();
+      const t = translations[currentLang] || translations.en;
+
+      if (input === currentWord) {
+        playSound('correct');
+        score += 10;
+        document.getElementById('score').textContent = score;
+        inp.classList.add('correct');
+        fireConfetti(150);
+
+        setTimeout(() => {
+          currentIndex++;
+          if (currentIndex >= arrOfStr.length) {
+            showGameOver();
+          } else {
+            displayImage();
+          }
+        }, 1000);
+      } else {
+        playSound('wrong');
+        inp.classList.add('wrong');
+        document.body.classList.add('error-flash');
+        setTimeout(() => {
+          inp.classList.remove('wrong');
+          document.body.classList.remove('error-flash');
+          inp.value = '';
+          inp.focus();
+        }, 500);
+      }
+    }
+
+    function showGameOver() {
+      document.getElementById('gameOverModal').style.display = 'flex';
+      document.getElementById('finalScore').textContent = score;
+    }
+
+    function fireConfetti(count) {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const colors = ['#ff5722', '#ff9800', '#4caf50', '#2196f3', '#9c27b0'];
+      
+      for(let i=0; i<count; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height + 20,
+          vx: (Math.random() - 0.5) * 30,
+          vy: (Math.random() - 0.8) * 40,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 1.0,
+          rotation: Math.random() * 360,
+          rVel: (Math.random() - 0.5) * 10
+        });
+      }
+      if(!window.confettiLoopActive) {
+        window.confettiLoopActive = true;
+        animateConfetti();
+      }
+    }
+
+    function animateConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = false;
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        if (p.life > 0) {
+          alive = true;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.7; 
+          p.vx *= 0.98;
+          p.life -= 0.01;
+          p.rotation += p.rVel;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation * Math.PI / 180);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.life;
+          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+          ctx.restore();
+        } else {
+          particles.splice(i, 1);
+        }
+      }
+      if(alive) requestAnimationFrame(animateConfetti);
+      else window.confettiLoopActive = false;
+    }
+
+    document.getElementById('ok').onclick = submit;
+    document.getElementById('clear').onclick = () => {
+      playSound('tap');
+      document.getElementById('textField').value = '';
+      document.getElementById('textField').focus();
+    };
+    document.getElementById('langSelect').onchange = (e) => {
+      currentLang = e.target.value;
+      localStorage.setItem(LANG_STORAGE_KEY, currentLang);
+      applyTranslations();
+    };
+    document.getElementById('restartBtn').onclick = () => {
+      location.reload();
+    };
+    document.getElementById('textField').onkeypress = (e) => {
+      if(e.key === 'Enter') submit();
+      else playSound('tap');
+    };
+
+    window.onload = () => {
+      applyTranslations();
+      initKeyboard();
+      displayImage();
+    };
+  </script>
+</body>
+
+</html>

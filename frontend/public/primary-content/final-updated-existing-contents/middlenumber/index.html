@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Middle Number Explorer</title>
+    <style>
+        :root {
+            --sky-blue: #4FC3F7;
+            --grass-green: #8BC34A;
+            --sun-yellow: #FFEB3B;
+            --cloud-white: #FFFFFF;
+            --wood-brown: #795548;
+            --success: #4CAF50;
+            --danger: #FF5252;
+            --text-dark: #2c3e50;
+            --card-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: sans-serif; /* Fallback after removing Google Fonts */
+            background: linear-gradient(to bottom, #81D4FA 0%, #B3E5FC 50%, #DCEDC8 50%, #AED581 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Decorative Clouds */
+        .cloud {
+            position: fixed; background: white; border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            animation: floatCloud linear infinite;
+            z-index: 0; pointer-events: none;
+        }
+        .cloud::after, .cloud::before { content:''; position:absolute; background:inherit; border-radius:50%; }
+        .cloud::after { width: 50px; height: 50px; top: -25px; left: 25px; }
+        .cloud::before { width: 40px; height: 40px; top: -15px; left: 10px; }
+        @keyframes floatCloud { from { left: -200px; } to { left: 100vw; } }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 2000;
+        }
+
+        /* Main Container */
+        .app-container {
+            width: 100%;
+            max-width: 1100px; /* Bigger for desktop */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Header Area */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-radius: 30px;
+            box-shadow: var(--card-shadow);
+            border: 4px solid white;
+        }
+
+        .logo-group { display: flex; align-items: center; gap: 15px; }
+        .logo-group h1 { font-size: 1.8rem; color: var(--text-dark); font-weight: 700; }
+        .logo-icon { font-size: 2.5rem; }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .score-box {
+            background: var(--sun-yellow);
+            border: 3px solid #FBC02D;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: #5D4037;
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+        }
+
+        select#langSelect {
+            background: white;
+            color: var(--text-dark);
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            padding: 8px 12px;
+            font-family: inherit;
+            font-weight: bold;
+            outline: none;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #ddd;
+        }
+
+        /* Game Card */
+        .mission-card {
+            background: white;
+            border-radius: 40px;
+            padding: 50px 40px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            border: 8px solid #F1F8E9;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .mission-label {
+            font-size: 1.5rem;
+            color: #558B2F;
+            font-weight: 700;
+            background: #F1F8E9;
+            padding: 10px 30px;
+            border-radius: 30px;
+        }
+
+        .sequence-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            width: 100%;
+        }
+
+        .digit-box {
+            width: 150px;
+            height: 180px;
+            background: #f9f9f9;
+            border: 6px solid #e0e0e0;
+            border-radius: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 6rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .digit-box.input-slot {
+            background: #E3F2FD;
+            border-color: #90CAF9;
+            color: #1976D2;
+            cursor: pointer;
+            border-style: dashed;
+        }
+
+        .digit-box.active {
+            border-style: solid;
+            border-color: #2196F3;
+            background: white;
+            box-shadow: 0 0 40px rgba(33, 150, 243, 0.2);
+            transform: scale(1.05);
+        }
+
+        .digit-box.wrong {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: #FFEBEE;
+            animation: shakeX 0.5s;
+        }
+
+        /* Custom animation for hint */
+        @keyframes customPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .digit-box.pulse-animation {
+            animation: customPulse 0.5s ease-in-out;
+        }
+
+        .separator {
+            font-size: 5rem;
+            color: #BDBDBD;
+            font-weight: 900;
+        }
+
+        /* Keypad */
+        .terminal-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            background: #F5F5F5;
+            border-radius: 35px;
+            border: 4px solid #eee;
+        }
+
+        .key {
+            height: 80px;
+            background: white;
+            border: none;
+            border-radius: 20px;
+            color: var(--text-dark);
+            font-size: 2.5rem;
+            font-weight: 800;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 0 6px 0 #ddd;
+        }
+
+        .key:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #ddd;
+        }
+
+        .key.hint { background: #FFF9C4; color: #F57F17; box-shadow: 0 6px 0 #FBC02D; }
+        .key.del { background: #FFEBEE; color: #D32F2F; box-shadow: 0 6px 0 #FFCDD2; }
+        .key.submit {
+            grid-column: span 3;
+            background: var(--success);
+            color: white;
+            box-shadow: 0 6px 0 #388E3C;
+            font-size: 1.8rem;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        /* Victory Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border: 10px solid var(--sun-yellow);
+            border-radius: 50px;
+            padding: 50px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            animation: bounceIn 0.8s;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+
+        /* Animations from animate.css reimplemented locally */
+        @keyframes shakeX {
+            from,
+            to {
+                transform: translate3d(0, 0, 0);
+            }
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translate3d(-10px, 0, 0);
+            }
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translate3d(10px, 0, 0);
+            }
+        }
+
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+
+        .victory-icon { font-size: 6rem; margin-bottom: 20px; display: block; }
+
+        .modal-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 1.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 30px;
+            width: 100%;
+            box-shadow: 0 8px 0 #388E3C;
+            transition: transform 0.1s;
+        }
+        .modal-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #388E3C; }
+
+        @media (max-width: 768px) {
+            header { padding: 12px 14px; gap: 10px; }
+            .logo-group { min-width: 0; flex: 1 1 auto; gap: 10px; }
+            .logo-group h1 { max-width: 46vw; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .header-right { flex: 0 0 auto; gap: 10px; }
+            select#langSelect { max-width: 150px; padding: 6px 10px; }
+            .score-box { padding: 6px 12px; font-size: 1.1rem; }
+            .digit-box { width: 100px; height: 130px; font-size: 4rem; }
+            .separator { font-size: 3rem; }
+            .key { height: 60px; font-size: 1.8rem; }
+            .mission-card { padding: 30px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    
+    <!-- Clouds for decoration -->
+    <div class="cloud" style="top: 15%; width: 120px; height: 50px; animation-duration: 30s; animation-delay: -5s;"></div>
+    <div class="cloud" style="top: 35%; width: 100px; height: 40px; animation-duration: 45s; animation-delay: -15s;"></div>
+    <div class="cloud" style="top: 10%; width: 150px; height: 60px; animation-duration: 25s; animation-delay: -2s;"></div>
+
+    <div class="app-container">
+        <header>
+            <div class="logo-group">
+                <span class="logo-icon">🎈</span>
+                <h1 id="title-text">መዛመድ (Matching)</h1>
+            </div>
+            <div class="header-right">
+                <select id="langSelect" onchange="applyLanguage(this.value)">
+                    <option value="ti" selected>ትግርኛ (Tigrinya)</option>
+                    <option value="am">አማርኛ (Amharic)</option>
+                    <option value="en">English (እንግሊዝኛ)</option>
+                    <option value="om">Afaan Oromoo (ኦሮምኛ)</option>
+                    <option value="so">Soomaali (ሱማልኛ)</option>
+                </select>
+                <div class="score-box">
+                    <span>⭐</span>
+                    <span id="score-val">0</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="mission-card">
+            <span class="mission-label" id="instr-text">ቅድሚ እዚ ቁፅሪ ኣየናይ ይመፅእ?</span>
+            
+            <div class="sequence-display">
+                <div class="digit-box" id="first-digit"></div>
+                <div class="separator">,</div>
+                <div class="digit-box input-slot active" id="user-input">?</div>
+                <div class="separator">,</div>
+                <div class="digit-box" id="third-digit"></div>
+            </div>
+
+            <div class="terminal-pad">
+                <div class="key" onclick="handleKey('1')">1</div>
+                <div class="key" onclick="handleKey('2')">2</div>
+                <div class="key" onclick="handleKey('3')">3</div>
+                <div class="key" onclick="handleKey('4')">4</div>
+                <div class="key" onclick="handleKey('5')">5</div>
+                <div class="key" onclick="handleKey('6')">6</div>
+                <div class="key" onclick="handleKey('7')">7</div>
+                <div class="key" onclick="handleKey('8')">8</div>
+                <div class="key" onclick="handleKey('9')">9</div>
+                <div class="key hint" onclick="showHint()">💡</div>
+                <div class="key" onclick="handleKey('0')">0</div>
+                <div class="key del" onclick="handleKey('back')">⌫</div>
+                <div class="key submit" id="btn-launch" onclick="checkMission()">መልስ</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="victoryModal" class="modal">
+        <div class="modal-content">
+            <span class="victory-icon" id="rocket-emoji">🎉</span>
+            <h2 id="win-title">ንኡድ ስራሕ!</h2>
+            <p id="win-msg" style="font-size: 1.4rem; color: #666; margin-top: 10px;">ብትኽክል መሊስካዮ ኣለኻ።</p>
+            <button class="modal-btn" id="btn-next" onclick="nextMission()">ቀጻሊ</button>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            en: { title: "Middle Number", instr: "What number comes in the middle?", launch: "CHECK ANSWER", win: "Great Job!", winMsg: "You got it right!", next: "NEXT" },
+            ti: { title: "ማእኸላይ ቁፅሪ", instr: "ኣብ ማእኸል እዞም ክልተ ቁፅርታት ኣየናይ ይመፅእ?", launch: "መልስ", win: "ንኡድ ስራሕ!", winMsg: "ብትኽክል ተመሊሱ።", next: "ቀጻሊ" },
+            am: { title: "መሀል ቁጥር", instr: "በእነዚህ ሁለት ቁጥሮች መካከል የትኛው ይመጣል?", launch: "መልስ", win: "ድንቅ ስራ!", winMsg: "በትክክል መልሰዋል።", next: "ቀጣይ" },
+            om: { title: "Lakkoofsa Gidduu", instr: "Lakkoofsi gidduu lamaan kanaa maali?", launch: "DEEBISI", win: "Hojii gaarii!", winMsg: "Sirriitti deebisteetta.", next: "Itti fufi" },
+            so: { title: "Lambarka Dhexe", instr: "Waa maxay lambarka u dhexeeya labadan lambar?", launch: "GUDBI", win: "Shaqo fiican!", winMsg: "Si sax ah ayaad u jawaabtay.", next: "Xiga" }
+        };
+
+        let targetNum = 0; // This will be the number the user needs to guess (the middle one)
+        let score = 0;
+        let currentLang = 'ti';
+        let particles = [];
+        let rainIntervalId = null;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const now = audioCtx.currentTime;
+
+            if (type === 'tap') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
+            } else if (type === 'success') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523, now);
+                osc.frequency.setValueAtTime(659, now + 0.1);
+                osc.frequency.setValueAtTime(783, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.6);
+                osc.start(); osc.stop(now + 0.6);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(); osc.stop(now + 0.3);
+            }
+            osc.connect(gain); gain.connect(audioCtx.destination);
+        }
+
+        function applyLanguage(lang) {
+            currentLang = lang;
+            const t = i18n[lang] || i18n.ti;
+            document.getElementById('title-text').innerText = t.title;
+            document.getElementById('instr-text').innerText = t.instr;
+            document.getElementById('btn-launch').innerText = t.launch;
+            document.getElementById('win-title').innerText = t.win;
+            document.getElementById('win-msg').innerText = t.winMsg;
+            document.getElementById('btn-next').innerText = t.next;
+        }
+
+        function generateProblem() {
+            // Generate targetNum between 2 and 99 (inclusive)
+            // So firstNum (targetNum - 1) is at least 1, and thirdNum (targetNum + 1) is at most 100.
+            targetNum = Math.floor(Math.random() * 98) + 2; 
+            const firstNum = targetNum - 1;
+            const thirdNum = targetNum + 1;
+
+            document.getElementById('first-digit').innerText = firstNum;
+            document.getElementById('user-input').innerText = '?';
+            document.getElementById('third-digit').innerText = thirdNum;
+            document.getElementById('user-input').className = 'digit-box input-slot active';
+        }
+
+        function handleKey(key) {
+            playSound('tap');
+            const box = document.getElementById('user-input');
+            box.classList.remove('wrong');
+            box.classList.remove('pulse-animation'); // Remove animation class if present
+            
+            if (key === 'back') {
+                box.innerText = '?';
+                return;
+            }
+
+            if (box.innerText === '?') {
+                box.innerText = key;
+            } else if (box.innerText.length < 2) {
+                box.innerText += key;
+            }
+        }
+
+        function showHint() {
+            playSound('tap');
+            const box = document.getElementById('user-input');
+            box.innerText = targetNum;
+            box.classList.add('pulse-animation'); // Use custom animation
+            setTimeout(() => box.classList.remove('pulse-animation'), 500);
+        }
+
+        function checkMission() {
+            const inputVal = document.getElementById('user-input').innerText;
+            if (inputVal === '?') {
+                playSound('error');
+                return;
+            }
+            const input = parseInt(inputVal);
+            if (input === targetNum) {
+                score += 10;
+                document.getElementById('score-val').innerText = score;
+                playSound('success');
+                fireConfetti(320);
+                setTimeout(() => fireConfetti(220), 140);
+                
+                const emojis = ['🎈', '🌈', '🍦', '🧸', '🍭', '🦋'];
+                document.getElementById('rocket-emoji').innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                document.getElementById('victoryModal').style.display = 'flex';
+                startRainConfetti();
+            } else {
+                playSound('error');
+                const box = document.getElementById('user-input');
+                box.classList.add('wrong');
+                setTimeout(() => box.classList.remove('wrong'), 500);
+            }
+        }
+
+        function nextMission() {
+            document.getElementById('victoryModal').style.display = 'none';
+            stopRainConfetti();
+            generateProblem();
+        }
+
+        // Confetti Engine
+        function fireConfetti(count) {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const colors = ['#FF5252', '#FFEB3B', '#4CAF50', '#2196F3', '#AB47BC'];
+            
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height + 20,
+                    vx: (Math.random() - 0.5) * 30,
+                    vy: (Math.random() - 0.8) * 45,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1.0,
+                    rotation: Math.random() * 360,
+                    rVel: (Math.random() - 0.5) * 10
+                });
+            }
+            if(!window.confettiActive) {
+                window.confettiActive = true;
+                animateConfetti();
+            }
+        }
+
+        function spawnRainConfetti(count) {
+            const canvas = document.getElementById('confetti-canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const colors = ['#FF5252', '#FFEB3B', '#4CAF50', '#2196F3', '#AB47BC'];
+
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: -20 - Math.random() * 60,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: 2 + Math.random() * 9,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1.0,
+                    rotation: Math.random() * 360,
+                    rVel: (Math.random() - 0.5) * 10
+                });
+            }
+
+            if(!window.confettiActive) {
+                window.confettiActive = true;
+                animateConfetti();
+            }
+        }
+
+        function startRainConfetti() {
+            stopRainConfetti();
+            spawnRainConfetti(120);
+            rainIntervalId = setInterval(() => spawnRainConfetti(45), 120);
+            setTimeout(stopRainConfetti, 1600);
+        }
+
+        function stopRainConfetti() {
+            if (rainIntervalId) {
+                clearInterval(rainIntervalId);
+                rainIntervalId = null;
+            }
+        }
+
+        function animateConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let alive = false;
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                if (p.life > 0) {
+                    alive = true;
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.7; // Gravity
+                    p.vx *= 0.98;
+                    p.life -= 0.01;
+                    p.rotation += p.rVel;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.life;
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                } else {
+                    particles.splice(i, 1);
+                }
+            }
+            if(alive) requestAnimationFrame(animateConfetti);
+            else window.confettiActive = false;
+        }
+
+        window.onload = () => {
+            generateProblem();
+            applyLanguage('ti');
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') handleKey(e.key);
+            if (e.key === 'Backspace') handleKey('back');
+            if (e.key === 'Enter') checkMission();
+        });
+    </script>
+</body>
+</html>

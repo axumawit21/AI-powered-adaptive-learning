@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smart Buyer | ብቁዕ ዓዳጊ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --birr: #3b82f6;
+            --amber: #f59e0b;
+            --glass: rgba(255, 255, 255, 0.92);
+            --gradient-1: #6366f1;
+            --gradient-2: #a855f7;
+            --gradient-3: #ec4899;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, #4338ca 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #7e22ce 0px, transparent 50%),
+                radial-gradient(at 100% 100%, #be185d 0px, transparent 50%),
+                radial-gradient(at 0% 100%, #115e59 0px, transparent 50%),
+                radial-gradient(at 50% 50%, #1e1b4b 0px, transparent 50%);
+            background-size: 200% 200%;
+            animation: moveBg 15s infinite alternate ease-in-out;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden;
+            color: #fff;
+        }
+
+        @keyframes moveBg { 0% { background-position: 0% 0%; } 100% { background-position: 100% 100%; } }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2000; }
+
+        header {
+            width: 100%; max-width: 1000px; padding: 25px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+        }
+
+        .score-pill {
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            padding: 12px 30px; border-radius: 50px; font-weight: 800; font-size: 1.6rem; color: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .lang-select {
+            padding: 10px 20px; border-radius: 20px; border: none; font: inherit; font-weight: bold; cursor: pointer;
+            background: white; color: var(--primary); box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 900px; display: flex; flex-direction: column; 
+            padding: 20px; gap: 20px; z-index: 10; justify-content: center;
+        }
+
+        .shop-card {
+            background: var(--glass); backdrop-filter: blur(40px);
+            border-radius: 50px; padding: 40px; 
+            border: 10px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.3);
+            width: 100%; text-align: center; display: flex; flex-direction: column; gap: 30px;
+            animation: slideUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #1e293b;
+        }
+        
+        .shop-card::before {
+            content: ''; position: absolute; top: -10px; bottom: -10px; left: -10px; right: -10px;
+            background: linear-gradient(45deg, #6366f1, #a855f7, #ec4899, #f59e0b);
+            z-index: -1; border-radius: 60px;
+        }
+
+        @keyframes slideUp { from { transform: translateY(80px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+        .market-visual {
+            height: 180px; display: flex; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.04); border-radius: 40px; padding: 20px; position: relative;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .item-icon { font-size: 7rem; filter: drop-shadow(0 15px 30px rgba(0,0,0,0.15)); animation: bounce 3s infinite ease-in-out; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        .story-box {
+            background: #f0f9ff; border-radius: 25px; padding: 25px; border-left: 12px solid var(--primary);
+            text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+        }
+        .story-text { font-size: 1.8rem; font-weight: 700; color: #1e3a8a; line-height: 1.4; }
+
+        .ans-area { display: flex; flex-direction: column; align-items: center; gap: 25px; }
+        .input-row { display: flex; gap: 20px; align-items: flex-start; justify-content: center; }
+
+        .digit-slot {
+            width: 130px; height: 110px; background: white; border: 6px dashed #cbd5e1;
+            border-radius: 30px; display: flex; align-items: center; justify-content: center;
+            font-size: 4rem; font-weight: 900; color: var(--primary); cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .digit-slot.active { border-style: solid; border-color: var(--primary); transform: scale(1.1); background: #f5f3ff; box-shadow: 0 0 40px rgba(99, 102, 241, 0.2); }
+        
+        .slot-container { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .slot-label { font-size: 1.2rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
+
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; max-width: 550px; }
+        .key {
+            height: 80px; background: white; border: none; border-radius: 22px;
+            font-size: 2.2rem; font-weight: 800; color: #475569; cursor: pointer;
+            box-shadow: 0 8px 0 #e2e8f0; transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 4px 0 #e2e8f0; }
+        .key.del { background: #fff1f2; color: #ef4444; box-shadow: 0 8px 0 #fecdd3; }
+        .key.check { 
+            grid-column: span 4; background: linear-gradient(135deg, var(--secondary), #059669); 
+            color: white; box-shadow: 0 10px 0 #064e3b; font-size: 2.4rem; text-transform: uppercase; letter-spacing: 2px;
+            height: 95px; margin-top: 10px;
+        }
+        .key.check:active { transform: translateY(6px); box-shadow: 0 4px 0 #064e3b; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-20px); } 40%, 80% { transform: translateX(20px); } }
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        
+        .wrong-flash { background-color: rgba(239, 68, 68, 0.4) !important; transition: background-color 0.2s; }
+        .digit-slot.wrong { border-color: var(--danger) !important; color: var(--danger) !important; background: #fee2e2 !important; }
+
+        #success-overlay {
+            position: fixed; inset: 0; background: rgba(16, 185, 129, 0.95);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 3000; color: white; text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        #success-overlay h2 { font-size: 5rem; margin-top: 20px; text-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+        #error-screen {
+            position: fixed; inset: 0; background: rgba(239, 68, 68, 0.3);
+            display: none; pointer-events: none; z-index: 2500;
+            align-items: center; justify-content: center;
+        }
+        #error-screen span { font-size: 20rem; color: white; opacity: 0.8; text-shadow: 0 0 50px rgba(0,0,0,0.5); }
+
+        @media (max-width: 600px) {
+            .story-text { font-size: 1.3rem; }
+            .digit-slot { width: 95px; height: 85px; font-size: 2.8rem; }
+            .key { height: 65px; font-size: 1.8rem; border-radius: 18px; }
+            .key.check { font-size: 1.8rem; height: 80px; }
+            .shop-card { padding: 30px 15px; border-radius: 40px; }
+            .item-icon { font-size: 5rem; }
+            .market-visual { height: 140px; }
+            header { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    
+    <div id="error-screen"><span>❌</span></div>
+
+    <header>
+        <div class="score-pill">🌟 <span id="scoreVal">0</span></div>
+        <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+            <option value="ti">ትግርኛ</option>
+            <option value="am">አማርኛ</option>
+            <option value="en">English</option>
+            <option value="om">Oromoo</option>
+            <option value="so">Soomaali</option>
+        </select>
+    </header>
+
+    <div class="container">
+        <div class="shop-card" id="gameCard">
+            <div class="story-box">
+                <p class="story-text" id="storyText">...</p>
+            </div>
+
+            <div class="market-visual" id="marketVisual">
+                <!-- Injected by JS -->
+            </div>
+
+            <div class="ans-area">
+                <div class="input-row" id="inputRow">
+                    <!-- Dynamic Inputs injected by JS -->
+                </div>
+
+                <div class="keypad">
+                    <button class="key" onclick="press(1)">1</button>
+                    <button class="key" onclick="press(2)">2</button>
+                    <button class="key" onclick="press(3)">3</button>
+                    <button class="key del" onclick="press('bk')">⌫</button>
+                    <button class="key" onclick="press(4)">4</button>
+                    <button class="key" onclick="press(5)">5</button>
+                    <button class="key" onclick="press(6)">6</button>
+                    <button class="key" onclick="press(0)">0</button>
+                    <button class="key" onclick="press(7)">7</button>
+                    <button class="key" onclick="press(8)">8</button>
+                    <button class="key" onclick="press(9)">9</button>
+                    <button class="key check" id="btnCheck" onclick="check()">ፈትሽ (Check)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-overlay">
+        <div style="font-size: 12rem; animation: bounce 1s infinite alternate;">🏆</div>
+        <h2 id="txtWin">ንኡድ ስራሕ!</h2>
+        <p style="font-size: 2rem;" id="txtWinSub">ብትኽክል መሊስካዮ ኣለኻ!</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { check: "ፈትሽ", win: "ንኡድ ስራሕ!", winsub: "ብትኽክል መሊስካዮ ኣለኻ!", birr: "ብር", santim: "ሳንቲም", qty: "ብዝሒ" },
+            am: { check: "አረጋግጥ", win: "ድንቅ ስራ!", winsub: "በትክክል መልሰዋል!", birr: "ብር", santim: "ሳንቲም", qty: "ብዛት" },
+            en: { check: "Check", win: "Great Job!", winsub: "You answered correctly!", birr: "Birr", santim: "Santim", qty: "Qty" },
+            om: { check: "Mirkaneessi", win: "Guddina!", winsub: "Sirriitti deebisteetta!", birr: "Birrii", santim: "Saantima", qty: "Baay'ee" },
+            so: { check: "Hubi", win: "Shaqo Fiican!", winsub: "Si sax ah ayaad uga jawaabtay!", birr: "Birr", santim: "Santiin", qty: "Tirada" }
+        };
+
+        const STORIES = [
+            { id: 1, type: 'qty', icon: '✏️', ans: { q: 10 }, text: { ti: "ዋጋ ሓደ እርሳስ 60 ሳንቲም እንተኾይኑ ብብር 6 ክንደይ እርሳስ ምዕዳግ ይከኣል?", am: "የአንድ እርሳስ ዋጋ 60 ሳንቲም ከሆነ በ6 ብር ስንት እርሳስ መግዛት ይቻላል?", en: "If one pencil costs 60 Santim, how many pencils can you buy with 6 Birr?" } },
+            { id: 2, type: 'money', icon: '🧼', ans: { b: 7, s: 50 }, text: { ti: "ዋጋ ሓደ ሳሙና ብር 2 ን 50 ሳንቲምን እንተኾይኑ 3 ሳሙናታት ንምዕዳግ ክንደይ ብር የድሊ?", am: "የአንድ ሳሙና ዋጋ 2 ብር ከ50 ሳንቲም ከሆነ 3 ሳሙናዎችን ለመግዛት ስንት ብር ያስፈልጋል?", en: "If one soap costs 2 Birr and 50 Santim, how much Birr do you need to buy 3 soaps?" } },
+            { id: 3, type: 'qty', icon: '🍞', ans: { q: 8 }, text: { ti: "ዋጋ ሓደ ባኒ 75 ሳንቲም እንተኾይኑ ብብር 6 ክንደይ ባኒ ምዕዳግ ይከኣል?", am: "የአንድ ዳቦ ዋጋ 75 ሳንቲም ከሆነ በ6 ብር ስንት ዳቦ መግዛት ይቻላል?", en: "If one bread costs 75 Santim, how many breads can you buy with 6 Birr?" } },
+            { id: 4, type: 'money', icon: '🔋', ans: { b: 30, s: 0 }, text: { ti: "1 ፓኬት 12 እምኒባትሪ ይሕዝ፡፡ ዋጋ 1 እምኒባትሪ ብር 1ን 25 ሳንቲምን እንተኾይኑ 2 ፓኬት ንምዕዳግ ክንደይ ብር የድሊ?", am: "1 ፓኬት 12 ድንጋይ ባትሪ ይይዛል። የአንድ ድንጋይ ባትሪ ዋጋ 1 ብር ከ25 ሳንቲም ከሆነ 2 ፓኬት ለመግዛት ስንት ብር ያስፈልጋል?", en: "1 pack contains 12 batteries. If one battery costs 1 Birr and 25 Santim, how much Birr do you need to buy 2 packs?" } },
+            { id: 5, type: 'money', icon: '🧴', ans: { b: 1, s: 50 }, text: { ti: "ዋጋ ሓደ ጥርሙዝ ቅብኣት ፀጉሪ ብር 3 ን 50 ሳንቲምን እዩ፡፡ ሓደ ጥርሙዝ ዓዲግና ብር 5 እንተሂብና መልስና ክንደይ ብር እዩ?", am: "የአንድ የፀጉር ቅባት ዋጋ 3 ብር ከ50 ሳንቲም ነው። አንዱን ገዝተን 5 ብር ብንሰጥ መልሱ ስንት ብር ነው?", en: "One hair oil bottle costs 3 Birr and 50 Santim. If you buy one and pay with 5 Birr, how much change do you get?" } },
+            { id: 6, type: 'money', icon: '⚖️', ans: { b: 3, s: 50 }, text: { ti: "1 ኪሎ ግራም ሽኮር ብብር 14 ዝዕደግ እንተኾይኑ ርብዒ ኪሎ ሽኮር (1/4) ንምዕዳግ ክንደይ ብር የድሊ?", am: "1 ኪሎ ግራም ስኳር በ14 ብር የሚገዛ ከሆነ ሩብ ኪሎ ስኳር (1/4) ለመግዛት ስንት ብር ያስፈልጋል?", en: "If 1 kg of sugar costs 14 Birr, how much Birr do you need to buy 1/4 kg of sugar?" } }
+        ];
+
+        let cur = 0, score = 0, lang = 'ti', focus = 'q', userVal = { q: "", b: "", s: "" }, particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(600, n); o.frequency.exponentialRampToValueAtTime(300, n + 0.1);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046, 1318].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.8);
+                o.start(); o.stop(n + 0.8);
+            } else {
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.linearRampToValueAtTime(50, n + 0.5);
+                g.gain.setValueAtTime(0.15, n); g.gain.linearRampToValueAtTime(0, n + 0.5);
+                o.start(); o.stop(n + 0.5);
+            }
+        }
+
+        function loadLevel() {
+            const s = STORIES[cur];
+            document.getElementById('storyText').innerText = s.text[lang] || s.text['en'];
+            const visual = document.getElementById('marketVisual');
+            visual.innerHTML = `<div class="item-icon">${s.icon}</div>`;
+            const row = document.getElementById('inputRow');
+            row.innerHTML = '';
+            userVal = { q: "", b: "", s: "" };
+
+            if (s.type === 'qty') {
+                focus = 'q';
+                row.innerHTML = `
+                    <div class="slot-container">
+                        <div class="digit-slot active" id="slot-q" onclick="setFocus('q')">?</div>
+                        <span class="slot-label">${i18n[lang].qty}</span>
+                    </div>
+                `;
+            } else {
+                focus = 'b';
+                row.innerHTML = `
+                    <div class="slot-container">
+                        <div class="digit-slot active" id="slot-b" onclick="setFocus('b')">?</div>
+                        <span class="slot-label">${i18n[lang].birr}</span>
+                    </div>
+                    <div class="slot-container">
+                        <div class="digit-slot" id="slot-s" onclick="setFocus('s')">?</div>
+                        <span class="slot-label">${i18n[lang].santim}</span>
+                    </div>
+                `;
+            }
+            document.getElementById('btnCheck').innerText = i18n[lang].check;
+        }
+
+        function setFocus(f) {
+            focus = f;
+            sfx('tap');
+            document.querySelectorAll('.digit-slot').forEach(el => el.classList.remove('active'));
+            const slot = document.getElementById(`slot-${f}`);
+            if(slot) slot.classList.add('active');
+        }
+
+        function press(n) {
+            sfx('tap');
+            if (n === 'bk') userVal[focus] = userVal[focus].slice(0, -1);
+            else { if (userVal[focus].length < 3) userVal[focus] += n; }
+            const slot = document.getElementById(`slot-${focus}`);
+            if(slot) slot.innerText = userVal[focus] || "?";
+        }
+
+        function check() {
+            const s = STORIES[cur];
+            let isCorrect = false;
+            if (s.type === 'qty') isCorrect = parseInt(userVal.q) === s.ans.q;
+            else isCorrect = parseInt(userVal.b || 0) === s.ans.b && parseInt(userVal.s || 0) === s.ans.s;
+
+            if (isCorrect) {
+                score += 10;
+                document.getElementById('scoreVal').innerText = score;
+                sfx('win');
+                burst(600);
+                setTimeout(() => burst(400), 300);
+                
+                const overlay = document.getElementById('success-overlay');
+                document.getElementById('txtWin').innerText = i18n[lang].win;
+                document.getElementById('txtWinSub').innerText = i18n[lang].winsub;
+                overlay.style.display = 'flex';
+
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    cur = (cur + 1) % STORIES.length;
+                    loadLevel();
+                }, 2500);
+            } else {
+                sfx('err');
+                const card = document.getElementById('gameCard');
+                const errScreen = document.getElementById('error-screen');
+                card.classList.add('shake', 'wrong-flash');
+                errScreen.style.display = 'flex';
+                document.querySelectorAll('.digit-slot').forEach(el => el.classList.add('wrong'));
+                
+                setTimeout(() => {
+                    card.classList.remove('shake', 'wrong-flash');
+                    errScreen.style.display = 'none';
+                    document.querySelectorAll('.digit-slot').forEach(el => {
+                        el.classList.remove('wrong');
+                        el.innerText = "?";
+                    });
+                    // Reset user logic
+                    userVal = { q: "", b: "", s: "" };
+                    const s_retry = STORIES[cur];
+                    focus = s_retry.type === 'qty' ? 'q' : 'b';
+                    document.querySelectorAll('.digit-slot').forEach(el => el.classList.remove('active'));
+                    const firstSlot = document.getElementById(`slot-${focus}`);
+                    if(firstSlot) firstSlot.classList.add('active');
+                }, 800);
+            }
+        }
+
+        function changeLang(l) {
+            lang = l;
+            loadLevel();
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#ffffff', '#3b82f6'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random() * c.width, y: c.height + 20,
+                vx: (Math.random()-0.5)*40, vy: (Math.random()-0.9)*55,
+                s: Math.random()*14+4, c: colors[Math.floor(Math.random()*colors.length)],
+                l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*25
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.vx *= 0.99; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); 
+                        x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = loadLevel;
+    </script>
+</body>
+</html>

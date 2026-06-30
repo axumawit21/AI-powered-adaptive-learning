@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Forest Sharing | ምክፋል ዱር</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <style>
+        :root {
+            --forest-green: #2d5a27;
+            --grass-light: #9ccc65;
+            --basket-brown: #8d6e63;
+            --sky-blue: #81d4fa;
+            --text-dark: #333;
+            --accent-gold: #ffd54f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0; padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: linear-gradient(to bottom, var(--sky-blue) 0%, #e1f5fe 40%, var(--grass-light) 40%, #7cb342 100%);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #confetti-canvas {
+            position: fixed; inset: 0; pointer-events: none; z-index: 2000;
+        }
+
+        /* Scenery */
+        .sun {
+            position: absolute; top: 60px; left: 10%; width: 80px; height: 80px;
+            background: var(--accent-gold); border-radius: 50%;
+            box-shadow: 0 0 50px var(--accent-gold);
+            animation: pulse 4s infinite ease-in-out;
+        }
+
+        /* Layout */
+        header {
+            width: 100%; max-width: 1000px; padding: 15px 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-home, .nav-back, .nav-reset {
+            background: white; color: var(--forest-green); width: 50px; height: 50px;
+            border-radius: 18px; display: flex; align-items: center; justify-content: center;
+            text-decoration: none; font-size: 1.6rem; box-shadow: 0 5px 0 rgba(0,0,0,0.1);
+            transition: 0.1s;
+            border: none;
+            cursor: pointer;
+        }
+        .nav-home:active, .nav-back:active, .nav-reset:active { transform: translateY(4px); box-shadow: none; }
+        .nav-back { background: #cfd8dc; font-size: 1.5rem; }
+        .nav-reset { background: #fffde7; color: #fbc02d; font-size: 1.5rem; }
+
+        .progress-dots {
+            display: flex; gap: 8px;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.4); border: 2px solid white; transition: 0.3s; }
+        .dot.active { background: var(--accent-gold); transform: scale(1.3); }
+        .dot.complete { background: white; }
+
+        select#langSelect {
+            background: white; border: none; padding: 10px 15px;
+            border-radius: 20px; font-family: inherit; font-weight: bold;
+            cursor: pointer; outline: none; box-shadow: 0 4px 0 rgba(0,0,0,0.05);
+        }
+
+        /* Owl Character & Story */
+        .character-row {
+            width: 100%; max-width: 800px; display: flex; align-items: flex-end;
+            padding: 0 20px; margin-top: 10px; z-index: 10;
+        }
+
+        .owl { font-size: 5rem; animation: bounce 3s infinite; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1)); }
+        
+        .bubble {
+            background: white; padding: 20px 30px; border-radius: 25px;
+            margin-left: 20px; position: relative; border: 4px solid #eee;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); flex: 1;
+            font-size: 1.6rem; font-weight: 600; color: var(--text-dark);
+            line-height: 1.4;
+        }
+        .bubble::after {
+            content: ''; position: absolute; left: -15px; bottom: 20px;
+            width: 0; height: 0; border-right: 20px solid white;
+            border-top: 15px solid transparent; border-bottom: 15px solid transparent;
+        }
+
+        /* Items Pool */
+        .item-pool {
+            flex: 1; width: 100%; display: flex; flex-wrap: wrap;
+            justify-content: center; align-content: center; gap: 15px;
+            padding: 20px; z-index: 10;
+        }
+
+        .food-item {
+            width: 70px; height: 70px; background: white;
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; cursor: pointer; box-shadow: 0 10px 0 #eee;
+            transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 4px solid white;
+            animation: bounceIn 0.5s;
+        }
+        .food-item:hover { transform: scale(1.1) rotate(5deg); }
+        .food-item.moving { position: fixed; z-index: 500; transition: 0.6s cubic-bezier(0.5, 0, 0.5, 1); pointer-events: none; }
+
+        /* Baskets Area */
+        .baskets-container {
+            width: 100%; padding: 40px 20px; display: flex; justify-content: center;
+            gap: 30px; flex-wrap: wrap; background: rgba(0,0,0,0.05);
+            border-radius: 50px 50px 0 0; z-index: 10;
+        }
+
+        .basket-wrapper { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        
+        .basket {
+            width: 140px; height: 100px; background: #a1887f;
+            border: 6px solid #5d4037; border-radius: 10px 10px 50px 50px;
+            position: relative; display: flex; flex-wrap: wrap;
+            justify-content: center; align-content: center; gap: 4px;
+            padding: 10px; box-shadow: 0 10px 0 #3e2723;
+            transition: 0.2s;
+        }
+        .basket::before {
+            content: ''; position: absolute; top: -40px; left: 10%; width: 80%; height: 60px;
+            border: 6px solid #5d4037; border-radius: 50% 50% 0 0;
+            z-index: -1;
+        }
+        .basket.pop { transform: scale(1.1); background: #bcaaa4; }
+
+        .basket-item { font-size: 1.5rem; animation: bounceIn 0.3s; }
+
+        /* Equation & Input */
+        .math-bar {
+            width: 100%; background: #263238; padding: 25px;
+            display: flex; justify-content: center; align-items: center;
+            gap: 20px; font-size: 2.8rem; font-weight: 900; color: white;
+            z-index: 100;
+        }
+        
+        .num-box { background: rgba(255,255,255,0.15); padding: 5px 25px; border-radius: 20px; min-width: 80px; text-align: center; }
+        
+        input.ans-input {
+            width: 100px; height: 80px; border-radius: 20px; border: 5px solid var(--accent-gold);
+            text-align: center; font-size: 3rem; font-weight: 900; color: var(--accent-gold);
+            background: white; outline: none; transition: 0.3s;
+        }
+        input.ans-input:focus { transform: scale(1.05); border-color: white; box-shadow: 0 0 30px rgba(255,255,255,0.4); }
+        input.ans-input.wrong { border-color: #ff5252; animation: shakeX 0.5s; }
+
+        /* Win Overlay */
+        #win-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 3000; text-align: center; padding: 20px;
+        }
+        .win-icon { font-size: 7rem; margin-bottom: 20px; animation: heartBeat 1.5s infinite; }
+        .win-title { font-size: 3.5rem; color: var(--accent-gold); font-weight: 900; margin-bottom: 10px; }
+        .win-btn {
+            background: #4caf50; color: white; border: none; padding: 20px 60px;
+            border-radius: 50px; font-size: 1.8rem; font-weight: 800;
+            cursor: pointer; box-shadow: 0 10px 0 #2e7d32; margin-top: 40px;
+            transition: 0.1s;
+        }
+        .win-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        @media (max-width: 600px) {
+            .owl { font-size: 3.5rem; }
+            .bubble { font-size: 1.1rem; padding: 15px 20px; }
+            .food-item { width: 55px; height: 55px; font-size: 2.2rem; }
+            .basket { width: 100px; height: 80px; }
+            .math-bar { font-size: 1.5rem; gap: 10px; padding: 15px; }
+            input.ans-input { width: 70px; height: 60px; font-size: 1.8rem; }
+            .basket-item { font-size: 1.1rem; }
+            .nav-home, .nav-back, .nav-reset { width: 40px; height: 40px; font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <div class="sun"></div>
+
+    <header>
+        <div class="header-left">
+            <a href="index.html" class="nav-home">♜</a>
+            <button onclick="prevQuestion()" class="nav-back" id="btnBack">⬅</button>
+            <button onclick="resetCurrentQuestion()" class="nav-reset" id="btnReset" title="Reset Question">↺</button>
+        </div>
+        <div class="progress-dots" id="progressDots"></div>
+        <select id="langSelect" onchange="setLanguage(this.value)">
+            <option value="ti" selected>ትግርኛ</option>
+            <option value="am">አማርኛ</option>
+            <option value="en">English</option>
+            <option value="om">Oromoo</option>
+            <option value="so">Soomaali</option>
+        </select>
+    </header>
+
+    <div class="character-row">
+        <div class="owl">🦉</div>
+        <div class="bubble" id="storyText">Loading story...</div>
+    </div>
+
+    <div class="item-pool" id="itemPool"></div>
+
+    <div class="math-bar">
+        <div class="num-box" id="eqDividend">0</div>
+        <span>÷</span>
+        <div class="num-box" id="eqDivisor">0</div>
+        <span>=</span>
+        <input type="number" class="ans-input" id="ansInput" placeholder="?" inputmode="numeric">
+    </div>
+
+    <div class="baskets-container" id="basketArea"></div>
+
+    <div id="win-overlay">
+        <div class="win-icon">✨🏆✨</div>
+        <h2 class="win-title" id="winTitle">Perfect!</h2>
+        <p id="winMsg" style="font-size: 1.5rem; color: white;">You shared everything correctly!</p>
+        <button class="win-btn" onclick="nextQuestion()" id="winBtn">Next Question ➜</button>
+    </div>
+
+    <script>
+        const LANGUAGES = {
+            en: { win: "Perfect!", msg: "You shared everything correctly!", next: "Next Question ➜" },
+            ti: { win: "ንኡድ!", msg: "ብትኽክል መቒልካዮም ኣለኻ!", next: "ቀጻሊ ሕቶ ➜" },
+            am: { win: "ድንቅ ስራ!", msg: "ሁሉንም በትክክል አከፋፍለዋል!", next: "ቀጣይ ጥያቄ ➜" },
+            om: { win: "Baay'ee gaarii!", msg: "Hunda sirriitti hiriirsiteetta!", next: "Gaaffii Itti Aanu ➜" },
+            so: { win: "Wanaagsan!", msg: "Si sax ah ayaad u qaybisay!", next: "Su'aasha Xigta ➜" }
+        };
+
+        const QUESTIONS = [
+            { div: 6, s: 2, e: "🍎" }, { div: 8, s: 4, e: "🐶" }, { div: 12, s: 3, e: "🎈" },
+            { div: 10, s: 2, e: "🍪" }, { div: 15, s: 3, e: "⭐" }, { div: 4, s: 2, e: "🍓" },
+            { div: 9, s: 3, e: "🚗" }, { div: 12, s: 2, e: "🖍️" }, { div: 20, s: 5, e: "🥚" },
+            { div: 18, s: 3, e: "🍕" }
+        ];
+
+        const STORIES = {
+            en: [
+                "Haben has 6 shiny apples. He wants to share them with 2 friends equally. How many does each get?",
+                "8 cute puppies. We have 4 cozy baskets. How many puppies go in each basket?",
+                "Saron has 12 colorful balloons. She divides them among 3 party groups equally. How many does each get?",
+                "A baker has 10 yummy cookies. He puts them into 2 equal boxes. How many cookies in each box?",
+                "There are 15 magic stars. We want to put them on 3 magic wands equally. How many stars on each wand?",
+                "Sarah has 4 tasty strawberries. She gives them to 2 friends equally. How many for each friend?",
+                "There are 9 fast cars. If we put them into 3 garages equally, how many in each garage?",
+                "A teacher has 12 bright crayons. She puts them into 2 equal cups. How many in each cup?",
+                "Farmer Joe has 20 eggs. He puts them in 5 nests equally. How many in each nest?",
+                "We have 18 slices of pizza for 3 hungry kids to share equally. How many for each kid?"
+            ],
+            ti: [
+                "ሓበን 6 ዘንጸባርቁ አፕል ኣለውዎ። ን 2 ኣዕሩኽቱ ብማዕረ ክመቅሎም ይደሊ። ነፍሲ ወከፍ ዓርኪ ክንደይ ይረክብ?",
+                "8 ጽቡቓት ከልቢ ኣለዉ። ኣብ 4 ማዕረ ቅርጫታት ክንገብሮም ንደሊ። ኣብ ሓደ ቅርጫት ክንደይ ይኣትዉ?",
+                "ሳሮን 12 ሕብራዊ ጋንቲ ኣለዋ። ን 3 ጉጅለታት ብማዕረ ትመቅሎም። ነፍሲ ወከፍ ክንደይ ይረክብ?",
+                "ሓደ ጋጋሪ 10 ጥዑማት ኩኪስ ኣለውዎ። ኣብ 2 ማዕረ ሳጹናት የቐምጦም። ኣብ ሓደ ሳንጹን ክንደይ ይኣትዉ?",
+                "15 ኮከባት ኣለዉ። ኣብ 3 ናይ ዘንጊ ብማዕረ ንመቅሎም። ኣብ ሓደ ዘንጊ ክንደይ ይኾኑ?",
+                "ሳራ 4 ጥዑማት እንጆሪ ኣለዋ። ን 2 ኣዕሩኽታ ብማዕረ ትህቦም። ነፍሲ ወከፍ ክንደይ ይረክብ?",
+                "9 ቅልጡፋት መካይን ኣለዋ። ኣብ 3 ጋራዥ ብማዕረ እንተመቒልናየን ኣብ ሓደ ጋራዥ ክንደይ ይኾና?",
+                "ሓንቲ መምህር 12 ብሩህ ክሬዮናት ኣለዋ። ኣብ 2 ማዕረ ኩባያታት ትገብሮም። ኣብ ሓደ ኩባያ ክንደይ ይኾኑ?",
+                "ሓረስታይ ጆ 20 እንቁላሊሕ ኣለዎ። ኣብ 5 ሰፈር ብማዕረ የቐምጦም። ኣብ ሓደ ሰፈር ክንደይ ይኣትዉ?",
+                "ን 3 ጥሙያት ቆልዑ ዝኸውን 18 ቁርጽራጽ ፒዛ ብማዕረ ንመቅሎ። ነፍሲ ወከፍ ክንደይ ይረክብ?"
+            ],
+            am: [
+                "ሓበን 6 የሚያብረቀርቁ ፖሞች አሉት። ለ 2 ጓደኞቹ በእኩል ማካፈል ይፈልጋል። እያንዳንዱ ስንት ያገኛል?",
+                "8 ቆንጆ ቡችላዎች አሉ። በ 4 ቅርጫቶች ውስጥ በእኩል ብናስገባቸው እያንዳንዱ ቅርጫት ስንት ይይዛል?",
+                "ሳሮን 12 ባለቀለም ፊኛዎች አሏት። ለ 3 የፓርቲ ቡድኖች በእኩል ታካፍላለች። እያንዳንዱ ስንት ያገኛል?",
+                "አንድ ጋጋሪ 10 ጣፋጭ ኩኪዎች አሉት። በ 2 እኩል ሳጥኖች ውስጥ ያስቀምጣቸዋል። በየሳጥኑ ስንት ይገባል?",
+                "15 አስማታዊ ኮከቦች አሉ። በ 3 አስማታዊ ዘንጎች ላይ በእኩል እናድርጋቸው። እያንዳንዱ ስንት ይይዛል?",
+                "ሳራ 4 ጣፋጭ እንጆሪዎች አሏት። ለ 2 ጓደኞቿ በእኩል ትሰጣለች። እያንዳንዱ ስንት ያገኛል?",
+                "9 ፈጣን መኪናዎች አሉ። በ 3 ጋራዦች ውስጥ በእኩል ብናስገባቸው እያንዳንዱ ስንት ይይዛል?",
+                "መምህሯ 12 ብሩህ ቀለሞች አሏት። በ 2 እኩል ኩባያዎች ውስጥ ታደርጋቸዋለች። እያንዳንዱ ስንት ይይዛል?",
+                "ገበሬው ጆ 20 እንቁላሎች አሉት። በ 5 ጎጆዎች ውስጥ በእኩል ያስቀምጣቸዋል። በየጎጆው ስንት ይገባል?",
+                "ለ 3 የተራቡ ልጆች 18 የፒዛ ቁርጥራጮች አሉን። በእኩል እንዲካፈሉ እናድርግ። እያንዳንዱ ስንት ያገኛል?"
+            ],
+            om: [
+                "Haben appiloota 6 qaba. Hiriyyoota isaa 2f qixa hiruuf barbaada. Tokkoo tokkoo isaanii meeqa argatu?",
+                "Kushullee bareedoo 8tu jiru. Guuboo 4 keessa qixa yoo keenye meeqa ta'u?",
+                "Saron bofloota 12 qabdi. Garee 3f qixa hirti. Tokkoo tokkoo isaanii meeqa argatu?",
+                "Baay'istoon kookii 10 qaba. Saanduqa wal-qixa 2 keessa kaa'a. Saanduqa tokko keessa meeqa ta'u?",
+                "Urjiiwwan majikaa 15tu jiru. Ulee 3 irratti qixa haa hiru. Ulee tokko irratti meeqa ta'u?",
+                "Saaraan istirooberii 4 qabdi. Hiriyyoota 2f qixa kenniti. Tokkoo tokkoo isaanii meeqa argatu?",
+                "Konkolaataa 9tu jiru. Garaajii 3 keessa qixa yoo galan meeqa ta'u?",
+                "Barsiistuun kireeyoonii 12 qabdi. Kubbayyaa wal-qixa 2 keessa keessi. Kubbayyaa tokko keessa meeqa?",
+                "Qonnaan bulaa Joo hanqaaquu 20 qaba. Goojjoo 5 keessa qixa kaa'a. Goojjoo tokko keessa meeqa?",
+                "Iyyaafattoota 3f piizaa 18 qabna. Qixa akka hirmaatan haa goonu. Tokkoo tokkoo isaanii meeqa?"
+            ],
+            so: [
+                "Haben wuxuu haystaa 6 tufaax. Wuxuu rabaa inuu 2 saaxiibadiis ah u qaybiyo si siman. Imisa ayuu midkiiba helayaa?",
+                "8 eey yar yar. Waxaan rabnaa inaan 4 dambi u galino si siman. Imisa ayaa dambi walba galaya?",
+                "Saron waxay haysataa 12 balooni. Waxay u qaybisay 3 kooxood si siman. Imisa ayuu midkiiba helayaa?",
+                "Dubaha wuxuu haystaa 10 kookis. Wuxuu geliyey 2 sanduuq oo siman. Imisa ayaa sanduuq walba ku jira?",
+                "Waxaa jira 15 xiddigood. Waxaan rabnaa inaan 3 usha ku ridno si siman. Imisa ayaa ushiiba saaran?",
+                "Sarah waxay haysataa 4 strawberry. Waxay siisay 2 saaxiibadeed si siman. Imisa ayuu midkiiba helayaa?",
+                "Waxaa jira 9 baabuur. Haddii 3 garaash lagu rido si siman imisa ayuu midkiiba noqon?",
+                "Macallimaddu waxay haysataa 12 qalin. Waxay gelisay 2 koob oo siman. Imisa ayaa ku jira koob walba?",
+                "Beeraley Joe wuxuu haystaa 20 ukun. Wuxuu 5 buul ku riday si siman. Imisa ayaa buul walba ku jira?",
+                "Waxaan haynaa 18 xabbo oo pizza ah oo loogu talagalay 3 carruur ah si siman u qaybsadaan. Imisa ayuu midkiiba helayaa?"
+            ]
+        };
+
+        let currentIdx = 0;
+        let distributed = 0;
+        let language = 'ti';
+        let particles = [];
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const now = audioCtx.currentTime;
+            if (type === 'pop') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
+            } else if (type === 'win') {
+                osc.type = 'triangle';
+                [523.25, 659.25, 783.99].forEach((f, i) => {
+                    const o = audioCtx.createOscillator(); o.type='sine'; o.frequency.value = f;
+                    const g = audioCtx.createGain(); g.gain.setValueAtTime(0.1, now + i*0.1); g.gain.linearRampToValueAtTime(0, now + i*0.1 + 0.5);
+                    o.connect(g); g.connect(audioCtx.destination); o.start(now + i*0.1); o.stop(now + i*0.1 + 0.5);
+                });
+            } else {
+                osc.type = 'sawtooth'; osc.frequency.value = 150;
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(); osc.stop(now + 0.3);
+            }
+            osc.connect(gain); gain.connect(audioCtx.destination);
+        }
+
+        function setLanguage(l) {
+            language = l;
+            updateUI();
+        }
+
+        function updateUI() {
+            const t = LANGUAGES[language];
+            document.getElementById('winTitle').innerText = t.win;
+            document.getElementById('winMsg').innerText = t.msg;
+            document.getElementById('winBtn').innerText = t.next;
+            document.getElementById('storyText').innerText = STORIES[language][currentIdx];
+            
+            const dots = document.getElementById('progressDots');
+            dots.innerHTML = '';
+            for(let i=0; i<QUESTIONS.length; i++) {
+                const d = document.createElement('div');
+                d.className = `dot ${i === currentIdx ? 'active' : (i < currentIdx ? 'complete' : '')}`;
+                dots.appendChild(d);
+            }
+
+            // Show/Hide back button
+            document.getElementById('btnBack').style.display = currentIdx > 0 ? 'flex' : 'none';
+        }
+
+        function initLevel() {
+            const q = QUESTIONS[currentIdx];
+            distributed = 0;
+            document.getElementById('eqDividend').innerText = q.div;
+            document.getElementById('eqDivisor').innerText = q.s;
+            document.getElementById('ansInput').value = '';
+            document.getElementById('ansInput').classList.remove('wrong');
+            
+            const pool = document.getElementById('itemPool');
+            pool.innerHTML = '';
+            for(let i=0; i<q.div; i++) {
+                const it = document.createElement('div');
+                it.className = 'food-item';
+                it.innerText = q.e;
+                it.onclick = (e) => shareItem(it, e);
+                pool.appendChild(it);
+            }
+
+            const area = document.getElementById('basketArea');
+            area.innerHTML = '';
+            for(let i=0; i<q.s; i++) {
+                const bw = document.createElement('div');
+                bw.className = 'basket-wrapper';
+                const b = document.createElement('div');
+                b.className = 'basket';
+                b.id = `basket-${i}`;
+                bw.appendChild(b);
+                area.appendChild(bw);
+            }
+            updateUI();
+        }
+
+        function shareItem(el, e) {
+            if(el.classList.contains('moving')) return;
+            const q = QUESTIONS[currentIdx];
+            const targetIdx = distributed % q.s;
+            const targetBasket = document.getElementById(`basket-${targetIdx}`);
+            
+            playSound('pop');
+            el.classList.add('moving');
+            const rect = el.getBoundingClientRect();
+            const bRect = targetBasket.getBoundingClientRect();
+            
+            el.style.top = rect.top + 'px';
+            el.style.left = rect.left + 'px';
+            
+            setTimeout(() => {
+                el.style.top = (bRect.top + bRect.height/2 - 35) + 'px';
+                el.style.left = (bRect.left + bRect.width/2 - 35) + 'px';
+                el.style.opacity = '0';
+                el.style.transform = 'scale(0.2)';
+            }, 10);
+
+            setTimeout(() => {
+                el.remove();
+                const bit = document.createElement('div');
+                bit.className = 'basket-item';
+                bit.innerText = q.e;
+                targetBasket.appendChild(bit);
+                targetBasket.classList.add('pop');
+                setTimeout(() => targetBasket.classList.remove('pop'), 200);
+                distributed++;
+                if(distributed === q.div) document.getElementById('ansInput').focus();
+            }, 600);
+        }
+
+        document.getElementById('ansInput').addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            const q = QUESTIONS[currentIdx];
+            if(val === q.div / q.s) {
+                if(distributed < q.div) return;
+                playSound('win');
+                fireConfetti();
+                setTimeout(() => document.getElementById('win-overlay').style.display = 'flex', 800);
+            } else if (e.target.value.length >= (q.div/q.s).toString().length) {
+                playSound('error');
+                e.target.classList.add('wrong');
+                setTimeout(() => e.target.classList.remove('wrong'), 500);
+            }
+        });
+
+        function nextQuestion() {
+            document.getElementById('win-overlay').style.display = 'none';
+            currentIdx = (currentIdx + 1) % QUESTIONS.length;
+            initLevel();
+        }
+
+        function prevQuestion() {
+            if(currentIdx > 0) {
+                currentIdx--;
+                initLevel();
+            }
+        }
+
+        function resetCurrentQuestion() {
+            playSound('pop');
+            initLevel();
+        }
+
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const colors = ['#fff', '#ffd54f', '#9ccc65', '#81d4fa', '#f48fb1'];
+            for(let i=0; i<100; i++) {
+                particles.push({
+                    x: canvas.width / 2, y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20,
+                    size: Math.random() * 10 + 5, color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1.0, r: Math.random() * 360, rv: (Math.random() - 0.5) * 10
+                });
+            }
+            if(!window.confettiActive) { window.confettiActive = true; animateConfetti(); }
+        }
+
+        function animateConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let alive = false;
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                if (p.life > 0) {
+                    alive = true; p.x += p.vx; p.y += p.vy; p.vy += 0.4; p.vx *= 0.98;
+                    p.life -= 0.015; p.r += p.rv;
+                    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r * Math.PI / 180);
+                    ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size); ctx.restore();
+                } else { particles.splice(i, 1); }
+            }
+            if(alive) requestAnimationFrame(animateConfetti);
+            else window.confettiActive = false;
+        }
+
+        window.onload = initLevel;
+    </script>
+</body>
+</html>

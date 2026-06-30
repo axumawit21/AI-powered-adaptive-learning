@@ -1,0 +1,611 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Place Value - Neon Nebula</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700;900&family=Noto+Sans+Ethiopic:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --space-dark: #0f172a;
+            --space-deeper: #020617;
+            --neon-pink: #f72585;
+            --neon-blue: #4cc9f0;
+            --neon-purple: #7209b7;
+            --neon-yellow: #f9c74f;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Comic Neue', 'Noto Sans Ethiopic', sans-serif;
+            background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #020617 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* --- Starry Background Effect --- */
+        .stars {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            opacity: 0.3;
+            z-index: 0;
+            animation: move-stars 100s linear infinite;
+        }
+        @keyframes move-stars { from { transform: translateY(0); } to { transform: translateY(-200px); } }
+
+        /* --- Header --- */
+        header {
+            width: 100%;
+            padding: 15px 30px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(15px);
+            z-index: 100;
+            border-bottom: 2px solid var(--neon-blue);
+        }
+
+        .header-left { display: flex; justify-content: flex-start; }
+        .header-right { display: flex; justify-content: flex-end; }
+
+        .grade-badge {
+            background: var(--neon-pink);
+            color: white;
+            width: 50px; height: 50px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.6rem;
+            border: 2px solid white;
+            box-shadow: 0 0 15px var(--neon-pink);
+            transform: rotate(-5deg);
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--neon-blue);
+            font-size: 2rem;
+            font-weight: 900;
+            text-shadow: 0 0 10px var(--neon-blue);
+            text-align: center;
+        }
+
+        /* Custom Language Select */
+        .custom-select-wrapper { position: relative; display: inline-block; cursor: pointer; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; font-weight: 800; color: white;
+            height: 45px; background: rgba(255,255,255,0.1); border-radius: 20px;
+            width: 160px; border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 10px rgba(76, 201, 240, 0.2);
+        }
+        .custom-options {
+            position: absolute; top: 115%; right: 0; left: 0;
+            background: #0f172a; border-radius: 15px; padding: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid var(--neon-blue);
+            display: none; flex-direction: column; z-index: 200;
+        }
+        .custom-select.open .custom-options { display: flex; animation: slideDown 0.3s ease forwards; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .custom-option { padding: 10px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; }
+        .custom-option:hover { background: var(--neon-blue); color: black; }
+
+        /* --- Main Content --- */
+        .container {
+            flex: 1; width: 100%; max-width: 1100px;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 40px 20px; z-index: 10;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        .stats-bar {
+            display: flex; gap: 20px;
+        }
+        .stat-pill {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 25px; border-radius: 50px;
+            border: 2px solid var(--neon-yellow);
+            box-shadow: 0 0 15px rgba(249, 199, 79, 0.2);
+            font-weight: 900; font-size: 1.2rem;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .instruction {
+            font-size: 1.5rem; font-weight: 800; text-align: center;
+            color: white; background: rgba(76, 201, 240, 0.1);
+            padding: 15px 40px; border-radius: 40px;
+            border: 2px dashed var(--neon-blue);
+            max-width: 800px;
+        }
+
+        /* --- Game Board --- */
+        .board {
+            display: flex; width: 100%; justify-content: center;
+            gap: 20px; flex-wrap: wrap;
+        }
+
+        .section {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 20px;
+            flex: 1; min-width: 250px;
+            display: flex; flex-direction: column; align-items: center;
+            border: 2px solid var(--glass-border);
+            min-height: 250px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .section-header {
+            font-weight: 900; font-size: 1.1rem; padding: 8px 20px;
+            border-radius: 50px; margin-bottom: 20px; width: 100%; text-align: center;
+            color: white;
+        }
+        .sh-100 { background: var(--neon-purple); box-shadow: 0 0 15px var(--neon-purple); }
+        .sh-10 { background: var(--neon-blue); box-shadow: 0 0 15px var(--neon-blue); }
+        .sh-1 { background: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink); }
+
+        .blocks-area {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            align-content: flex-start; gap: 10px; width: 100%; flex-grow: 1;
+        }
+
+        /* 3D Blocks */
+        .block {
+            border-radius: 4px; border: 1px solid rgba(255,255,255,0.3);
+            animation: blockPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0;
+        }
+        .b-100 { width: 70px; height: 70px; background: var(--neon-purple); box-shadow: 0 0 10px var(--neon-purple); }
+        .b-10 { width: 18px; height: 70px; background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
+        .b-1 { width: 18px; height: 18px; background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
+
+        @keyframes blockPop { from { transform: scale(0) rotate(15deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+
+        /* --- Controls --- */
+        .input-panel {
+            background: rgba(255,255,255,0.05);
+            padding: 30px; border-radius: 40px;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 20px; width: 100%; max-width: 450px;
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 30px rgba(76, 201, 240, 0.1);
+        }
+
+        input[type="number"] {
+            width: 100%; padding: 15px; font-size: 3.5rem; text-align: center;
+            background: #020617; border: 4px solid var(--neon-blue);
+            border-radius: 20px; color: var(--neon-blue); font-family: inherit;
+            font-weight: 900; outline: none;
+        }
+        input:focus { box-shadow: 0 0 20px var(--neon-blue); border-color: white; }
+
+        .btn-check {
+            width: 100%; background: var(--neon-yellow); color: #422006;
+            border: none; padding: 20px; border-radius: 25px;
+            font-size: 1.8rem; font-weight: 900; cursor: pointer;
+            box-shadow: 0 8px 0 #92400e;
+        }
+        .btn-check:active { transform: translateY(8px); box-shadow: none; }
+
+        /* --- Overlay Reactions --- */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(2, 6, 23, 0.95);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(10px);
+        }
+        .overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+        
+        .modal {
+            background: #1e1b4b; padding: 60px; border-radius: 50px;
+            text-align: center; max-width: 500px; width: 90%;
+            border: 4px solid var(--neon-blue);
+            box-shadow: 0 0 50px rgba(76, 201, 240, 0.3);
+        }
+
+        .modal-icon { font-size: 8rem; display: block; margin-bottom: 20px; }
+        .modal-title { font-size: 3rem; font-weight: 900; margin-bottom: 10px; }
+        .modal-sub { font-size: 1.5rem; opacity: 0.8; margin-bottom: 40px; }
+
+        .btn-modal {
+            background: var(--neon-blue); color: #020617;
+            padding: 20px 60px; border-radius: 50px; font-weight: 900;
+            font-size: 1.6rem; cursor: pointer; border: none;
+            box-shadow: 0 8px 0 #0077b6;
+        }
+        .btn-modal:active { transform: translateY(4px); box-shadow: none; }
+
+        #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 1100; }
+
+        @media (max-width: 600px) {
+            header { grid-template-columns: auto 1fr auto; padding: 10px; gap: 10px; }
+            h1 { font-size: 1.2rem; }
+            .grade-badge { width: 40px; height: 40px; font-size: 1.2rem; }
+            .custom-select__trigger { width: 130px; font-size: 0.8rem; }
+
+            /* Mobile layout: hundreds & tens side by side, ones underneath */
+            .board {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .section {
+                flex: 1 1 45%;
+                max-width: 45%;
+                padding: 15px;
+            }
+            .board .section:nth-child(3) {
+                flex-basis: 100%;
+                max-width: 100%;
+            }
+
+            /* Make blocks and labels a bit smaller on mobile */
+            .section-header {
+                font-size: 1rem;
+                margin-bottom: 15px;
+            }
+            .b-100 { width: 60px; height: 60px; }
+            .b-10 { width: 16px; height: 60px; }
+            .b-1 { width: 16px; height: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="stars"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+    <div class="header-left">
+        <div class="grade-badge">3</div>
+    </div>
+    <h1 id="app-title">Place Value Blocks</h1>
+    <div class="header-right">
+        <div class="custom-select-wrapper" id="lang-select">
+            <div class="custom-select">
+                <div class="custom-select__trigger">
+                    <span id="curr-lang-label">🗺️ ትግርኛ</span>
+                    <span style="font-size:0.8rem">▼</span>
+                </div>
+                <div class="custom-options">
+                    <div class="custom-option" data-value="ti">ትግርኛ</div>
+                    <div class="custom-option" data-value="am">አማርኛ</div>
+                    <div class="custom-option" data-value="en">English</div>
+                    <div class="custom-option" data-value="om">Afan Oromoo</div>
+                    <div class="custom-option" data-value="so">Soomaali</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="stats-bar">
+        <div class="stat-pill" style="border-color: var(--neon-yellow);">
+            🏆 <span id="lbl-record">Record</span>: <span id="val-record">0</span>
+        </div>
+        <div class="stat-pill" style="border-color: var(--neon-blue);">
+            🌟 <span id="lbl-score">Score</span>: <span id="val-score">0</span>
+        </div>
+    </div>
+
+    <div class="instruction" id="lbl-instr">ብሎክታት ብምቁፃር ቁፅሪ ጽሓፉ!</div>
+
+    <div class="board">
+        <div class="section">
+            <div class="section-header sh-100" id="lbl-100s">ሚኢትታት (100s)</div>
+            <div class="blocks-area" id="area-100"></div>
+        </div>
+        <div class="section">
+            <div class="section-header sh-10" id="lbl-10s">ዓሰርተታት (10s)</div>
+            <div class="blocks-area" id="area-10"></div>
+        </div>
+        <div class="section">
+            <div class="section-header sh-1" id="lbl-1s">ሓደታት (1s)</div>
+            <div class="blocks-area" id="area-1"></div>
+        </div>
+    </div>
+
+    <div class="input-panel">
+        <input type="number" id="user-input" placeholder="?" inputmode="numeric">
+        <button class="btn-check" id="btn-check" onclick="checkAnswer()">ፈትሽ (Check) ✔️</button>
+    </div>
+</div>
+
+<!-- Reaction Overlays -->
+<div class="overlay" id="overlay-win">
+    <div class="modal" style="border-color: var(--neon-yellow);">
+        <span class="modal-icon">🌠💎</span>
+        <div class="modal-title" id="win-title" style="color: var(--neon-yellow);">ትኽክል!</div>
+        <div class="modal-sub" id="win-sub">ንቕድሚት ቀፅል!</div>
+        <button class="btn-modal" onclick="nextQuestion()" id="btn-next">ቀፃሊ ➡</button>
+    </div>
+</div>
+
+<div class="overlay" id="overlay-fail">
+    <div class="modal" style="border-color: var(--neon-pink);">
+        <span class="modal-icon">🌑</span>
+        <div class="modal-title" id="fail-title" style="color: var(--neon-pink);">ተጋግዩ!</div>
+        <div class="modal-sub">
+            <span id="fail-sub">እንደገና ፈትን።</span><br><br>
+            <span id="lbl-final-score" style="font-weight: 800;">ውፅኢትካ</span>: 
+            <span id="final-score-val" style="font-size:3rem; color:var(--neon-pink); font-weight:900;">0</span>
+        </div>
+        <button class="btn-modal" onclick="restartGame()" id="btn-restart" style="background:var(--neon-pink); box-shadow: 0 8px 0 #9d0208;">እንደገና ጀምር 🔄</button>
+    </div>
+</div>
+
+<script>
+    const translations = {
+        ti: {
+            title: "ዓድታት ቁፅሪ",
+            instr: "ብሎክታት ብምቁፃር ቁፅሪ ጽሓፉ!",
+            lbl100s: "ሚኢትታት (100s)",
+            lbl10s: "ዓሰርተታት (10s)",
+            lbl1s: "ሓደታት (1s)",
+            score: "ነጥቢ",
+            record: "ክብረወሰን",
+            win: "ትኽክል!",
+            winSub: "ብጣዕሚ ጽቡቕ! ንቕድሚት ቀፅል",
+            fail: "ተጋግዩ!",
+            failSub: "እንደገና ብጥንቃቄ ቁፀር።",
+            final: "ውፅኢትካ",
+            next: "ቀፃሊ ➡",
+            restart: "እንደገና ጀምር 🔄",
+            check: "ፈትሽ ✔️"
+        },
+        am: {
+            title: "የቁጥር ቤቶች",
+            instr: "ብሎኮቹን በመቁጠር ቁጥሩን ጻፉ!",
+            lbl100s: "መቶዎች (100s)",
+            lbl10s: "አስሮች (10s)",
+            lbl1s: "አንዶች (1s)",
+            score: "ውጤት",
+            record: "ከፍተኛ",
+            win: "ትክክል!",
+            winSub: "በጣም ጎበዝ! ቀጥል",
+            fail: "ስህተት!",
+            failSub: "በጥንቃቄ ቁጠር።",
+            final: "የእርስዎ ውጤት",
+            next: "ቀጣይ ➡",
+            restart: "እንደገና ጀምር 🔄",
+            check: "ፈትሽ ✔️"
+        },
+        en: {
+            title: "Place Value Blocks",
+            instr: "Count the blocks and write the number!",
+            lbl100s: "Hundreds (100s)",
+            lbl10s: "Tens (10s)",
+            lbl1s: "Ones (1s)",
+            score: "Score",
+            record: "Record",
+            win: "Correct!",
+            winSub: "Awesome job! Keep going",
+            fail: "Oops!",
+            failSub: "Count carefully next time.",
+            final: "Your Score",
+            next: "Next Level ➡",
+            restart: "Restart Game 🔄",
+            check: "Check ✔️"
+        },
+        om: {
+            title: "Iddoo Lakkoofsaa",
+            instr: "Blokii lakkaauun lakkoofsa barreessi!",
+            lbl100s: "Dhibba (100s)",
+            lbl10s: "Kudhan (10s)",
+            lbl1s: "Tokko (1s)",
+            score: "Qabxii",
+            record: "Rikardii",
+            win: "Sirrii!",
+            winSub: "Baay'ee gaariidha! Itti fufi",
+            fail: "Dogoggora!",
+            failSub: "Of-eeggannoon lakkaa'i.",
+            final: "Qabxii Keessan",
+            next: "Itti Aanu ➡",
+            restart: "Irra deebi'i 🔄",
+            check: "Mirkaneessi ✔️"
+        },
+        so: {
+            title: "Baloogyada Tirada",
+            instr: "Tiri baloogyada oo qor lambarka!",
+            lbl100s: "Boqollo (100s)",
+            lbl10s: "Tobanle (10s)",
+            lbl1s: "Kow (1s)",
+            score: "Dhibco",
+            record: "Rikoodh",
+            win: "Sax!",
+            winSub: "Shaqo fiican! Horay u soco",
+            fail: "Isku day mar kale!",
+            failSub: "Si fiican u tiri.",
+            final: "Dhibcahaaga",
+            next: "Xiga ➡",
+            restart: "Dib u billow 🔄",
+            check: "Hubi ✔️"
+        }
+    };
+
+    let currentLang = 'ti';
+    let score = 0;
+    let highScore = localStorage.getItem('placeValueHigh_V2') || 0;
+    let targetNum = 0;
+
+    function init() {
+        document.getElementById('val-record').textContent = highScore;
+        updateUI();
+        generateLevel();
+        setupLanguage();
+    }
+
+    function setupLanguage() {
+        const wrapper = document.getElementById('lang-select');
+        const trigger = wrapper.querySelector('.custom-select__trigger');
+        const options = wrapper.querySelectorAll('.custom-option');
+        
+        trigger.onclick = (e) => {
+            e.stopPropagation();
+            wrapper.querySelector('.custom-select').classList.toggle('open');
+        };
+
+        options.forEach(opt => {
+            opt.onclick = () => {
+                currentLang = opt.dataset.value;
+                document.getElementById('curr-lang-label').textContent = "🗺️ " + opt.textContent;
+                wrapper.querySelector('.custom-select').classList.remove('open');
+                updateUI();
+            };
+        });
+
+        window.onclick = () => wrapper.querySelector('.custom-select').classList.remove('open');
+    }
+
+    function updateUI() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('lbl-instr').textContent = t.instr;
+        document.getElementById('lbl-100s').textContent = t.lbl100s;
+        document.getElementById('lbl-10s').textContent = t.lbl10s;
+        document.getElementById('lbl-1s').textContent = t.lbl1s;
+        document.getElementById('lbl-score').textContent = t.score;
+        document.getElementById('lbl-record').textContent = t.record;
+        document.getElementById('btn-check').textContent = t.check;
+        document.getElementById('win-title').textContent = t.win;
+        document.getElementById('win-sub').textContent = t.winSub;
+        document.getElementById('btn-next').textContent = t.next;
+        document.getElementById('fail-title').textContent = t.fail;
+        document.getElementById('fail-sub').textContent = t.failSub;
+        document.getElementById('lbl-final-score').textContent = t.final;
+        document.getElementById('btn-restart').textContent = t.restart;
+    }
+
+    function generateLevel() {
+        let max = score < 50 ? 100 : (score < 150 ? 500 : 999);
+        targetNum = Math.floor(Math.random() * (max - 1)) + 1;
+        
+        const h = Math.floor(targetNum / 100);
+        const t = Math.floor((targetNum % 100) / 10);
+        const o = targetNum % 10;
+
+        render('area-100', h, 'b-100');
+        render('area-10', t, 'b-10');
+        render('area-1', o, 'b-1');
+
+        document.getElementById('user-input').value = '';
+        document.getElementById('user-input').focus();
+    }
+
+    function render(id, count, cls) {
+        const el = document.getElementById(id);
+        el.innerHTML = '';
+        for(let i=0; i<count; i++) {
+            const b = document.createElement('div');
+            b.className = `block ${cls}`;
+            b.style.animationDelay = `${i * 0.08}s`;
+            el.appendChild(b);
+        }
+    }
+
+    function checkAnswer() {
+        const userVal = parseInt(document.getElementById('user-input').value);
+        if(isNaN(userVal)) return;
+
+        if (userVal === targetNum) {
+            score += 10;
+            if(score > highScore) {
+                highScore = score;
+                localStorage.setItem('placeValueHigh_V2', highScore);
+            }
+            document.getElementById('val-score').textContent = score;
+            document.getElementById('val-record').textContent = highScore;
+            showWin();
+        } else {
+            showFail();
+        }
+    }
+
+    function showWin() {
+        playSound(600, 'sine', 0.1);
+        setTimeout(() => playSound(900, 'sine', 0.2), 100);
+        fireConfetti();
+        document.getElementById('overlay-win').classList.add('show');
+    }
+
+    function showFail() {
+        playSound(200, 'sawtooth', 0.3);
+        document.getElementById('final-score-val').textContent = score;
+        document.getElementById('overlay-fail').classList.add('show');
+    }
+
+    function nextQuestion() {
+        document.getElementById('overlay-win').classList.remove('show');
+        generateLevel();
+    }
+
+    function restartGame() {
+        score = 0;
+        document.getElementById('val-score').textContent = 0;
+        document.getElementById('overlay-fail').classList.remove('show');
+        generateLevel();
+    }
+
+    function playSound(freq, type, dur) {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        osc.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.1, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        osc.start(); osc.stop(ctx.currentTime + dur);
+    }
+
+    function fireConfetti() {
+        const c = document.getElementById('confetti-canvas');
+        const ctx = c.getContext('2d');
+        c.width = window.innerWidth; c.height = window.innerHeight;
+        const particles = [];
+        for(let i=0; i<80; i++) {
+            particles.push({
+                x: c.width/2, y: c.height/2,
+                vx: (Math.random()-0.5)*25, vy: (Math.random()-0.5)*25 - 8,
+                col: `hsl(${Math.random()*360}, 100%, 50%)`, r: Math.random()*8+4
+            });
+        }
+        function anim() {
+            ctx.clearRect(0,0,c.width,c.height);
+            let active = false;
+            particles.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.5;
+                if(p.y < c.height) {
+                    active = true;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                    ctx.fillStyle = p.col; ctx.fill();
+                }
+            });
+            if(active) requestAnimationFrame(anim);
+        }
+        anim();
+    }
+
+    window.onload = init;
+    document.getElementById('user-input').onkeypress = (e) => { if(e.key === 'Enter') checkAnswer(); };
+</script>
+
+</body>
+</html>

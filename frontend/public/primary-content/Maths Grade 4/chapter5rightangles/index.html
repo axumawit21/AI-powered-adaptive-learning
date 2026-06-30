@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Angle Lab | ማኣዝናዊ ኩርናዕ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --accent: #f59e0b;
+            --neon-blue: #00f2fe;
+            --neon-pink: #ec4899;
+            --bg-grad: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+            --glass: rgba(255, 255, 255, 0.95);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--bg-grad);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #fff;
+            overflow-x: hidden;
+            transition: background-color 0.2s;
+        }
+
+        body.wrong-flash {
+            background: #7f1d1d !important;
+            color: white !important;
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+        #wrong-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9500; pointer-events: none;
+        }
+        #wrong-overlay span { 
+            font-size: clamp(15rem, 50vw, 30rem); 
+            color: #fff; 
+            text-shadow: 0 0 70px rgba(0,0,0,0.8); 
+            font-weight: 900; 
+            animation: popX 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+        }
+        @keyframes popX { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1.1); opacity: 1; } }
+
+        header {
+            width: 100%;
+            max-width: 1100px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .badges { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        
+        .stat-pill {
+            background: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 2px solid #f1f5f9;
+            color: #1e1b4b;
+        }
+        .stat-label { color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
+        .stat-val { color: var(--primary); }
+        .pill-high { border-color: var(--accent); }
+        .pill-high .stat-val { color: var(--accent); }
+
+        .header-controls { display: flex; gap: 10px; align-items: center; }
+        .btn-mute {
+            width: 45px; height: 45px; border-radius: 50%; border: none;
+            background: white; color: #64748b; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            flex: 1;
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            padding: 20px;
+            gap: 30px;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .main-title {
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-align: center;
+            color: var(--neon-blue);
+            text-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+            margin-bottom: 5px;
+        }
+
+        .game-area {
+            width: 100%;
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* AMAZING Question Box with Gradient Border and Glow */
+        .shape-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 8px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            border-radius: 50px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 35px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 700px;
+            color: #1e1b4b;
+        }
+
+        .shape-card::before {
+            content: "";
+            position: absolute;
+            inset: -8px;
+            border-radius: 58px;
+            padding: 8px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--primary), var(--neon-pink));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: -1;
+            animation: borderRotate 4s linear infinite;
+        }
+
+        @keyframes borderRotate {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        .visual-stage {
+            width: 100%;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 30px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        .angle-target {
+            stroke-width: 10;
+            stroke-linecap: round;
+            fill: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .question-txt {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1e293b;
+            padding: 10px 25px;
+            background: #eff6ff;
+            border-radius: 20px;
+            border-bottom: 4px solid #cbd5e1;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .btn-choice {
+            padding: 20px;
+            border-radius: 25px;
+            border: none;
+            background: white;
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #334155;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #e2e8f0;
+            transition: all 0.1s;
+            font-family: inherit;
+        }
+        .btn-choice:active { transform: translateY(4px); box-shadow: 0 2px 0 #e2e8f0; }
+        .btn-choice:hover { background: #f1f5f9; color: var(--primary); }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-15px); } 75% { transform: translateX(15px); } }
+        .shake { animation: shake 0.4s; }
+
+        #success-overlay {
+            position: fixed; inset: 0; background: rgba(255, 255, 255, 0.98);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 9000; text-align: center;
+            backdrop-filter: blur(25px);
+        }
+        .win-icon { font-size: 10rem; margin-bottom: 20px; animation: bouncePop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes bouncePop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .lang-select {
+            padding: 10px;
+            border-radius: 15px;
+            border: 2px solid var(--primary);
+            background: white;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+            color: var(--primary);
+        }
+
+        @media (max-width: 600px) {
+            .main-title { font-size: 1.5rem; }
+            .question-txt { font-size: 1.3rem; }
+            .btn-choice { font-size: 1.2rem; padding: 15px; }
+            .shape-card { padding: 30px 15px; }
+            .visual-stage { height: 220px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <div id="wrong-overlay"><span>❌</span></div>
+
+    <header>
+        <div class="badges">
+            <div class="stat-pill"><span class="stat-label" id="txtLvl">ደረጃ</span><span id="valLvl" class="stat-val">1</span></div>
+            <div class="stat-pill pill-high"><span class="stat-label" id="txtHigh">ዝለዓለ</span><span id="valHigh" class="stat-val">0</span></div>
+            <div class="stat-pill">⭐ <span class="stat-label" id="txtScoreLabel">ነጥቢ</span> <span id="valScore" class="stat-val">0</span></div>
+        </div>
+        <div class="header-controls">
+            <button class="btn-mute" id="btnMute" onclick="toggleMute()">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="main-title" id="pageTitle">ማኣዝናዊ ኩርናዕ (Right Angle)</h1>
+
+        <div class="game-area">
+            <div class="shape-card" id="gameCard">
+                <p class="question-txt" id="txtQuest">እዚ ማኣዝናዊ ኩርናዕ (90°) ድዩ?</p>
+                <div class="visual-stage" id="svgCon">
+                    <!-- SVG injected here -->
+                </div>
+                <div class="options-grid">
+                    <button class="btn-choice" id="btnYes" onclick="check(true)">እወ</button>
+                    <button class="btn-choice" id="btnNo" onclick="check(false)">ኣይኮነን</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-overlay">
+        <div class="win-icon" id="successEmoji">📐✨</div>
+        <h2 id="txtWin" style="font-size: 4rem; color: var(--secondary);">ንኡድ ስራሕ!</h2>
+        <p style="font-size: 1.8rem; color: #64748b;" id="txtWinSub">ማኣዝናዊ ኩርናዕ ብትኽክል ፈሊኻዮ ኣለኻ!</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { title: "ማኣዝናዊ ኩርናዕ (Right Angle)", quest: "እዚ ማኣዝናዊ ኩርናዕ (90°) ድዩ?", yes: "እወ", no: "ኣይኮነን", win: "ንኡድ ስራሕ!", winsub: "ማኣዝናዊ ኩርናዕ ብትኽክል ፈሊኻዮ ኣለኻ!", lvl: "ደረጃ", high: "ዝለዓለ", score: "ነጥቢ" },
+            am: { title: "ማዕዘናዊ ኩርናዕ (Right Angle)", quest: "ይህ ማዕዘናዊ ኩርናዕ (90°) ነው?", yes: "አዎ", no: "አይደለም", win: "ድንቅ ስራ!", winsub: "ማዕዘናዊ ኩርናዕን በትክክል ለይተሃል!", lvl: "ደረጃ", high: "ከፍተኛ", score: "ነጥብ" },
+            en: { title: "Right Angle (90°)", quest: "Is this a Right Angle (90°)?", yes: "Yes", no: "No", win: "Great Job!", winsub: "You identified the right angle correctly!", lvl: "Level", high: "Highest", score: "Score" },
+            om: { title: "Rog-afree (Right Angle)", quest: "Kun rog-afree (90°) dhaa?", yes: "Eeyyee", no: "Lakki", win: "Hojii Gaarii!", winsub: "Rog-afree sirriitti adda baafatteetta!", lvl: "Sadarkaa", high: "Olaanaa", score: "Qabxii" },
+            so: { title: "Xagal Toosan (Right Angle)", quest: "Kani ma xagal toosan (90°) baa?", yes: "Haa", no: "Maya", win: "Shaqo Fiican!", winsub: "Si sax ah ayaad u aqoonsatay xagasha toosan!", lvl: "Heerka", high: "Sare", score: "Dhibco" }
+        };
+
+        let state = {
+            lang: 'ti', score: 0, level: 1,
+            highScore: parseInt(localStorage.getItem('right_angle_high')) || 0,
+            isRightAngle: false, busy: false, muted: false, particles: []
+        };
+
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function sfx(type) {
+            if (state.muted) return;
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type==='win') { o.type='triangle'; [523,659,783,1046].forEach((f,i)=>o.frequency.setValueAtTime(f,n+i*0.1)); g.gain.setValueAtTime(0.1,n); o.start(); o.stop(n+0.6); }
+            else if(type==='err') { o.type='sawtooth'; o.frequency.value=120; g.gain.setValueAtTime(0.15,n); o.start(); o.stop(n+0.4); }
+            else { o.type='sine'; o.frequency.value=440; g.gain.setValueAtTime(0.05,n); o.start(); o.stop(n+0.1); }
+        }
+
+        function generate() {
+            state.busy = false;
+            state.level = Math.floor(state.score / 50) + 1;
+            state.isRightAngle = Math.random() > 0.5;
+            
+            let angle;
+            if (state.isRightAngle) {
+                angle = 90;
+            } else {
+                const diff = Math.max(35 - state.level * 2, 5);
+                angle = Math.random() > 0.5 ? (90 - (Math.random() * diff + 10)) : (90 + (Math.random() * diff + 10));
+            }
+
+            const rotation = state.level > 1 ? (Math.random() * 360) : 0;
+            renderAngle(angle, rotation);
+            updateUI();
+        }
+
+        function renderAngle(angle, rotation) {
+            const container = document.getElementById('svgCon');
+            const rad = (angle * Math.PI) / 180;
+            const centerX = 100;
+            const centerY = 150;
+            const len = 120;
+
+            const x2 = centerX + len;
+            const y2 = centerY;
+            const x3 = centerX + len * Math.cos(-rad);
+            const y3 = centerY + len * Math.sin(-rad);
+
+            let markerPath = "";
+            if (angle === 90) {
+                // Square sign for right angles
+                markerPath = `<path d="M ${centerX+25} ${centerY} L ${centerX+25} ${centerY-25} L ${centerX} ${centerY-25}" fill="none" stroke="var(--primary)" stroke-width="4" />`;
+            } else {
+                // Arc sign for other angles
+                markerPath = `<path d="M ${centerX+20} ${centerY} A 20 20 0 0 0 ${centerX + 20 * Math.cos(-rad)} ${centerY + 20 * Math.sin(-rad)}" fill="none" stroke="var(--accent)" stroke-width="4" />`;
+            }
+
+            container.innerHTML = `
+                <svg width="250" height="250" viewBox="0 0 250 250" style="transform: rotate(${rotation}deg)">
+                    <path d="M ${x2} ${y2} L ${centerX} ${centerY} L ${x3} ${y3}" 
+                          class="angle-target" stroke="#1e293b" />
+                    <circle cx="${centerX}" cy="${centerY}" r="8" fill="var(--danger)" />
+                    ${markerPath}
+                </svg>
+            `;
+        }
+
+        function check(userChoice) {
+            if (state.busy) return;
+            if (userChoice === state.isRightAngle) {
+                handleSuccess();
+            } else {
+                handleError();
+            }
+        }
+
+        function handleSuccess() {
+            state.busy = true;
+            state.score += 10;
+            if (state.score > state.highScore) {
+                state.highScore = state.score;
+                localStorage.setItem('right_angle_high', state.highScore);
+            }
+            sfx('win');
+            
+            burst(300);
+            let count = 0;
+            const celebrate = setInterval(() => {
+                burst(100);
+                count++;
+                if (count > 6) clearInterval(celebrate);
+            }, 250);
+
+            document.getElementById('success-overlay').style.display = 'flex';
+            setTimeout(() => {
+                clearInterval(celebrate);
+                document.getElementById('success-overlay').style.display = 'none';
+                generate();
+            }, 2500);
+        }
+
+        function handleError() {
+            state.busy = true; // Lock interaction during animation
+            sfx('err');
+            document.body.classList.add('wrong-flash');
+            document.getElementById('gameCard').classList.add('shake');
+            document.getElementById('wrong-overlay').style.display = 'flex';
+            
+            setTimeout(() => {
+                document.body.classList.remove('wrong-flash');
+                document.getElementById('gameCard').classList.remove('shake');
+                document.getElementById('wrong-overlay').style.display = 'none';
+                state.busy = false; // Allow the user to try again on the SAME question
+            }, 1000);
+        }
+
+        function changeLang(l) { state.lang = l; updateUI(); }
+        function toggleMute() { state.muted = !state.muted; document.getElementById('btnMute').innerText = state.muted ? '🔇' : '🔊'; }
+
+        function updateUI() {
+            const t = i18n[state.lang];
+            document.getElementById('pageTitle').innerText = t.title;
+            document.getElementById('txtQuest').innerText = t.quest;
+            document.getElementById('btnYes').innerText = t.yes;
+            document.getElementById('btnNo').innerText = t.no;
+            document.getElementById('valScore').innerText = state.score;
+            document.getElementById('valHigh').innerText = state.highScore;
+            document.getElementById('valLvl').innerText = state.level;
+            document.getElementById('txtLvl').innerText = t.lvl;
+            document.getElementById('txtHigh').innerText = t.high;
+            document.getElementById('txtScoreLabel').innerText = t.score;
+            document.getElementById('txtWin').innerText = t.win;
+            document.getElementById('txtWinSub').innerText = t.winsub;
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            if (c.width !== window.innerWidth) { c.width = window.innerWidth; c.height = window.innerHeight; }
+            const colors = ['#6366f1','#10b981','#ffffff','#f59e0b','#ec4899','#00f2fe','#ec4899'];
+            for(let i=0; i<count; i++) state.particles.push({
+                x: Math.random() * c.width, y: c.height + 20, vx: (Math.random()-0.5)*40, vy: (Math.random()-0.8)*60,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*30
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=state.particles.length-1; i>=0; i--){
+                    const p=state.particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.vx *= 0.985; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else state.particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = generate;
+    </script>
+</body>
+</html>

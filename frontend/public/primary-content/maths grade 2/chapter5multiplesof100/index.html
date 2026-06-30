@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Century Climber | ርባሕ ሚኢቲ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sky: #38bdf8;
+            --grass: #4ade80;
+            --mountain: #64748b;
+            --primary: #6366f1;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --glass: rgba(255, 255, 255, 0.9);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: linear-gradient(to bottom, #0ea5e9 0%, #38bdf8 40%, #86efac 40%, #4ade80 100%);
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden;
+            color: #1e293b;
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2000; }
+
+        header {
+            width: 100%; max-width: 1000px; padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+        }
+
+        .level-badge {
+            background: var(--primary); color: white; padding: 5px 15px; border-radius: 12px;
+            font-weight: 700; font-size: 1rem; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .score-pill {
+            background: white; padding: 10px 25px; border-radius: 50px;
+            font-weight: 800; font-size: 1.4rem; color: var(--primary);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 3px solid #e0e7ff;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .lang-select {
+            padding: 8px 15px; border-radius: 15px; border: 2px solid #e2e8f0; font: inherit; font-weight: bold; cursor: pointer; outline: none;
+            background: white; color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 900px; display: flex; flex-direction: column; 
+            justify-content: flex-start; align-items: center; padding: 5px 20px; gap: 15px; z-index: 10;
+        }
+
+        .game-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: white;
+            text-align: center;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            margin-bottom: 0;
+        }
+
+        /* Mountain Visual */
+        .mountain-scene {
+            width: 100%; height: 160px; position: relative; background: rgba(255,255,255,0.2);
+            border-radius: 25px; border: 4px solid white; overflow: hidden;
+            display: flex; align-items: flex-end; justify-content: center;
+        }
+        .peak {
+            width: 0; height: 0; border-left: 150px solid transparent; border-right: 150px solid transparent;
+            border-bottom: 140px solid var(--mountain); position: relative;
+        }
+        .peak::after {
+            content: ''; position: absolute; top: 80px; left: -150px; width: 300px; height: 60px;
+            background: rgba(255,255,255,0.3); clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        .climber {
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+            font-size: 2.8rem; transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));
+        }
+
+        /* Problem Card */
+        .game-card {
+            background: var(--glass); backdrop-filter: blur(20px);
+            border-radius: 35px; padding: 25px; border: 6px solid white;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.1); width: 100%;
+            text-align: center; display: flex; flex-direction: column; gap: 15px;
+        }
+
+        .instruction { font-size: 1.2rem; font-weight: 700; color: #64748b; }
+
+        .equation {
+            display: flex; justify-content: center; align-items: center; gap: 12px;
+            font-size: 3rem; font-weight: 900; color: #1e293b;
+        }
+        .ans-box {
+            min-width: 140px; height: 80px; background: #f8fafc; border: 5px dashed #cbd5e1;
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            color: var(--primary); transition: 0.3s;
+        }
+        .ans-box.active { border-style: solid; border-color: var(--primary); background: white; transform: scale(1.05); }
+
+        /* Visual Blocks */
+        .blocks-container {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; min-height: 70px;
+            max-height: 150px; overflow-y: auto; padding: 5px;
+        }
+        .hundred-block {
+            width: 50px; height: 50px; background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border-radius: 10px; border: 2px solid white; display: flex; align-items: center;
+            justify-content: center; font-weight: 900; color: white; font-size: 0.9rem;
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
+        }
+        @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* Keypad */
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; max-width: 500px; }
+        .key {
+            height: 60px; background: white; border: none; border-radius: 15px;
+            font-size: 1.5rem; font-weight: 800; color: #475569; cursor: pointer;
+            box-shadow: 0 5px 0 #e2e8f0; transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 2px 0 #e2e8f0; }
+        .key.special { background: #e0f2fe; color: var(--primary); }
+        .key.del { background: #fff1f2; color: var(--danger); }
+        .key.check { 
+            grid-column: span 4; background: var(--success); color: white; 
+            box-shadow: 0 6px 0 #059669; font-size: 1.6rem; height: 70px; margin-top: 5px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .key.check:active { transform: translateY(6px); box-shadow: 0 2px 0 #059669; }
+
+        @keyframes shake { 0%,100% {transform:translateX(0);} 25% {transform:translateX(-10px);} 75% {transform:translateX(10px);} }
+        .shake { animation: shake 0.4s; }
+
+        #success-msg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 4rem; font-weight: 900; color: var(--success); opacity: 0; pointer-events: none; z-index: 50;
+        }
+        .show-success { animation: popSuccess 1.5s forwards; }
+        @keyframes popSuccess {
+            0% { opacity:0; transform: translate(-50%, -50%) scale(0.5); }
+            30% { opacity:1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity:0; transform: translate(-50%, -100%) scale(1); }
+        }
+
+        @media (max-width: 600px) {
+            .game-title { font-size: 1.4rem; }
+            .equation { font-size: 2rem; }
+            .ans-box { min-width: 90px; height: 60px; font-size: 1.8rem; }
+            .key { height: 50px; font-size: 1.1rem; }
+            .instruction { font-size: 1rem; }
+            .climber { font-size: 2rem; }
+            .hundred-block { width: 40px; height: 40px; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <header>
+        <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+            <option value="ti">ትግርኛ</option>
+            <option value="am">አማርኛ</option>
+            <option value="en">English</option>
+            <option value="om">Afan Oromo</option>
+            <option value="so">Soomaali</option>
+        </select>
+        <div class="score-pill">⛰️ <span id="scoreVal">0</span></div>
+    </header>
+
+    <div class="container">
+        <div class="level-badge" id="levelDisplay">Level 1</div>
+        <h1 class="game-title" id="mainHeader">ክሳብ 1000 ዘለዉ ርባሓት 100</h1>
+        
+        <div class="mountain-scene">
+            <div class="peak"></div>
+            <div class="climber" id="climber">🧗‍♂️</div>
+        </div>
+
+        <div class="game-card" id="gameCard">
+            <div id="success-msg">ንፉዕ!</div>
+            <p class="instruction" id="txtInstr">ነዚ ሕቶ መልሶ!</p>
+            
+            <div class="blocks-container" id="blocksCon"></div>
+
+            <div class="equation">
+                <span id="num">1</span>
+                <span style="color: var(--primary)">×</span>
+                <span>100</span>
+                <span>=</span>
+                <div class="ans-box active" id="ansBox">?</div>
+            </div>
+
+            <div class="keypad" id="kp">
+                <!-- Keys 1-9 -->
+                <!-- 0, 00, Del -->
+                <!-- Check -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { header: "ክሳብ {m} ዘለዉ ርባሓት 100", instr: "ነቲ ርባሕ ሚኢቲ ጸሓፍ!", check: "አረጋግጽ", win: "ንፉዕ!", level: "ደረጃ" },
+            am: { header: "እስከ {m} ያሉ የመቶ ብዜታዎች", instr: "የመቶ ብዜታዎችን ጻፍ!", check: "አረጋግጥ", win: "ድንቅ ስራ!", level: "ደረጃ" },
+            en: { header: "Multiples of 100 up to {m}", instr: "Calculate the multiple of 100!", check: "Check", win: "Correct!", level: "Level" },
+            om: { header: "Baay’ee 100 hanga {m}", instr: "Baay'ee 100 shallagi!", check: "Mirkaneessi", win: "Sirrii!", level: "Sadarkaa" },
+            so: { header: "Tarmiga 100 ilaa {m}", instr: "Xisaabi tarmiga 100!", check: "Hubi", win: "Sax!", level: "Heerka" }
+        };
+
+        let state = {
+            score: 0,
+            level: 1,
+            currentNum: 1,
+            userAns: "",
+            lang: 'ti',
+            pool: [],
+            particles: []
+        };
+
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(500, n); o.frequency.exponentialRampToValueAtTime(200, n + 0.1);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.6);
+                o.start(); o.stop(n + 0.6);
+            } else {
+                o.type = 'sawtooth'; o.frequency.value = 150;
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.3);
+                o.start(); o.stop(n + 0.3);
+            }
+        }
+
+        function refillPool() {
+            const start = (state.level - 1) * 10 + 1;
+            const end = state.level * 10;
+            state.pool = [];
+            for (let i = start; i <= end; i++) state.pool.push(i);
+            // Shuffle
+            for (let i = state.pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [state.pool[i], state.pool[j]] = [state.pool[j], state.pool[i]];
+            }
+        }
+
+        function generate() {
+            if (state.pool.length === 0) {
+                if (state.score > 0) {
+                    state.level++;
+                    burst(800);
+                }
+                refillPool();
+            }
+
+            state.currentNum = state.pool.pop();
+            state.userAns = "";
+            
+            updateUI();
+            
+            document.getElementById('num').innerText = state.currentNum;
+            document.getElementById('ansBox').innerText = "?";
+            document.getElementById('success-msg').classList.remove('show-success');
+
+            // Visual Blocks
+            const con = document.getElementById('blocksCon');
+            con.innerHTML = '';
+            for(let i=0; i<state.currentNum; i++) {
+                const b = document.createElement('div');
+                b.className = 'hundred-block';
+                b.innerText = '100';
+                if (state.currentNum > 15) {
+                    b.style.width = '35px'; b.style.height = '35px'; b.style.fontSize = '0.6rem';
+                }
+                b.style.animationDelay = (i * 0.03) + 's';
+                con.appendChild(b);
+            }
+
+            // Update climber position
+            const climber = document.getElementById('climber');
+            const minNum = (state.level - 1) * 10;
+            const maxNum = state.level * 10;
+            const range = maxNum - minNum;
+            const progress = (state.currentNum - minNum) / range;
+            const targetPos = progress * 120;
+            climber.style.bottom = (10 + targetPos) + 'px';
+        }
+
+        function press(k) {
+            sfx('tap');
+            if(k === 'bk') state.userAns = state.userAns.slice(0, -1);
+            else if(k === '00') {
+                if(state.userAns.length > 0 && state.userAns.length < 4) state.userAns += "00";
+            }
+            else {
+                if(state.userAns.length < 5) state.userAns += k;
+            }
+            document.getElementById('ansBox').innerText = state.userAns || "?";
+        }
+
+        function check() {
+            if(state.userAns === "") return;
+            const correct = state.currentNum * 100;
+            if(parseInt(state.userAns) === correct) {
+                state.score += 10;
+                document.getElementById('scoreVal').innerText = state.score;
+                sfx('win'); 
+                
+                burst(500); 
+                setTimeout(() => burst(300), 200);
+
+                const msg = document.getElementById('success-msg');
+                msg.innerText = i18n[state.lang].win;
+                msg.classList.add('show-success');
+                setTimeout(generate, 2000);
+            } else {
+                sfx('err');
+                document.getElementById('gameCard').classList.add('shake');
+                setTimeout(() => document.getElementById('gameCard').classList.remove('shake'), 500);
+                state.pool.push(state.currentNum);
+                state.pool.sort(() => Math.random() - 0.5); 
+                state.userAns = "";
+                document.getElementById('ansBox').innerText = "?";
+            }
+        }
+
+        function changeLang(l) {
+            state.lang = l;
+            updateUI();
+        }
+
+        function updateUI() {
+            const t = i18n[state.lang];
+            const maxMultiple = state.level * 1000;
+            document.getElementById('mainHeader').innerText = t.header.replace('{m}', maxMultiple);
+            document.getElementById('txtInstr').innerText = t.instr;
+            document.getElementById('checkBtn').innerText = t.check;
+            document.getElementById('levelDisplay').innerText = `${t.level} ${state.level}`;
+        }
+
+        function burst(count = 500) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#38bdf8', '#ffffff', '#ec4899', '#8b5cf6'];
+            for(let i=0; i<count; i++) state.particles.push({
+                x: c.width/2, y: c.height/2,
+                vx: (Math.random()-0.5)*40, vy: (Math.random()-0.6)*40,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)],
+                l: 1.5, r: Math.random()*360, rv: (Math.random()-0.5)*20
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=state.particles.length-1; i>=0; i--){
+                    const p=state.particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.6; p.vx *= 0.99; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); 
+                        x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else state.particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => {
+            const kp = document.getElementById('kp');
+            [1, 2, 3, 'bk', 4, 5, 6, '00', 7, 8, 9, 0].forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key' + (k==='bk'?' del':(k==='00'?' special':''));
+                b.innerText = k==='bk'?'⌫':k;
+                b.onclick = () => press(k);
+                kp.appendChild(b);
+            });
+            const checkBtn = document.createElement('button');
+            checkBtn.className = 'key check';
+            checkBtn.id = 'checkBtn';
+            checkBtn.innerText = i18n[state.lang].check;
+            checkBtn.onclick = check;
+            kp.appendChild(checkBtn);
+            generate();
+        };
+    </script>
+</body>
+</html>

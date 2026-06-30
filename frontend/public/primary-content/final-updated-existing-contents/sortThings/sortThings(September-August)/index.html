@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Ordering</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Baloo 2', 'Noto Sans Ethiopic', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #84d8ff, #1363db);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        
+        .instructions {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        
+        .game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .drop-zone {
+            background: #e3f2fd;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 120px;
+            margin-bottom: 30px;
+            border: 3px dashed #64b5f6;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .drop-zone.highlight {
+            background: #bbdefb;
+            border-color: #2196f3;
+        }
+        
+        .words-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            padding: 15px 0;
+        }
+        
+        .word-item {
+            background: linear-gradient(145deg, #FF9800, #FFC107);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: grab;
+            font-size: 1.2em;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            user-select: none;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            transform: translateY(0);
+        }
+        
+        .word-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(145deg, #FFC107, #FF9800);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 0;
+            border-radius: 50px;
+        }
+        
+        .word-item span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .word-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+        }
+        
+        .word-item:hover::before {
+            opacity: 1;
+        }
+        
+        .word-item:active {
+            cursor: grabbing;
+            transform: translateY(1px) scale(0.98);
+            box-shadow: 0 2px 10px rgba(255, 152, 0, 0.2);
+        }
+        
+        .word-item.placed {
+            background: linear-gradient(145deg, #4CAF50, #66BB6A);
+            animation: pop 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .word-item.placed::before {
+            background: linear-gradient(145deg, #66BB6A, #4CAF50);
+        }
+        
+        .word-item.wrong {
+            animation: shake 0.5s ease;
+            background: linear-gradient(145deg, #f44336, #e53935);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+        
+        .word-item.wrong::before {
+            background: linear-gradient(145deg, #e53935, #f44336);
+        }
+        
+        .feedback {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            min-height: 40px;
+            margin: 15px 0;
+            color: #2e7d32;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+        }
+        
+        .feedback.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .feedback.wrong {
+            color: #c62828;
+        }
+        
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        
+        .celebration.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .celebration-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            transform: scale(0.8);
+            opacity: 0;
+            animation: popIn 0.5s 0.3s forwards;
+            max-width: 90%;
+        }
+        
+        .celebration h2 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+            font-size: 2em;
+        }
+        
+        .next-btn {
+            background: linear-gradient(145deg, #4CAF50, #66BB6A);
+            color: white;
+            border: none;
+            padding: 14px 36px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            position: relative;
+            overflow: hidden;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            transform: translateY(0);
+        }
+        
+        .next-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(145deg, #66BB6A, #4CAF50);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 0;
+            border-radius: 50px;
+        }
+        
+        .next-btn span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .next-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        .next-btn:hover::before {
+            opacity: 1;
+        }
+        
+        .next-btn:active {
+            transform: translateY(1px) scale(0.98);
+            box-shadow: 0 2px 10px rgba(76, 175, 80, 0.2);
+        }
+        
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        
+        @keyframes popIn {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 15px;
+            }
+            
+            .word-item {
+                padding: 10px 16px;
+                font-size: 1em;
+            }
+            
+            .header {
+                font-size: 1.8em;
+            }
+            
+            .instructions {
+                font-size: 1em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .word-item {
+                padding: 8px 14px;
+                font-size: 0.9em;
+            }
+            
+            .drop-zone {
+                padding: 15px 10px;
+                min-height: 100px;
+            }
+            
+            #instructionsText {
+                margin-left: 16px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1 class="header" id="headerTitle">Word Ordering</h1>
+    <div class="top-bar" style="margin: 12px 0; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+        <p class="instructions" id="instructionsText" style="margin: 0 0 0 140px; flex: 1 1 auto;">Drag or click words into the correct order!</p>
+        <select id="langSelect" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #ccc; width: auto; min-width: 140px; max-width: 180px; flex: 0 0 auto;">
+            <option value="am">አማርኛ</option>
+            <option value="ti">ትግርኛ</option>
+            <option value="en" selected>English</option>
+            <option value="om">Afan orommo</option>
+            <option value="so">Soomaali</option>
+        </select>
+    </div>
+    
+    <div class="game-container">
+        <div class="feedback" id="feedback"></div>
+        
+        <div class="drop-zone" id="dropZone">
+            <p id="dropHint" style="color: #666; text-align: center; width: 100%;">Drop or click words here</p>
+        </div>
+        
+        <div class="words-container" id="wordsContainer">
+        </div>
+    </div>
+    
+    <div class="celebration" id="celebration">
+        <div class="celebration-content">
+            <h2 id="celebrationTitle">Great job! 🎉</h2>
+            <p id="celebrationMsg">You got the correct order!</p>
+            <button class="next-btn" id="nextBtn"><span id="nextBtnText">Next Puzzle 🚀</span></button>
+        </div>
+    </div>
+    
+    <audio src="" id="sound" autoplay></audio>
+    <script>
+        console.log('Hello from utils mod');
+
+        let log = console.log;
+        let table = console.table;
+
+        function getElement(selector) {
+            return document.querySelector(selector);
+        }
+
+        function getElements(selector) {
+            return document.querySelectorAll(selector);
+        }
+
+        function createElement(_elem, _class="", _id="") {
+            let elem = document.createElement(_elem);
+            if(_class) {
+                elem.className = _class;
+            }
+            if(_id) {
+                elem.id = _id;
+            }
+            return elem;
+        }
+
+        function applyStyle(elem, style) { 
+            return elem.setAttribute("style", style);
+        }
+
+        async function playAudio(elem, src) {
+            elem.src = src;
+            await elem.play();
+        }
+
+        function pandaNews(state=1) { 
+            let bg = createElement("div", "pandaBg", "");
+            bg.style = {
+                width: `${window.innerWidth}px`,
+                height: `${window.innerHeight}px`,
+                background: "rgb(0, 0, 0, 0.9)"
+            };
+            let panda = createElement("img", "ok_panda", "");
+            if(state) panda.src = "images/numbers/win.png";
+            else panda.src = "images/numbers/null.png";
+            panda.animationName = "ok_panda";
+            panda.animationDuration = "2s";
+            return bg.appendChild(panda);
+        }
+
+        function randInt(min, max) {
+            return Math.floor(min + Math.random() * (max + 1 - min));
+        }
+
+        function myRandom(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function arrify(coll) {
+            return Array.prototype.slice.call(coll);
+        }
+
+        function getRandomHexColor() {
+            let hexes = ["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"]
+            let hex = "#";
+            for(let i=0; i<6; i++) {
+                hex += myRandom(hexes);
+            }
+            return hex;
+        }
+
+        HTMLCollection.prototype.clone = function () {
+            let elems = [];
+            for (let i = 0; i < this.length; i++) {
+                elems.push(this[i]);
+            }
+            return elems;
+        }
+
+        NodeList.prototype.clone = function () {
+            let elems = [];
+            for (let i = 0; i < this.length; i++) {
+                elems.push(this[i]);
+            }
+            return elems;
+        }
+
+        Array.prototype.randomize = function () {
+            let _arr = [].concat(this);
+            _arr.forEach((item, index, __arr) => {
+                let a = Math.floor(Math.random() * __arr.length);
+                let tempA = __arr[a];
+                _arr[index] = tempA;
+                _arr[a] = item
+            })
+            return _arr;
+        }
+
+        String.prototype.forEachStr = function (func) {
+            for(let i=0; i<this.length; i++) {
+                func(this.slice(i, i+1));
+            }
+        }
+    </script>
+
+<script>
+    // Global word sets used for all languages - MODIFIED
+    const wordSets = [
+        ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    ];
+
+    const languageData = {
+        am: {
+            label: 'ቋንቋ:',
+            title: 'የቃላት ቅደም ተከተል',
+            instructions: 'ትክክለኛውን ቅደም ተከተል ለማግኘት ቃላቱን ጎትት!',
+            dropHint: 'ቃላቱን እዚህ ጋ ጎትት',
+            celebrationTitle: 'በጣም ጥሩ! 🎉',
+            celebrationMsg: 'ትክክለኛውን ቅደም ተከተል አገኙ!',
+            next: 'ቀጣይ ጨዋታ 🚀',
+            correctFeedback: 'በጣም ጥሩ! ትክክለኛ መልስ!',
+            wrongFeedback: 'እባክዎ በትክክል ያስቀምጡ!',
+        
+        },
+        en: {
+            label: 'Language:',
+            title: 'Word Ordering',
+            instructions: 'Drag or click words into the correct order!',
+            dropHint: 'Drop or click words here',
+            celebrationTitle: 'Great job! 🎉',
+            celebrationMsg: 'You got the correct order!',
+            next: 'Next Puzzle 🚀',
+            correctFeedback: 'Excellent! Correct answer!',
+            wrongFeedback: 'Please place them in the correct order!',
+         
+        },
+        ti: {
+            label: 'ቋንቋ:',
+            title: 'ናይ ቃላት ቅደም ተከተል',
+            instructions: 'ትክክለኛ ቅደም ተከተል ስርዓዮም ቃላት ናጎተትካ!',
+            dropHint: 'ቃላት ናብዚ ጉተቶም ',
+            celebrationTitle: 'ብጣዕሚ ጽቡቅ! 🎉',
+            celebrationMsg: 'ትክክለኛ ቅደም ተከተል ተሰሪዖም!',
+            next: 'ቀጻሊ ጨዋታ 🚀',
+            correctFeedback: 'ብጣዕሚ ጽቡቅ! ትክክለኛ መልሲ!',
+            wrongFeedback: 'ብትክክል አቀምጡ!',
+        
+        },
+        om: {
+            label: 'Afaan:',
+            title: 'የቃላት ቅደም ተከተል',
+            instructions: 'ትክክለኛውን ቅደም ተከተል ለማግኘት ቃላቱን ጎትት!',
+            dropHint: 'ቃላቱን እዚህ ጋ ጎትት',
+            celebrationTitle: 'በጣም ጥሩ! 🎉',
+            celebrationMsg: 'ትክክለኛውን ቅደም ተከተል አገኙ!',
+            next: 'ቀጣይ ጨዋታ 🚀',
+            correctFeedback: 'በጣም ጥሩ! ትክክለኛ መልስ!',
+            wrongFeedback: 'እባክዎ በትክክል ያስቀምጡ!',
+          
+        },
+        so: {
+            label: 'Af-soomaali:',
+            title: 'የቃላት ቅደም ተከተል',
+            instructions: 'ትክክለኛውን ቅደም ተከተል ለማግኘት ቃላቱን ጎትት!',
+            dropHint: 'ቃላቱን እዚህ ጋ ጎትት',
+            celebrationTitle: 'በጣም ጥሩ! 🎉',
+            celebrationMsg: 'ትክክለኛውን ቅደም ተከተል አገኙ!',
+            next: 'ቀጣይ ጨዋታ 🚀',
+            correctFeedback: 'በጣም ጥሩ! ትክክለኛ መልስ!',
+            wrongFeedback: 'እባክዎ በትክክል ያስቀምጡ!',
+       
+        }
+    };
+
+    let currentLang = 'en'; // MODIFIED: Default to English since wordset is English
+    let currentSetIndex = 0;
+    let currentSet = [...wordSets[currentSetIndex]];
+    let shuffledWords = [];
+    let draggedItem = null;
+
+    const wordsContainer = document.getElementById('wordsContainer');
+    const dropZone = document.getElementById('dropZone');
+    const feedback = document.getElementById('feedback');
+    const celebration = document.getElementById('celebration');
+    const nextBtn = document.getElementById('nextBtn');
+    const sound = document.getElementById('sound');
+    const headerTitle = document.getElementById('headerTitle');
+    const instructionsText = document.getElementById('instructionsText');
+    const dropHint = document.getElementById('dropHint');
+    const celebrationTitle = document.getElementById('celebrationTitle');
+    const celebrationMsg = document.getElementById('celebrationMsg');
+    const nextBtnText = document.getElementById('nextBtnText');
+    const langSelect = document.getElementById('langSelect');
+
+    function applyTranslations() {
+        const t = languageData[currentLang];
+        headerTitle.textContent = t.title;
+        instructionsText.textContent = t.instructions;
+        dropHint.textContent = t.dropHint;
+        celebrationTitle.textContent = t.celebrationTitle;
+        celebrationMsg.textContent = t.celebrationMsg;
+        nextBtnText.textContent = t.next;
+    }
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        // Do not change the current word set when switching languages
+        applyTranslations();
+        initGame(); // Re-initialize to update drop hint and instructions if language changed
+    }
+
+    function initGame() {
+        dropZone.innerHTML = `<p id="dropHint" style="color: #666; text-align: center; width: 100%;">${languageData[currentLang].dropHint}</p>`;
+        wordsContainer.innerHTML = '';
+        feedback.textContent = '';
+        feedback.className = 'feedback';
+
+        shuffledWords = [...currentSet].randomize();
+
+        shuffledWords.forEach(word => {
+            const wordEl = document.createElement('div');
+            wordEl.className = 'word-item';
+            const span = document.createElement('span');
+            span.textContent = word;
+            wordEl.appendChild(span);
+            wordEl.draggable = true;
+
+            wordEl.addEventListener('dragstart', handleDragStart);
+            wordEl.addEventListener('dragend', handleDragEnd);
+            wordEl.addEventListener('click', handleWordClick);
+
+            wordsContainer.appendChild(wordEl);
+        });
+    }
+
+    function handleWordClick() {
+        if (this.parentNode === wordsContainer) {
+            dropZone.appendChild(this);
+            playSound('drop');
+            checkAnswer();
+        } else {
+            wordsContainer.appendChild(this);
+        }
+    }
+
+    function handleDragStart(e) {
+        draggedItem = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+        playSound('drag');
+    }
+
+    function handleDragEnd() {
+        this.classList.remove('dragging');
+    }
+
+    dropZone.ondragover = function(e) {
+        if (e.preventDefault) e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        this.classList.add('highlight');
+        return false;
+    };
+
+    dropZone.ondragleave = function() {
+        this.classList.remove('highlight');
+    };
+
+    dropZone.ondrop = function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        this.classList.remove('highlight');
+        if (!draggedItem) return;
+        if (draggedItem.parentNode === dropZone) return;
+        dropZone.appendChild(draggedItem);
+        playSound('drop');
+        checkAnswer();
+    };
+
+    function checkAnswer() {
+        const droppedWords = Array.from(dropZone.querySelectorAll('.word-item'));
+        if (droppedWords.length === currentSet.length) {
+            const isCorrect = droppedWords.every((wordEl, index) => wordEl.textContent === currentSet[index]);
+            if (isCorrect) {
+                playSound('success');
+                showFeedback(languageData[currentLang].correctFeedback, true);
+                setTimeout(() => {
+                    celebration.classList.add('show');
+                }, 800);
+                droppedWords.forEach(word => {
+                    word.classList.add('placed');
+                    word.draggable = false;
+                });
+            } else {
+                playSound('error');
+                showFeedback(languageData[currentLang].wrongFeedback, false);
+                droppedWords.forEach((wordEl, index) => {
+                    if (wordEl.textContent !== currentSet[index]) {
+                        wordEl.classList.add('wrong');
+                        setTimeout(() => wordEl.classList.remove('wrong'), 500);
+                    }
+                });
+                setTimeout(() => {
+                    initGame();
+                }, 1500);
+            }
+        } else if (droppedWords.length > 0 && dropZone.querySelector('#dropHint')) {
+             // Remove hint once words are dropped
+            dropZone.querySelector('#dropHint').remove();
+        }
+    }
+
+    function showFeedback(message, isCorrect) {
+        feedback.textContent = message;
+        feedback.className = `feedback show ${isCorrect ? '' : 'wrong'}`;
+    }
+
+    function playSound(type) {
+        if (!sound) return;
+        switch(type) {
+            case 'drag':
+                sound.src = './assets/sound_button_clicked.mp3'; // Assuming assets folder exists
+                break;
+            case 'drop':
+                sound.src = './assets/drop_sound.mp3'; // Assuming assets folder exists
+                break;
+            case 'success':
+                sound.src = './assets/success_sound.mp3'; // Assuming assets folder exists
+                break;
+            case 'error':
+                sound.src = './assets/error_sound.mp3'; // Assuming assets folder exists
+                break;
+        }
+        sound.play().catch(e => console.log('Audio play failed:', e));
+    }
+
+    function nextLevel() {
+        celebration.classList.remove('show');
+        // Since there's only one wordSet now, we can decide if 'next level' means resetting the same set
+        // or just closing the celebration. For now, it will just re-initialize the same set shuffled.
+        currentSetIndex = 0; // Keep at 0 for the single wordset
+        currentSet = [...wordSets[currentSetIndex]];
+        initGame();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        applyTranslations();
+        initGame();
+    });
+
+    nextBtn.onclick = nextLevel;
+    langSelect.addEventListener('change', (e) => setLanguage(e.target.value));
+</script>
+
+</body>
+</html>

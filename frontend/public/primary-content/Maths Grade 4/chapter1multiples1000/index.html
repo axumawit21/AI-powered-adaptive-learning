@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cosmic Multiples | ርባሓት ኣድማስ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --amber: #f59e0b;
+            --space: #0f172a;
+            --glass: rgba(255, 255, 255, 0.1);
+            --star-white: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--space);
+            background-image: 
+                radial-gradient(circle at 20% 30%, #1e1b4b 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, #312e81 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, #0f172a 0%, transparent 100%);
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden;
+            color: #fff;
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4000; }
+
+        /* Starfield Background */
+        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.5; pointer-events: none; }
+
+        header {
+            width: 100%; max-width: 1200px; padding: 25px 40px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            flex-wrap: nowrap; gap: 40px;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 30px; }
+        .badges { display: flex; gap: 20px; align-items: center; }
+        
+        .stat-pill { 
+            background: rgba(255,255,255,0.08); backdrop-filter: blur(10px);
+            padding: 10px 22px; border-radius: 50px; font-weight: 800; font-size: 1.1rem; color: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .stat-label { opacity: 0.6; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-val { color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
+
+        .btn-icon {
+            background: white; border: none; width: 50px; height: 50px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            color: var(--space); font-size: 1.3rem; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .btn-icon:active { transform: scale(0.9); }
+        .btn-reset { background: #fee2e2; color: #991b1b; }
+        .btn-reset:hover { background: #fecaca; }
+
+        .lang-select {
+            padding: 12px 24px; border-radius: 20px; border: none; font: inherit; font-weight: bold; cursor: pointer;
+            background: white; color: var(--space); box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+        .lang-select:hover { transform: scale(1.05); }
+
+        .container {
+            flex: 1; width: 100%; max-width: 1000px; display: flex; flex-direction: column; 
+            padding: 20px; gap: 30px; z-index: 10; justify-content: center;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(40px);
+            border-radius: 45px; padding: 50px; 
+            border: 4px solid rgba(255,255,255,0.1);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+            width: 100%; text-align: center; display: flex; flex-direction: column; gap: 35px;
+            animation: slideUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .rocket-visual { 
+            font-size: 6rem; position: relative; display: inline-block; 
+            transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: drift 4s infinite ease-in-out;
+        }
+        @keyframes drift { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-15px) rotate(5deg); } }
+        
+        .launching { animation: launch 1.5s forwards !important; }
+        @keyframes launch { 
+            0% { transform: translateY(0) scale(1); }
+            30% { transform: translateY(20px) scale(1.1); }
+            100% { transform: translateY(-100vh) scale(0.5); }
+        }
+
+        .problem-text { font-size: 2.2rem; font-weight: 700; color: #fff; line-height: 1.4; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+        .choices-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; width: 100%; }
+        .choice-btn {
+            background: rgba(255,255,255,0.08); border: 3px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 25px;
+            font-size: 2rem; font-weight: 900; color: #fff; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: all 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .choice-btn:hover { background: rgba(255,255,255,0.15); border-color: #38bdf8; transform: translateY(-8px); }
+        .choice-btn:active { transform: scale(0.95); }
+        .choice-btn .sub-label { font-size: 0.9rem; opacity: 0.6; font-weight: 400; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Keypad Input View */
+        .input-view { display: none; flex-direction: column; align-items: center; gap: 25px; width: 100%; }
+        .ans-box {
+            width: 100%; max-width: 450px; height: 110px; background: rgba(0,0,0,0.4); border: 6px dashed rgba(255,255,255,0.2);
+            border-radius: 30px; display: flex; align-items: center; justify-content: center;
+            font-size: 4.5rem; font-weight: 900; color: #38bdf8; cursor: pointer; transition: 0.3s;
+        }
+        .ans-box.active { border-style: solid; border-color: #38bdf8; background: rgba(56, 189, 248, 0.1); box-shadow: 0 0 50px rgba(56, 189, 248, 0.2); }
+
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; max-width: 600px; }
+        .key {
+            height: 75px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 20px;
+            font-size: 2.2rem; font-weight: 800; color: #fff; cursor: pointer;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.4); transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.4); }
+        .key.del { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3); }
+        .key.special { background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 1.5rem; }
+        .key.check { 
+            grid-column: span 4; background: linear-gradient(135deg, var(--secondary), #059669); 
+            color: white; box-shadow: 0 8px 0 #064e3b; font-size: 2.4rem; text-transform: uppercase;
+            height: 95px; margin-top: 10px; font-weight: 900;
+        }
+
+        /* Feedback Effects */
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-15px); } 40%, 80% { transform: translateX(15px); } }
+        .shake { animation: shake 0.5s; }
+
+        #error-screen {
+            position: fixed; inset: 0; background: rgba(239, 68, 68, 0.25);
+            display: none; pointer-events: none; z-index: 2500;
+            align-items: center; justify-content: center;
+        }
+        #error-screen span { font-size: 20rem; color: white; opacity: 0.5; }
+
+        #success-overlay {
+            position: fixed; inset: 0; background: rgba(16, 185, 129, 0.96);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 3000; color: white; text-align: center;
+            backdrop-filter: blur(20px);
+        }
+        #success-overlay h2 { font-size: 5rem; margin-top: 20px; text-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+
+        @media (max-width: 850px) {
+            header { padding: 15px; flex-direction: row; flex-wrap: wrap; justify-content: space-between; gap: 15px; }
+            .header-left { gap: 15px; }
+            .badges { gap: 10px; }
+            .stat-pill { padding: 8px 12px; font-size: 0.9rem; }
+            .lang-select { padding: 8px 15px; font-size: 0.9rem; }
+            .problem-text { font-size: 1.5rem; }
+            .ans-box { height: 80px; font-size: 2.8rem; }
+            .key { height: 60px; font-size: 1.8rem; }
+            .choice-btn { font-size: 1.5rem; padding: 20px; }
+            .game-card { padding: 30px 20px; border-radius: 35px; }
+            .rocket-visual { font-size: 4rem; }
+        }
+        
+        @media (max-width: 480px) {
+            header { flex-direction: row; justify-content: space-between; }
+            .badges { width: 100%; justify-content: center; order: 3; margin-top: 10px; }
+            .lang-select { order: 2; }
+            .header-left { order: 1; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <div id="error-screen"><span>❌</span></div>
+
+    <header>
+        <div class="header-left">
+            <button class="btn-icon" id="muteBtn" onclick="toggleMute()" title="Sound Toggle">🔊</button>
+            <button class="btn-icon btn-reset" onclick="resetGame()" title="Reset Game">🔄</button>
+            <div class="badges">
+                <div class="stat-pill">
+                    <span id="lvlLabel" class="stat-label">ደረጃ</span>
+                    <span id="levelVal" class="stat-val">1</span>
+                </div>
+                <div class="stat-pill">
+                    <span id="highLabel" class="stat-label">ዝለዓለ</span>
+                    <span id="highScoreVal" class="stat-val">0</span>
+                </div>
+                <div class="stat-pill">
+                    <span id="scoreLabel" class="stat-label">ነጥቢ</span>
+                    <span id="scoreVal" class="stat-val">0</span>
+                </div>
+            </div>
+        </div>
+        <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+            <option value="ti">ትግርኛ</option>
+            <option value="am">አማርኛ</option>
+            <option value="en">English</option>
+            <option value="om">Oromoo</option>
+            <option value="so">Soomaali</option>
+        </select>
+    </header>
+
+    <div class="container">
+        <div class="game-card" id="gameCard">
+            <div class="rocket-visual" id="rocket">🚀</div>
+            <p class="problem-text" id="problemText">...</p>
+
+            <div id="choiceView" class="choices-grid">
+                <!-- Choice buttons injected by JS -->
+            </div>
+
+            <div id="inputView" class="input-view">
+                <div class="ans-box active" id="ansBox">?</div>
+                <div class="keypad" id="keypad">
+                    <!-- Keypad buttons injected by JS -->
+                </div>
+                <button class="key check" id="btnCheck" onclick="check()">ኣረጋግፅ (Check)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-overlay">
+        <div style="font-size: 12rem; animation: bounce 1s infinite alternate;">🪐</div>
+        <h2 id="txtWin">ንኡድ ስራሕ!</h2>
+        <p style="font-size: 2.2rem;" id="txtWinSub">ብትኽክል መሊስካዮ ኣለኻ!</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { check: "ኣረጋግፅ", win: "ንኡድ ስራሕ!", winsub: "ብትኽክል ተመሊሱ!", level: "ደረጃ", highest: "ዝለዓለ", score: "ነጥቢ", 
+                  qBase: "{n} ርባሓት {base} ክንደይ እዩ?", 
+                  qIdent: "{n} ክንደይ {base} ይሕዝ?",
+                  bases: { 1000: "ሽሕ (1,000)", 10000: "ዓሰርተ ሽሕ (10,000)", 100000: "ሚኢቲ ሽሕ (100,000)" },
+                  units: { 1000: "ሽሕ", 10000: "ዓሰርተ ሽሕ", 100000: "ሚኢቲ ሽሕ" }
+                },
+            am: { check: "አረጋግጥ", win: "ድንቅ ስራ!", winsub: "በትክክል መልሰዋል!", level: "ደረጃ", highest: "ከፍተኛ", score: "ነጥብ",
+                  qBase: "የ{n} ርባታ {base} ስንት ነው?", 
+                  qIdent: "{n} ስንት {base} ይይዛል?",
+                  bases: { 1000: "ሺህ (1,000)", 10000: "አስር ሺህ (10,000)", 100000: "መቶ ሺህ (100,000)" },
+                  units: { 1000: "ሺህ", 10000: "አስር ሺህ", 100000: "መቶ ሺህ" }
+                },
+            en: { check: "Check", win: "Great Job!", winsub: "You answered correctly!", level: "Level", highest: "Highest", score: "Score",
+                  qBase: "What is {n} multiples of {base}?", 
+                  qIdent: "How many {base} are in {n}?",
+                  bases: { 1000: "1,000", 10000: "10,000", 100000: "100,000" },
+                  units: { 1000: "thousands", 10000: "ten-thousands", 100000: "hundred-thousands" }
+                },
+            om: { check: "Mirkaneessi", win: "Guddina!", winsub: "Sirriitti deebisteetta!", level: "Sadarkaa", highest: "Olaanaa", score: "Qabxii",
+                  qBase: "Baay'ee {base} kan {n} meeqa ta'a?", 
+                  qIdent: "{n} keessa {base} meeqatu jira?",
+                  bases: { 1000: "Kuma (1,000)", 10000: "Kudhan-Kuma (10,000)", 100000: "Dhibba-Kuma (100,000)" },
+                  units: { 1000: "kuma", 10000: "kudhan-kuma", 100000: "dhibba-kuma" }
+                },
+            so: { check: "Hubi", win: "Shaqo Fiican!", winsub: "Si sax ah ayaad uga jawaabtay!", level: "Heerka", highest: "Sare", score: "Dhibco",
+                  qBase: "Waa imisa {n} tarmiga {base}?", 
+                  qIdent: "Imisa {base} ayaa ku jira {n}?",
+                  bases: { 1000: "1,000", 10000: "10,000", 100000: "100,000" },
+                  units: { 1000: "kun", 10000: "toban-kun", 100000: "boqol-kun" }
+                }
+        };
+
+        let score = 0, level = 1, lang = 'ti', userVal = "", currentQuestion = null, muted = false;
+        let highScore = parseInt(localStorage.getItem('multiples_1000_high')) || 0;
+        let particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(600, n); o.frequency.exponentialRampToValueAtTime(300, n + 0.1);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.8);
+                o.start(); o.stop(n + 0.8);
+            } else {
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.linearRampToValueAtTime(50, n + 0.5);
+                g.gain.setValueAtTime(0.15, n); g.gain.linearRampToValueAtTime(0, n + 0.5);
+                o.start(); o.stop(n + 0.5);
+            }
+        }
+
+        function toggleMute() {
+            muted = !muted;
+            document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊';
+        }
+
+        function resetGame() {
+            sfx('tap');
+            score = 0; level = 1;
+            updateStats();
+            generateQuestion();
+        }
+
+        function createStars() {
+            for(let i=0; i<80; i++) {
+                const s = document.createElement('div');
+                s.className = 'star';
+                const size = Math.random() * 3;
+                s.style.width = size + 'px';
+                s.style.height = size + 'px';
+                s.style.left = Math.random() * 100 + 'vw';
+                s.style.top = Math.random() * 100 + 'vh';
+                s.style.opacity = Math.random();
+                document.body.appendChild(s);
+            }
+        }
+
+        function generateQuestion() {
+            // Difficulty based on level
+            const basePool = level === 1 ? [1000] : (level === 2 ? [1000, 10000] : [1000, 10000, 100000]);
+            const base = basePool[Math.floor(Math.random() * basePool.length)];
+            const n = Math.floor(Math.random() * 9) + 1;
+            
+            const isIdentifying = Math.random() > 0.5; // True: 50,000 is how many 10k? False: 5 * 10k is what?
+            
+            if (isIdentifying) {
+                currentQuestion = {
+                    type: 'identify',
+                    base: base,
+                    n: n * base,
+                    ans: n.toString(),
+                    mode: 'choice'
+                };
+            } else {
+                currentQuestion = {
+                    type: 'calculate',
+                    base: base,
+                    n: n,
+                    ans: (n * base).toString(),
+                    mode: score < 50 ? 'choice' : 'input'
+                };
+            }
+            userVal = "";
+            renderProblem();
+        }
+
+        function renderProblem() {
+            const t = i18n[lang];
+            const q = currentQuestion;
+            const problemEl = document.getElementById('problemText');
+            const choiceView = document.getElementById('choiceView');
+            const inputView = document.getElementById('inputView');
+
+            if (q.type === 'calculate') {
+                problemEl.innerText = t.qBase.replace('{n}', q.n).replace('{base}', t.bases[q.base]);
+            } else {
+                problemEl.innerText = t.qIdent.replace('{n}', q.n.toLocaleString()).replace('{base}', t.units[q.base]);
+            }
+
+            if (q.mode === 'choice') {
+                choiceView.style.display = 'grid';
+                inputView.style.display = 'none';
+                renderChoices();
+            } else {
+                choiceView.style.display = 'none';
+                inputView.style.display = 'flex';
+                renderKeypad();
+            }
+            updateStats();
+        }
+
+        function renderChoices() {
+            const container = document.getElementById('choiceView');
+            container.innerHTML = '';
+            
+            const ansNum = parseInt(currentQuestion.ans);
+            const choices = new Set([ansNum]);
+            
+            while(choices.size < 4) {
+                let offset;
+                if (currentQuestion.type === 'calculate') {
+                    offset = (Math.floor(Math.random() * 5) + 1) * currentQuestion.base;
+                } else {
+                    offset = Math.floor(Math.random() * 5) + 1;
+                }
+                const wrong = Math.random() > 0.5 ? ansNum + offset : Math.max(1, ansNum - offset);
+                choices.add(wrong);
+            }
+
+            const shuffled = [...choices].sort(() => Math.random() - 0.5);
+            shuffled.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerHTML = `<span>${choice.toLocaleString()}</span>`;
+                btn.onclick = () => { userVal = choice.toString(); check(); };
+                container.appendChild(btn);
+            });
+        }
+
+        function renderKeypad() {
+            const container = document.getElementById('keypad');
+            container.innerHTML = '';
+            const keys = [1,2,3,'bk',4,5,6,'00',7,8,9,0];
+            keys.forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key' + (k === 'bk' ? ' del' : (k === '00' ? ' special' : ''));
+                b.innerText = k === 'bk' ? '⌫' : (k === '00' ? '000' : k);
+                b.onclick = () => press(k);
+                container.appendChild(b);
+            });
+            document.getElementById('ansBox').innerText = "?";
+        }
+
+        function press(k) {
+            sfx('tap');
+            if (k === 'bk') userVal = userVal.slice(0, -1);
+            else if (k === '00') userVal += "000";
+            else if (userVal.length < 7) userVal += k;
+            document.getElementById('ansBox').innerText = userVal || "?";
+        }
+
+        function check() {
+            if (userVal === "") return;
+            const q = currentQuestion;
+            if (userVal === q.ans) {
+                score += 10;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('multiples_1000_high', highScore);
+                }
+                level = Math.floor(score / 50) + 1;
+                sfx('win');
+                burst(600);
+                
+                // Rocket effect
+                const rocket = document.getElementById('rocket');
+                rocket.classList.add('launching');
+
+                const overlay = document.getElementById('success-overlay');
+                document.getElementById('txtWin').innerText = i18n[lang].win;
+                document.getElementById('txtWinSub').innerText = i18n[lang].winsub;
+                overlay.style.display = 'flex';
+
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    rocket.classList.remove('launching');
+                    generateQuestion();
+                }, 2000);
+            } else {
+                sfx('err');
+                const card = document.getElementById('gameCard');
+                const errScreen = document.getElementById('error-screen');
+                card.classList.add('shake');
+                errScreen.style.display = 'flex';
+                
+                setTimeout(() => {
+                    card.classList.remove('shake');
+                    errScreen.style.display = 'none';
+                    userVal = "";
+                    if (q.mode === 'input') document.getElementById('ansBox').innerText = "?";
+                }, 600);
+            }
+            updateStats();
+        }
+
+        function updateStats() {
+            const t = i18n[lang];
+            document.getElementById('scoreVal').innerText = score;
+            document.getElementById('levelVal').innerText = level;
+            document.getElementById('highScoreVal').innerText = highScore;
+            document.getElementById('lvlLabel').innerText = t.level;
+            document.getElementById('highLabel').innerText = t.highest;
+            document.getElementById('scoreLabel').innerText = t.score;
+        }
+
+        function changeLang(l) {
+            lang = l;
+            renderProblem();
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#38bdf8', '#ffffff'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random() * c.width, y: c.height + 20,
+                vx: (Math.random()-0.5)*50, vy: (Math.random()-0.9)*65,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)],
+                l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*25
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.vx *= 0.99; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); 
+                        x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => {
+            createStars();
+            generateQuestion();
+        };
+    </script>
+</body>
+</html>

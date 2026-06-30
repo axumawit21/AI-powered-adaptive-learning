@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <title>Document</title>
+    <style>
+*{
+    padding: 0;
+    margin: 0;
+}
+body{
+    background: url('./assets/cartoon.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    overflow: hidden;
+}
+.container{ position: fixed; inset: 0; min-height: 100vh; overflow: hidden; }
+.header {
+    font-size: 2.5vw;
+    color: #e0f7fa;
+    text-align: center;
+    margin-top: 1vw;
+    font-weight: bolder;
+}
+.balloon{
+    position: absolute;
+    top: 40%;
+    left: 45%;
+    width: 7.4vw;
+    height: 7.4vw;
+    background: url('./assets/fish.png') no-repeat;
+    background-size: 100%;
+    transition: 4s;
+    text-align: center;
+    color: rgb(255, 255, 255);
+    font-size: 6vw;
+    font-family: sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#balloon1, #balloon2{
+    width: 14.7vw;
+    height: 14.7vw;
+    background: url('./assets/shark.png');
+    background-size: 100%;
+}
+#balloon3{
+    width: 4.4vw;
+    height: 4.4vw;
+    background: url('./assets/fish2.png') no-repeat;
+    background-size: 100%;
+}
+#balloon4, #balloon5{
+    width: 7.4vw;
+    height: 7.4vw;
+    background: url('./assets/jellyfish.png') no-repeat;
+    background-size: 100%;
+}
+#balloon6, #balloon7{
+    width: 5.9vw;
+    height: 5.9vw;
+    background: url('./assets/starfish.png') no-repeat;
+    background-size: 100%;
+}
+.fishs{
+    position: absolute;
+    top: 40%;
+    left: 45%;
+    width: 8.5vw;
+    height: 11.4vw;
+    background-size: 100%;
+    transition: 5s;
+    text-align: center;
+    color: rgb(255, 255, 255);
+    font-size: 5vw;
+    font-family: sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.bubble{
+    position: absolute;
+    top: 100%;
+    left: 45%;
+    width: 1.47vw;
+    height: 1.47vw;
+    border-radius: 50%;
+    background: url('./assets/bubble.png') no-repeat;
+    background-size: 100%;
+    transition: 4s;
+    text-align: center;
+    color: rgb(255, 255, 255);
+    font-size: 6vw;
+    font-family: sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+}
+#bubble1, #bubble2{
+    width: 3.7vw;
+    height: 3.7vw;
+}
+.question{
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    height: 20%;
+    width: 100%;
+    background: white;
+    border-top: solid rgb(81, 255, 0) 5px;
+    color: black;
+    font-size: 6vw;
+    text-align: center;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 20;
+}
+#dash{
+    border: none;
+    outline: none;
+    width: 8.8vw;
+    height: 6.6vw;
+    font-size: 6vw;
+    border-bottom: blue 4px solid;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 0.5vw;
+}
+/* Responsive styles for mobile */
+@media (max-width: 600px) {
+    body {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+    .header {
+        font-size: 6vw;
+        margin-top: calc(14vw + env(safe-area-inset-top));
+    }
+    .balloon {
+        width: 16vw;
+        height: 16vw;
+        font-size: 10vw;
+    }
+    #balloon1, #balloon2 {
+        width: 28vw;
+        height: 28vw;
+    }
+    #balloon3 {
+        width: 10vw;
+        height: 10vw;
+    }
+    #balloon4, #balloon5 {
+        width: 16vw;
+        height: 16vw;
+    }
+    #balloon6, #balloon7 {
+        width: 12vw;
+        height: 12vw;
+    }
+    .fishs {
+        width: 18vw;
+        height: 22vw;
+        font-size: 8vw;
+    }
+    .bubble {
+        width: 4vw;
+        height: 4vw;
+        font-size: 8vw;
+    }
+    #bubble1, #bubble2 {
+        width: 8vw;
+        height: 8vw;
+    }
+    .question {
+        font-size: 8vw;
+        height: 24vw;
+    }
+    #dash {
+        width: 18vw;
+        height: 10vw;
+        font-size: 8vw;
+    }
+}
+/* Responsive styles for large desktop */
+@media (min-width: 1200px) {
+    .header {
+        font-size: 2vw;
+    }
+    .balloon {
+        width: 5vw;
+        height: 5vw;
+        font-size: 4vw;
+    }
+    #balloon1, #balloon2 {
+        width: 10vw;
+        height: 10vw;
+    }
+    #balloon3 {
+        width: 3vw;
+        height: 3vw;
+    }
+    #balloon4, #balloon5 {
+        width: 5vw;
+        height: 5vw;
+    }
+    #balloon6, #balloon7 {
+        width: 4vw;
+        height: 4vw;
+    }
+    .fishs {
+        width: 6vw;
+        height: 8vw;
+        font-size: 3vw;
+    }
+    .bubble {
+        width: 1vw;
+        height: 1vw;
+        font-size: 3vw;
+    }
+    #bubble1, #bubble2 {
+        width: 2vw;
+        height: 2vw;
+    }
+    .question {
+        font-size: 3vw;
+        height: 10vw;
+    }
+    #dash {
+        width: 6vw;
+        height: 4vw;
+        font-size: 3vw;
+    }
+}
+.controls{
+    position: fixed;
+    top: calc(0.5rem + env(safe-area-inset-top));
+    right: 2.5rem;
+    transform: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 40;
+}
+.btn{
+    background: rgba(255,255,255,0.9);
+    border: 2px solid #0aa;
+    color: #034;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    line-height: 1;
+}
+.btn[disabled]{ opacity: 0.8; }
+.questionText{
+    display: inline;
+}
+        .lang-select{
+            font-size: 0.95rem;
+        }
+        .btn.streak{
+            background: linear-gradient(135deg,#ff9800,#ff5722);
+            color:#fff;
+            border-color:#e65100;
+            font-weight:bold;
+            box-shadow:0 0 10px rgba(0,0,0,0.25);
+        }
+    </style>
+</head>
+
+
+<body>
+    <div class="container">
+        <div class="header">ቀዳሚ ፊደል ፀሓፉ</div>
+        <div class="itemWrapper"></div>
+        <div class="question"><p class="questionText"></p><input type="text" name="" id="dash" autofocus><p class="questionText"></p></div>
+        <div class="controls">
+            <select id="lang-select" class="btn lang-select" aria-label="Language">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Afan Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+            <button class="btn mute-toggle" aria-pressed="false" title="Mute/Unmute">🔊</button>
+            <button class="btn streak" disabled title="Score">🏆 Score: <span class="streak-count">0</span></button>
+        </div>
+        <audio id="bg-music" src="./assets/background_music.mp4" autoplay loop></audio>
+        <audio class="result" autoplay></audio>
+    </div>
+</body>
+
+<script>
+    // Updated arrOfStr for "ሀ-ሆ" range
+    var arrOfStr = ["ሀ", "ሁ", "ሂ", "ሃ", "ሄ", "ህ", "ሆ"]; //end-var
+
+    // Lightweight i18n
+    const i18n = {
+        ti: { header: "ቀዳሚ ፊደል ፀሓፉ" }, // "Write the previous letter"
+        am: { header: "የቀደመውን ፊደል ጻፍ" },
+        en: { header: "Write the previous letter" },
+        om: { header: "Quubee duraa barreessi" },
+        so: { header: "Fartaantii hore qor" }
+    };
+    function getLang(){ return localStorage.getItem("lang") || "ti"; }
+    function setLang(l){ localStorage.setItem("lang", l); document.documentElement.setAttribute("lang", l); }
+    function applyLanguage(){
+        const lang = getLang();
+        const t = i18n[lang] || i18n.ti;
+        const headerEl = document.querySelector('.header');
+        if(headerEl) headerEl.innerText = t.header;
+        const select = document.getElementById('lang-select');
+        if(select){ select.value = lang; }
+    }
+
+    const itemWrapper = document.getElementsByClassName("itemWrapper")[0];
+    const balloon = document.getElementsByClassName("balloon");
+    const fishs = document.getElementsByClassName("fishs");
+    const bubble = document.getElementsByClassName("bubble");
+
+    const colors = ['red', 'yellow', 'rgb(0, 102, 255)', 'rgb(81, 255, 0)', 'rgb(217, 0, 236)'];
+
+    // Simple score handling (shown in the Score button)
+    let score = 0;
+    const scoreSpan = document.querySelector('.streak-count');
+    const scoreBtn = document.querySelector('.btn.streak');
+
+    function updateScoreDisplay(){
+        if(scoreSpan){ scoreSpan.textContent = score; }
+    }
+    if(scoreBtn){ scoreBtn.disabled = false; }
+    updateScoreDisplay();
+    let randomX;
+    let randomY;
+
+    // Variables for the game logic
+    var questionIndex;
+    var currentQuestionLetter; // The letter displayed in the question (e.g., "ሁ")
+    var correctAnswerLetter;   // The letter the user needs to find (e.g., "ሀ")
+
+    createElements();
+    assignLetters();
+    checkAnswer();
+
+    document.getElementsByTagName("body")[0].onload = function(){
+        dynamics();
+        dynamics2();
+        setInterval(dynamics,3000);
+        setInterval(dynamics2,4000);
+        // language init
+        setLang(getLang());
+        applyLanguage();
+        const select = document.getElementById('lang-select');
+        if(select){
+            select.addEventListener('change', (e)=>{ setLang(e.target.value); applyLanguage(); });
+        }
+    };
+
+    // Simple mute handling (shared with result sounds and background music)
+    let isMuted = false;
+    const muteBtn = document.querySelector('.mute-toggle');
+    const resultAudio = document.querySelector('audio.result');
+    const bgAudio = document.getElementById('bg-music');
+
+    function applyMuteState(){
+        try{
+            window.__muted = isMuted;
+        }catch(e){}
+        if(muteBtn){
+            muteBtn.textContent = isMuted ? '🔇' : '🔊';
+            muteBtn.setAttribute('aria-pressed', String(!isMuted));
+        }
+        if(resultAudio){
+            resultAudio.muted = isMuted;
+            resultAudio.volume = isMuted ? 0 : 1;
+        }
+        if(bgAudio){
+            bgAudio.muted = isMuted;
+            bgAudio.volume = isMuted ? 0 : 1;
+        }
+    }
+
+    if(muteBtn){
+        muteBtn.addEventListener('click', ()=>{
+            isMuted = !isMuted;
+            applyMuteState();
+        });
+    }
+
+    applyMuteState();
+
+    function createElements(){
+        for(let i=0;i<8;i++){
+            const balloon = document.createElement("div");
+            balloon.className = "balloon";
+            balloon.id = "balloon" + (i+1);
+            itemWrapper.appendChild(balloon);
+            const bubble = document.createElement("div");
+            bubble.className = "bubble";
+            itemWrapper.appendChild(bubble);
+        }
+        document.getElementsByClassName("bubble")[0].id = "bubble1";
+        document.getElementsByClassName('bubble')[1].id = "bubble2";
+        for(let i=0;i<6;i++){ // There are 6 fish elements
+            const fish = document.createElement("div");
+            fish.className = "fishs";
+            itemWrapper.appendChild(fish);
+        }
+    }
+
+    function dynamics(){
+        for(let i=0;i<balloon.length;i++){
+            randomX = Math.floor(Math.random()*80);
+            randomY = Math.floor(Math.random()*60);
+            balloon[i].style.top = randomY + "%";
+            balloon[i].style.left = randomX + "%";
+            if(balloon[i].style.left > "70%"){
+                balloon[i].style.transform = "rotateY(180deg)";
+            } else {
+                balloon[i].style.transform = "rotateY(0deg)";
+            }
+        }
+        for(let i=0;i<bubble.length;i++){
+            randomX = Math.floor(Math.random()*100);
+            randomY = Math.floor(Math.random()*70);
+            bubble[i].style.top = randomY + "%";
+            bubble[i].style.left = randomX + "%";
+        }
+    }
+
+    function dynamics2(){
+        for(let i=0;i<fishs.length;i++){
+            randomX = Math.floor(Math.random()*80);
+            randomY = Math.floor(Math.random()*60);
+            fishs[i].style.top = randomY + "%";
+            fishs[i].style.left = randomX + "%";
+            fishs[i].style.background = "url(./assets/balloon" + (Math.floor(Math.random()*7)+1) + ".png)";
+            fishs[i].style.backgroundSize = "100%";
+        }
+    }
+
+    function assignLetters(){
+        // Pick a letter from arrOfStr, ensuring it's not the very first one ('ሀ')
+        // because 'ሀ' has no previous letter in this context.
+        questionIndex = Math.floor(Math.random() * (arrOfStr.length - 1)) + 1; // Generates index from 1 to 6
+        currentQuestionLetter = arrOfStr[questionIndex];
+        correctAnswerLetter = arrOfStr[questionIndex - 1];
+
+        // Display the currentQuestionLetter in the question area
+        document.getElementsByClassName("questionText")[0].innerText = ""; // Clear the first part
+        document.getElementsByClassName("questionText")[1].innerText = currentQuestionLetter;
+        document.getElementById("dash").value = ""; // Clear input field
+
+        // Prepare letters for the fishs (balloons)
+        let lettersForFishs = [];
+        // Ensure the correct answer is among the fishs
+        lettersForFishs.push(correctAnswerLetter);
+
+        // Add other random letters as distractions, avoiding duplicates and the current question letter
+        let potentialDistractors = arrOfStr.filter(
+            letter => letter !== currentQuestionLetter && letter !== correctAnswerLetter
+        );
+
+        // Shuffle potentialDistractors
+        for (let i = potentialDistractors.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [potentialDistractors[i], potentialDistractors[j]] = [potentialDistractors[j], potentialDistractors[i]];
+        }
+
+        // Add enough distractors to fill the fishs (up to 6 total, since correctAnswerLetter is 1)
+        for (let i = 0; lettersForFishs.length < fishs.length && i < potentialDistractors.length; i++) {
+            lettersForFishs.push(potentialDistractors[i]);
+        }
+        // If there are less than 6 unique letters available, fill remaining fishs with duplicates from the generated set
+        while (lettersForFishs.length < fishs.length) {
+            lettersForFishs.push(lettersForFishs[Math.floor(Math.random() * lettersForFishs.length)]);
+        }
+
+
+        // Shuffle lettersForFishs to randomize position of the correct answer
+        for (let i = lettersForFishs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [lettersForFishs[i], lettersForFishs[j]] = [lettersForFishs[j], lettersForFishs[i]];
+        }
+
+        // Assign letters to fishs
+        for (let i = 0; i < fishs.length; i++) {
+            if (i < lettersForFishs.length) {
+                fishs[i].innerText = lettersForFishs[i];
+                fishs[i].style.display = "flex"; // Make sure fish is visible
+            } else {
+                fishs[i].style.display = "none"; // Hide unused fish elements if lettersForFishs is smaller
+            }
+        }
+    }
+
+    function checkAnswer() {
+        for(let i=0; i<fishs.length; i++){
+            fishs[i].onclick = function(){
+                document.getElementById("dash").value = fishs[i].innerText; // User inputs the clicked letter
+                randomX = Math.floor(Math.random()*1000);
+                randomY = Math.floor(Math.random()*500);
+                fishs[i].style.top = randomY + "px";
+                fishs[i].style.left = randomX + "px";
+                fishs[i].style.background = colors[Math.floor(Math.random()*colors.length)];
+
+                // Check if the clicked letter is the correctAnswerLetter
+                if (fishs[i].innerText === correctAnswerLetter) {
+                    document.getElementsByClassName("question")[0].style.color = "rgb(81, 255, 0)";
+                    document.getElementById("dash").style.color = "rgb(81, 255, 0)";
+                    // update score
+                    score += 1;
+                    updateScoreDisplay();
+                    // play correct sound
+                    if(resultAudio){
+                        resultAudio.src = './assets/goodjob.mp3';
+                        try{
+                            const p = resultAudio.play();
+                            if(p && p.catch) p.catch(()=>{});
+                        }catch(e){}
+                    }
+                    // visual celebration handled in celebrateDog (will use award.jpg + confetti after we update celebrate.js)
+                    celebrateDog();
+                    setTimeout(function(){
+                        document.getElementById("dash").value = "";
+                        document.getElementsByClassName("question")[0].style.color = "black";
+                        document.getElementById("dash").style.color = "black";
+                        assignLetters(); // Move to next question
+                    },1500);
+                } else {
+                    document.getElementsByClassName("question")[0].style.color = "red";
+                    document.getElementById("dash").style.color = "red";
+                    if(resultAudio){
+                        resultAudio.src = './assets/tryagain.mp3';
+                        try{
+                            const p = resultAudio.play();
+                            if(p && p.catch) p.catch(()=>{});
+                        }catch(e){}
+                    }
+                    showWrong();
+                }
+            };
+        }
+    }
+
+    function showWrong(){
+        const img = document.createElement('img');
+        img.src = './assets/wrong.jpg';
+        img.setAttribute('style','position:absolute; left: 50%; top: 30%; z-index:2000; width: 320px; height: auto; transform: translateX(-50%); transition: none; pointer-events: none;');
+        document.body.appendChild(img);
+        setTimeout(()=>{ img.remove(); }, 1800);
+    }
+
+    // Inline celebration for correct answer: award image + confetti (audio already handled by resultAudio)
+    function celebrateDog(){
+        const img = document.createElement('img');
+        img.src = './assets/award.jpg';
+        img.setAttribute('style','position:absolute; left: 50%; top: 25%; z-index:2000; width: 320px; height: auto; transform: translateX(-50%); transition: none; pointer-events: none;');
+        document.body.appendChild(img);
+
+        try { triggerConfetti(); } catch(e) {}
+
+        setTimeout(()=>{ img.remove(); }, 1500);
+    }
+
+    // Simple self-contained confetti effect
+    function triggerConfetti(){
+        if (typeof document === 'undefined') return;
+
+        // Inject confetti CSS once
+        try {
+            if (!document.getElementById('confetti-style')) {
+                const style = document.createElement('style');
+                style.id = 'confetti-style';
+                style.textContent = `
+                    .confetti-piece{
+                        position: fixed;
+                        width: 8px;
+                        height: 14px;
+                        border-radius: 2px;
+                        opacity: 0.9;
+                        z-index: 2000;
+                        pointer-events: none;
+                        animation-name: confetti-fall;
+                        animation-timing-function: linear;
+                    }
+                    @keyframes confetti-fall{
+                        0%{ transform: translate3d(0, -100vh, 0) rotateZ(0deg); }
+                        100%{ transform: translate3d(0, 110vh, 0) rotateZ(360deg); }
+                    }
+                `;
+                document.head && document.head.appendChild(style);
+            }
+        } catch(e) {}
+
+        const colors = ['#ff4e50','#ffd54f','#4caf50','#29b6f6','#ff9800','#e91e63'];
+        const count = 120;
+        for (let i = 0; i < count; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'confetti-piece';
+            piece.style.left = Math.random() * 100 + 'vw';
+            piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            const duration = 2000 + Math.random() * 1200;
+            const delay = Math.random() * 300;
+            piece.style.animationDuration = duration + 'ms';
+            piece.style.animationDelay = delay + 'ms';
+            document.body.appendChild(piece);
+            setTimeout(() => {
+                piece.remove();
+            }, duration + delay + 150);
+        }
+    }
+
+    // Ensure background music starts after a user interaction (to avoid autoplay blocking)
+    (function initBgMusic(){
+        try{
+            const bg = document.getElementById('bg-music');
+            if(!bg) return;
+
+            function startBg(){
+                try {
+                    const muted = !!(window.__muted || isMuted);
+                    bg.muted = muted;
+                    bg.volume = muted ? 0 : 1;
+                } catch(e) {}
+                const p = bg.play && bg.play();
+                if (p && p.catch) p.catch(()=>{});
+                cleanup();
+            }
+
+            function gate(){
+                if (document.visibilityState === 'hidden') return;
+                startBg();
+            }
+
+            function cleanup(){
+                ['pointerdown','touchstart','keydown','visibilitychange'].forEach(ev =>
+                    window.removeEventListener(ev, gate)
+                );
+            }
+
+            if (navigator.userActivation && navigator.userActivation.hasBeenActive) {
+                startBg();
+            }
+
+            ['pointerdown','touchstart','keydown','visibilitychange'].forEach(ev =>
+                window.addEventListener(ev, gate, { passive: true })
+            );
+        }catch(e){}
+    })();
+</script>
+<style>
+    body {
+        background-image: url('./assets/cartoon.jpg');
+        background-size: cover;
+        background-attachment: fixed;
+        overflow: hidden;
+    }
+</style>
+</html>

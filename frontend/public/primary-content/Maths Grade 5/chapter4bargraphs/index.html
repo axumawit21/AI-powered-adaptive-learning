@@ -1,0 +1,1147 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bar Graphs - ባር ግራፍ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700;900&family=Noto+Sans+Ethiopic:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF9F1C;   /* Lion Orange */
+            --secondary: #2EC4B6; /* Teal */
+            --accent: #FFBF69;    /* Light Orange */
+            --green: #06D6A0;     /* Nature Green */
+            --dark: #1F2937;
+            --bg-sky: #E0F7FA;
+            --text: #1F2937;
+            --wrong: #EF476F;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); user-select: none; }
+
+        body {
+            font-family: 'Comic Neue', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--bg-sky);
+            background-image: 
+                radial-gradient(#4FD1C5 1px, transparent 1px), 
+                radial-gradient(#4FD1C5 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 12% 18%, rgba(255, 159, 28, 0.18), transparent 42%),
+                radial-gradient(circle at 88% 15%, rgba(46, 196, 182, 0.16), transparent 45%),
+                radial-gradient(circle at 18% 86%, rgba(6, 214, 160, 0.18), transparent 46%),
+                radial-gradient(circle at 85% 86%, rgba(255, 191, 105, 0.22), transparent 48%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* --- Header --- */
+        header {
+            background: white;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 5px solid var(--green);
+            border-radius: 0 0 25px 25px;
+            background-image: linear-gradient(90deg, rgba(255, 159, 28, 0.12), rgba(46, 196, 182, 0.12), rgba(6, 214, 160, 0.12));
+        }
+
+        .header-left, .header-right { 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+        }
+        
+        .header-right {
+            justify-content: flex-end;
+        }
+
+        .header-center {
+            flex: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .grade-badge {
+            background: var(--green);
+            color: white;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.4rem;
+            border: 3px solid white;
+            box-shadow: 0 4px 8px rgba(6, 214, 160, 0.3);
+            transform: rotate(-10deg);
+        }
+
+        h1 {
+            color: var(--dark);
+            font-size: 1.6rem;
+            font-weight: 900;
+            margin: 0;
+        }
+
+        /* --- Custom Language Dropdown --- */
+        .custom-select-wrapper { position: relative; z-index: 200; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; font-weight: 800; color: var(--green);
+            height: 45px; background: #ffffff; cursor: pointer;
+            border: 2px solid var(--green); border-radius: 25px;
+            width: 160px;
+            box-shadow: 0 4px 0 rgba(6, 214, 160, 0.2);
+            transition: all 0.2s;
+        }
+        .custom-select__trigger:active { transform: translateY(4px); box-shadow: none; }
+        
+        .custom-options {
+            position: absolute; top: 120%; left: 0; right: 0;
+            background: #fff; border: 3px solid #e9ecef; border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            opacity: 0; visibility: hidden; transform: translateY(-10px);
+            padding: 10px; display: flex; flex-direction: column; gap: 5px;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; transform: translateY(0); }
+        .custom-option { padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+        .custom-option:hover { background: var(--green); color: white; }
+
+        /* --- Main Content --- */
+        .container {
+            max-width: 1200px; /* Increased from 900px */
+            margin: 20px auto;
+            padding: 0 20px;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-weight: 900;
+            color: #9CA3AF;
+            cursor: pointer;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 0 #E5E7EB;
+            flex: 1;
+            max-width: 200px;
+            transition: transform 0.1s;
+        }
+
+        .tab-btn:hover { transform: translateY(-3px); }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 0 #e88b05;
+            transform: translateY(-2px);
+        }
+        .tab-btn:active { transform: translateY(2px); box-shadow: none; }
+
+        /* Card Stage */
+        .stage {
+            background: white;
+            border-radius: 40px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 6px solid white;
+            position: relative;
+            min-height: 500px;
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .stage::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 40px;
+            background: linear-gradient(135deg, rgba(255, 159, 28, 0.10), rgba(46, 196, 182, 0.10), rgba(6, 214, 160, 0.10));
+            opacity: 0.65;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .stage > * { position: relative; z-index: 1; }
+        .stage.active { display: block; }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .instruction {
+            font-size: 1.3rem;
+            color: var(--dark);
+            font-weight: 800;
+            background: #F3F4F6;
+            padding: 15px 25px;
+            border-radius: 20px;
+            border-left: 5px solid var(--secondary);
+            flex-grow: 1;
+        }
+
+        .score-board-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .score-pill {
+            background: #FFF3CD;
+            color: #856404;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 900;
+            font-size: 1.2rem;
+            border: 2px solid #FFEEBA;
+            white-space: nowrap;
+        }
+        
+        .score-pill.high {
+            background: #E0F2F1;
+            color: #00695C;
+            border-color: #B2DFDB;
+        }
+
+        /* --- Graph Area --- */
+        .graph-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 400px; /* Increased height */
+            background: #F9FAFB;
+            border-bottom: 4px solid #374151; /* X Axis */
+            border-left: 4px solid #374151; /* Y Axis */
+            border-radius: 10px;
+            padding: 0 20px 0 10px;
+            margin: 20px 0 60px 40px; /* Space for Y axis labels */
+            position: relative;
+        }
+
+        /* Draw Graph: highlight each stacking lane without changing overall white background */
+        #graph-draw {
+            border-bottom-color: #60A5FA;   /* lighter blue line under bars */
+        }
+
+        /* Colored lanes show exactly where to stack blocks in Draw Graph mode */
+        #graph-draw .bar-col {
+            background: rgba(96, 165, 250, 0.18); /* soft blue strip behind each column */
+            border-radius: 8px 8px 0 0;
+        }
+
+        /* Y Axis Lines */
+        .grid-lines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        .grid-line {
+            position: absolute;
+            width: 100%;
+            border-top: 1px dashed #E5E7EB;
+        }
+        .y-label {
+            position: absolute;
+            left: -40px;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            font-weight: bold;
+            color: #6B7280;
+            width: 30px;
+            text-align: right;
+        }
+
+        /* Bar Column */
+        .bar-col {
+            height: 100%;
+            width: 15%; /* Responsive width */
+            display: flex;
+            flex-direction: column-reverse; /* Build from bottom */
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .bar-col:hover .x-emoji { transform: scale(1.3); }
+
+        .x-label {
+            position: absolute;
+            bottom: -65px; /* push labels and emojis further below the bar line */
+            text-align: center;
+            font-weight: bold;
+            color: var(--dark);
+            width: 100%;
+        }
+        .x-emoji { font-size: 2.2rem; display: block; transition: transform 0.2s; margin-top: 10px; }
+        .x-name { font-size: 1rem; display: block; white-space: nowrap;}
+
+        /* Blocks (for stacking) */
+        .block {
+            width: 100%;
+            height: 10%; /* 10 units max usually */
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 8px;
+            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.1);
+            transition: all 0.1s ease-out;
+            opacity: 0.15;
+            background: #E5E7EB;
+            transform: scale(0.9);
+        }
+        .block.active { opacity: 1; transform: scale(1); }
+
+        /* Colors for Categories */
+        .col-0 .block.active { background: #FF595E; } /* Red */
+        .col-1 .block.active { background: #FFCA3A; } /* Yellow */
+        .col-2 .block.active { background: #8AC926; } /* Green */
+        .col-3 .block.active { background: #1982C4; } /* Blue */
+
+        /* --- Read Mode UI --- */
+        .question-box {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .q-text { font-size: 1.8rem; font-weight: 900; color: var(--dark); margin-bottom: 30px; }
+        
+        .options { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .opt-btn {
+            background: white; border: 4px solid #E5E7EB;
+            padding: 20px 40px; border-radius: 25px;
+            font-size: 1.5rem; font-weight: 800; color: var(--dark);
+            cursor: pointer; min-width: 120px;
+            transition: transform 0.1s, border-color 0.1s;
+        }
+        .opt-btn:hover { border-color: var(--secondary); background: #F0FDFA; transform: translateY(-5px); }
+        .opt-btn:active { transform: translateY(2px); }
+
+        /* --- Draw Mode UI --- */
+        .data-table {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .data-card {
+            background: #FEF3C7; /* warm light yellow to highlight the target values */
+            padding: 10px 25px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 3px solid #FBBF24; /* stronger border so it clearly differs from white */
+        }
+        .data-card .emoji { font-size: 2rem; }
+        .data-card .count { font-size: 1.8rem; font-weight: 900; color: var(--primary); }
+
+        .btn-check {
+            background: var(--green);
+            color: white; border: none;
+            padding: 15px 50px; border-radius: 50px;
+            font-size: 1.5rem; font-weight: 900;
+            cursor: pointer; box-shadow: 0 6px 0 #047857;
+            display: block; margin: 30px auto 0;
+        }
+        .btn-check:hover { transform: translateY(-3px); filter: brightness(1.03); }
+        .btn-check:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Feedback Overlay */
+        .feedback {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: white;
+            padding: 40px 60px;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 50;
+            pointer-events: none;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 8px solid var(--green);
+            min-width: 300px;
+        }
+        .feedback.show { transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+        .feedback.wrong { border-color: var(--wrong); }
+        
+        .fb-icon { font-size: 5rem; display: block; margin-bottom: 20px; }
+        .fb-text { font-size: 2.5rem; font-weight: 900; color: var(--dark); display: block; margin-bottom: 20px; }
+        
+        .btn-next {
+            background: var(--secondary); color: white; border: none;
+            padding: 15px 40px; border-radius: 30px; font-weight: 900; font-size: 1.5rem;
+            cursor: pointer; box-shadow: 0 6px 0 #155e75;
+        }
+        .btn-next:hover { transform: translateY(-3px); filter: brightness(1.03); }
+        
+        /* Game Over Specifics */
+        .game-over-score { font-size: 2rem; color: #555; margin-bottom: 20px; }
+        .game-over-val { color: var(--primary); font-size: 3rem; font-weight: 900; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        #confetti-canvas.show { opacity: 1; }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            header { padding: 1rem; flex-wrap: wrap; }
+            h1 { font-size: 1.2rem; }
+            .header-center { order: 3; width: 100%; margin-top: 10px; }
+            .tabs { gap: 10px; }
+            .tab-btn { padding: 10px; font-size: 1rem; }
+            .instruction { max-width: 100%; font-size: 1rem; padding: 10px; }
+            .graph-container { height: 250px; padding: 0 5px; }
+
+            /* On mobile, pull labels even closer to the bar line */
+            .x-label { bottom: -45px; }
+            .x-emoji { font-size: 1.5rem; margin-top: 2px; }
+            .x-name { display: none; } /* Hide text labels on small screens, show emojis only */
+            .q-text { font-size: 1.2rem; }
+            .opt-btn { padding: 10px 20px; font-size: 1.1rem; }
+            .data-card { padding: 5px 10px; }
+            .data-card .emoji { font-size: 1.4rem; }
+            .data-card .count { font-size: 1.2rem; }
+            .game-header { flex-direction: column; align-items: center; gap: 15px; }
+            .score-board-area { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <div class="grade-badge">5</div>
+    </div>
+    <div class="header-center">
+        <h1 id="app-title">Bar Graphs</h1>
+    </div>
+    <div class="header-right">
+        <div class="custom-select-wrapper">
+            <div class="custom-select">
+                <div class="custom-select__trigger">
+                    <span id="current-lang-label">🗺️ ትግርኛ</span>
+                    <div style="font-size:0.8rem">▼</div>
+                </div>
+                <div class="custom-options">
+                    <span class="custom-option selected" data-value="ti">ትግርኛ</span>
+                    <span class="custom-option" data-value="am">አማርኛ</span>
+                    <span class="custom-option" data-value="en">English</span>
+                    <span class="custom-option" data-value="om">Afan Oromoo</span>
+                    <span class="custom-option" data-value="so">Soomaali</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchMode('read')" id="tab-read">Read Graph</button>
+        <button class="tab-btn" onclick="switchMode('draw')" id="tab-draw">Draw Graph</button>
+    </div>
+
+    <!-- READ MODE -->
+    <div id="stage-read" class="stage active">
+        <div class="game-header">
+            <div class="instruction" id="instr-read">Look at the graph and answer the questions.</div>
+            <div class="score-board-area">
+                <div class="score-pill high">🏆 <span id="record-read">0</span></div>
+                <div class="score-pill">⭐ <span id="score-read">0</span></div>
+            </div>
+        </div>
+
+        <div class="graph-container" id="graph-read">
+            <!-- Grid Lines & Y Labels generated by JS -->
+            <div class="grid-lines" id="grid-read"></div>
+            <!-- Bars generated by JS -->
+        </div>
+
+        <div class="question-box">
+            <div class="q-text" id="question-text">How many Lions are there?</div>
+            <div class="options" id="options-container">
+                <!-- Buttons generated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- DRAW MODE -->
+    <div id="stage-draw" class="stage">
+        <div class="game-header">
+            <div class="instruction" id="instr-draw">Stack the blocks to match the numbers!</div>
+            <div class="score-board-area">
+                <div class="score-pill high">🏆 <span id="record-draw">0</span></div>
+                <div class="score-pill">⭐ <span id="score-draw">0</span></div>
+            </div>
+        </div>
+
+        <div class="data-table" id="data-target">
+            <!-- Target numbers generated here -->
+        </div>
+
+        <div class="graph-container" id="graph-draw">
+            <div class="grid-lines" id="grid-draw"></div>
+            <!-- Clickable Bars -->
+        </div>
+
+        <button class="btn-check" onclick="checkDrawAnswer()" id="btn-check">Check ✔️</button>
+    </div>
+
+    <!-- Feedback / Game Over Overlay -->
+    <div class="feedback" id="feedback-ui">
+        <div class="fb-icon" id="fb-icon">🎉</div>
+        <div class="fb-text" id="fb-text">Correct!</div>
+        
+        <div id="game-over-content" style="display:none;">
+            <div class="game-over-score">Final Score: <span class="game-over-val" id="final-score">0</span></div>
+            <button class="btn-next" onclick="resetGame()" id="btn-restart">Play Again 🔄</button>
+        </div>
+        
+        <button class="btn-next" onclick="nextRound()" id="btn-next">Next ➡</button>
+    </div>
+
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+    // --- Audio Engine ---
+    const AudioEngine = {
+        ctx: null,
+        init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+        playTone(freq, type, duration) {
+            this.init();
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+        },
+        playPop(pitch = 1) { 
+            this.playTone(400 * pitch, 'sine', 0.1); 
+        },
+        playSuccess() { 
+            this.playTone(600, 'triangle', 0.1); 
+            setTimeout(() => this.playTone(800, 'triangle', 0.2), 100);
+        },
+        playError() { 
+            this.playTone(150, 'sawtooth', 0.3); 
+            setTimeout(() => this.playTone(100, 'sawtooth', 0.4), 150);
+        },
+        playGameOver() {
+            this.playTone(300, 'sawtooth', 0.3);
+            setTimeout(() => this.playTone(250, 'sawtooth', 0.4), 300);
+            setTimeout(() => this.playTone(200, 'sawtooth', 0.6), 700);
+        }
+    };
+
+    // --- Translations ---
+    const translations = {
+        ti: {
+            title: "ባር ግራፍ",
+            tabRead: "ግራፍ ምንባብ",
+            tabDraw: "ግራፍ ምስኣል",
+            instRead: "ነቲ ግራፍ ርኢኩም ነቲ ሕቶ መልሱ።",
+            instDraw: "ነቶም ቁጽርታት ንምምላእ ነቲ ብሎክ ሰርዕዎ!",
+            btnCheck: "ፈትሽ ✔️",
+            btnNext: "ቀፃሊ ➡",
+            btnRestart: "እንደገና ተፃወቱ 🔄",
+            correct: "ትኽክል!",
+            wrong: "ተጋግዩ!",
+            gameover: "ጸወታ ተወዲኡ!",
+            qCount: "{a} ክንደይ አለው?",
+            qMost: "ዝበዝሐ ዘለዎ ኣየናይ እዩ?",
+            qTotal: "ድምር ኩሎም እንስሳታት ክንደይ እዩ?",
+            animals: { lion: "አንበሳ", elephant: "ሓርማዝ", giraffe: "ዘራፍ", monkey: "ህበይ" }
+        },
+        am: {
+            title: "ባር ግራፍ",
+            tabRead: "ግራፍ ማንበብ",
+            tabDraw: "ግራፍ መስራት",
+            instRead: "ግራፉን አይተው ጥያቄውን ይመልሱ።",
+            instDraw: "ቁጥሮቹን ለማሟላት ብሎኮቹን ይስሩ!",
+            btnCheck: "ፈትሽ ✔️",
+            btnNext: "ቀጣይ ➡",
+            btnRestart: "እንደገና ይጫወቱ 🔄",
+            correct: "ትክክል!",
+            wrong: "ስህተት!",
+            gameover: "ጨዋታው አብቅቷል!",
+            qCount: "ስንት {a} አሉ?",
+            qMost: "በብዛት ያለው የትኛው ነው?",
+            qTotal: "የእንስሳቱ ድምር ስንት ነው?",
+            animals: { lion: "አንበሳ", elephant: "ዝሆን", giraffe: "ቀጭኔ", monkey: "ጦጣ" }
+        },
+        en: {
+            title: "Bar Graphs",
+            tabRead: "Read Graph",
+            tabDraw: "Draw Graph",
+            instRead: "Look at the graph and answer the question.",
+            instDraw: "Stack the blocks to match the numbers!",
+            btnCheck: "Check ✔️",
+            btnNext: "Next ➡",
+            btnRestart: "Play Again 🔄",
+            correct: "Correct!",
+            wrong: "Incorrect!",
+            gameover: "Game Over!",
+            qCount: "How many {a}?",
+            qMost: "Which has the most?",
+            qTotal: "Total animals?",
+            animals: { lion: "Lions", elephant: "Elephants", giraffe: "Giraffes", monkey: "Monkeys" }
+        },
+        om: {
+            title: "Baar Giraafii",
+            tabRead: "Giraafii Dubbisuu",
+            tabDraw: "Giraafii Kaasuu",
+            instRead: "Giraafii ilaaluun gaaffii deebisi.",
+            instDraw: "Lakkoofsa guutuuf blokii tuuli!",
+            btnCheck: "Mirkaneessi ✔️",
+            btnNext: "Itti Aanu ➡",
+            btnRestart: "Irra Deebi'ii Taphadhu 🔄",
+            correct: "Sirrii!",
+            wrong: "Dogoggora!",
+            gameover: "Tapha Dhumate!",
+            qCount: "{a} meeqatu jira?",
+            qMost: "Kamtu baay'ata?",
+            qTotal: "Ida'amni bineensotaa meeqa?",
+            animals: { lion: "Leenca", elephant: "Arba", giraffe: "Qeerransa", monkey: "Qamalee" } // Giraffe correction needed locally if wrong
+        },
+        so: {
+            title: "Jaantus",
+            tabRead: "Akhriso Jaantuska",
+            tabDraw: "Sawir Jaantuska",
+            instRead: "Fiiri jaantuska oo ka jawaab su'aasha.",
+            instDraw: "Is dul saar baloogyada si ay ula mid noqdaan tirada!",
+            btnCheck: "Hubi ✔️",
+            btnNext: "Xiga ➡",
+            btnRestart: "Mar kale ciyaar 🔄",
+            correct: "Sax!",
+            wrong: "Qaldan!",
+            gameover: "Ciyaartu way dhamaatay!",
+            qCount: "Imisa {a} ayaa jira?",
+            qMost: "Keeba ugu badan?",
+            qTotal: "Wadar ahaan waa imisa?",
+            animals: { lion: "Libaax", elephant: "Maroodi", giraffe: "Geri", monkey: "Daanyeer" }
+        }
+    };
+
+    let currentLang = 'ti';
+    let currentMode = 'read';
+    let scoreRead = 0;
+    let scoreDraw = 0;
+    let highScoreRead = localStorage.getItem('barGraphReadHigh') || 0;
+    let highScoreDraw = localStorage.getItem('barGraphDrawHigh') || 0;
+    
+    // Data
+    const ANIMALS = [
+        { id: 'lion', emoji: '🦁', color: '#FF9F1C' },
+        { id: 'elephant', emoji: '🐘', color: '#2EC4B6' },
+        { id: 'giraffe', emoji: '🦒', color: '#FFBF69' },
+        { id: 'monkey', emoji: '🐒', color: '#8AC926' }
+    ];
+    let currentData = [];
+    let currentQuestion = null;
+
+    // --- Core Logic ---
+
+    function init() {
+        updateHighScores();
+        switchMode('read');
+        generateReadLevel();
+    }
+
+    function updateHighScores() {
+        document.getElementById('record-read').textContent = highScoreRead;
+        document.getElementById('record-draw').textContent = highScoreDraw;
+    }
+
+    function switchMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`tab-${mode}`).classList.add('active');
+        
+        document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
+        document.getElementById(`stage-${mode}`).classList.add('active');
+
+        if(mode === 'draw') generateDrawLevel();
+    }
+
+    // --- Read Mode ---
+    function generateReadLevel() {
+        // Generate random data (max 10)
+        currentData = ANIMALS.map(a => ({ ...a, count: Math.floor(Math.random() * 8) + 2 }));
+        
+        renderGraph('graph-read', currentData, false); // Not interactive
+        generateQuestion();
+    }
+
+    function generateQuestion() {
+        const t = translations[currentLang];
+        const type = Math.random();
+        
+        let qText = "";
+        let answer = 0;
+        let options = [];
+
+        if (type < 0.5) {
+            // Count specific animal
+            const target = currentData[Math.floor(Math.random() * currentData.length)];
+            qText = t.qCount.replace('{a}', t.animals[target.id]);
+            answer = target.count;
+        } else if (type < 0.8) {
+            // Who has most
+            let max = -1;
+            let winners = [];
+            currentData.forEach(d => {
+                if (d.count > max) {
+                    max = d.count;
+                    winners = [d];
+                } else if (d.count === max) {
+                    winners.push(d);
+                }
+            });
+
+            if (winners.length === 1) {
+                // Safe to ask "which has the most" because there is one clear winner
+                qText = t.qMost;
+                answer = winners[0].emoji; // Answer is emoji for simplicity in buttons
+            } else {
+                // Tie for maximum: fall back to a total question instead of an impossible "most" question
+                qText = t.qTotal;
+                answer = currentData.reduce((a, b) => a + b.count, 0);
+            }
+        } else {
+            // Total
+            qText = t.qTotal;
+            answer = currentData.reduce((a,b) => a + b.count, 0);
+        }
+
+        currentQuestion = { answer };
+        document.getElementById('question-text').textContent = qText;
+
+        // Generate Options
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        // Create distractors
+        let opts = new Set([answer]);
+        while(opts.size < 3) {
+            let r;
+            if (typeof answer === 'number') r = Math.floor(Math.random() * 10) + 1; // Number options
+            else r = ANIMALS[Math.floor(Math.random() * ANIMALS.length)].emoji; // Emoji options
+            opts.add(r);
+        }
+        
+        Array.from(opts).sort().forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-btn';
+            btn.textContent = opt;
+            btn.onclick = () => checkReadAnswer(opt);
+            container.appendChild(btn);
+        });
+    }
+
+    function checkReadAnswer(val) {
+        if(val === currentQuestion.answer) {
+            scoreRead += 10;
+            if(scoreRead > highScoreRead) {
+                highScoreRead = scoreRead;
+                localStorage.setItem('barGraphReadHigh', highScoreRead);
+                updateHighScores();
+            }
+            document.getElementById('score-read').textContent = scoreRead;
+            showFeedback(true);
+        } else {
+            showGameOver(scoreRead);
+        }
+    }
+
+    // --- Draw Mode ---
+    function generateDrawLevel() {
+        // Target data
+        currentData = ANIMALS.map(a => ({ ...a, count: Math.floor(Math.random() * 8) + 1 }));
+        
+        // Show Targets
+        const targetContainer = document.getElementById('data-target');
+        targetContainer.innerHTML = '';
+        currentData.forEach(d => {
+            const card = document.createElement('div');
+            card.className = 'data-card';
+            card.innerHTML = `<span class="emoji">${d.emoji}</span><span class="count">${d.count}</span>`;
+            targetContainer.appendChild(card);
+        });
+
+        // Interactive Graph (starts at 0)
+        // We pass currentData structure but counts will be managed by DOM state or separate array
+        // Initial visual is 0
+        const initData = ANIMALS.map(a => ({...a, count: 0}));
+        renderGraph('graph-draw', initData, true);
+    }
+
+    function handleBarClick(colIdx, clickedBlockHeight) {
+        // Find the column
+        const cols = document.querySelectorAll('#graph-draw .bar-col');
+        const col = cols[colIdx];
+        const blocks = col.querySelectorAll('.block');
+        
+        // Logic:
+        // If clicking block height H, set height to H.
+        // If current height is H and we click block H (top one), decrease height by 1 (remove top).
+        
+        let currentHeight = 0;
+        // Count active
+        blocks.forEach(b => { if(b.classList.contains('active')) currentHeight++; });
+
+        let newHeight = clickedBlockHeight;
+        
+        if (currentHeight === clickedBlockHeight) {
+            newHeight = clickedBlockHeight - 1; // Toggle off top block
+        }
+
+        // Update visual
+        blocks.forEach((b, i) => {
+            // i is 0-indexed (0 is bottom). Height 1 means index 0 active.
+            if (i < newHeight) {
+                if (!b.classList.contains('active')) {
+                    b.classList.add('active');
+                    AudioEngine.playPop(1 + (i*0.1));
+                }
+            } else {
+                b.classList.remove('active');
+            }
+        });
+        
+        // Store value in DOM for easy checking
+        col.dataset.value = newHeight;
+    }
+
+    function checkDrawAnswer() {
+        const cols = document.querySelectorAll('#graph-draw .bar-col');
+        let allCorrect = true;
+        
+        cols.forEach((col, i) => {
+            const val = parseInt(col.dataset.value || 0);
+            if (val !== currentData[i].count) allCorrect = false;
+        });
+
+        if (allCorrect) {
+            scoreDraw += 20;
+            if(scoreDraw > highScoreDraw) {
+                highScoreDraw = scoreDraw;
+                localStorage.setItem('barGraphDrawHigh', highScoreDraw);
+                updateHighScores();
+            }
+            document.getElementById('score-draw').textContent = scoreDraw;
+            showFeedback(true);
+        } else {
+            showGameOver(scoreDraw);
+        }
+    }
+
+    // --- Shared Graph Renderer ---
+    function renderGraph(containerId, data, interactive) {
+        const container = document.getElementById(containerId);
+        const gridId = containerId.replace('graph', 'grid');
+        const gridLayer = document.getElementById(gridId);
+        
+        // Clear bars (keep grid layer)
+        const existingBars = container.querySelectorAll('.bar-col');
+        existingBars.forEach(b => b.remove());
+        
+        // Draw Grid Lines (1 to 10)
+        gridLayer.innerHTML = '';
+        for(let i=1; i<=10; i++) {
+            const line = document.createElement('div');
+            line.className = 'grid-line';
+            line.style.bottom = `${i * 10}%`;
+            
+            const label = document.createElement('span');
+            label.className = 'y-label';
+            label.textContent = i;
+            line.appendChild(label);
+            
+            gridLayer.appendChild(line);
+        }
+
+        const t = translations[currentLang];
+
+        // Draw Columns
+        data.forEach((d, idx) => {
+            const col = document.createElement('div');
+            col.className = `bar-col col-${idx}`;
+            col.dataset.id = d.id;
+            col.dataset.value = d.count;
+
+            // X Labels
+            const xLabel = document.createElement('div');
+            xLabel.className = 'x-label';
+            xLabel.innerHTML = `<span class="x-emoji">${d.emoji}</span><span class="x-name">${t.animals[d.id]}</span>`;
+            col.appendChild(xLabel);
+
+            // Blocks (1 to 10)
+            for(let i=0; i<10; i++) {
+                const block = document.createElement('div');
+                block.className = 'block';
+                if (!interactive && i < d.count) block.classList.add('active'); // Pre-fill for read mode
+                col.appendChild(block);
+            }
+
+            // Interaction
+            if (interactive) {
+                // Attach click to blocks
+                const blocks = col.querySelectorAll('.block');
+                blocks.forEach((b, bIdx) => {
+                    // bIdx 0 is bottom. Height = bIdx + 1.
+                    b.onclick = () => handleBarClick(idx, bIdx + 1);
+                });
+                
+                // Clear by clicking label base? Optional, block logic handles removal now.
+                // xLabel.onclick = () => handleBarClick(idx, 0); 
+            }
+
+            container.appendChild(col);
+        });
+    }
+
+    function showFeedback(isCorrect) {
+        const ui = document.getElementById('feedback-ui');
+        const icon = document.getElementById('fb-icon');
+        const text = document.getElementById('fb-text');
+        const t = translations[currentLang];
+
+        // Ensure Game Over UI is hidden
+        document.getElementById('game-over-content').style.display = 'none';
+        document.getElementById('btn-next').style.display = 'inline-block';
+        ui.classList.remove('wrong');
+
+        if (isCorrect) {
+            AudioEngine.playSuccess();
+            triggerConfetti();
+            icon.textContent = '🎉';
+            text.textContent = t.correct;
+            text.style.color = 'var(--green)';
+        }
+        ui.classList.add('show');
+    }
+
+    function showGameOver(finalScore) {
+        AudioEngine.playError();
+        const ui = document.getElementById('feedback-ui');
+        const icon = document.getElementById('fb-icon');
+        const text = document.getElementById('fb-text');
+        const t = translations[currentLang];
+
+        icon.textContent = '❌';
+        text.textContent = t.gameover;
+        text.style.color = 'var(--wrong)';
+        ui.classList.add('wrong');
+
+        // Show Game Over Content
+        document.getElementById('game-over-content').style.display = 'block';
+        document.getElementById('btn-next').style.display = 'none';
+        
+        document.getElementById('final-score').textContent = finalScore;
+        ui.classList.add('show');
+    }
+
+    function nextRound() {
+        document.getElementById('feedback-ui').classList.remove('show');
+        if(currentMode === 'read') generateReadLevel();
+        else generateDrawLevel();
+    }
+
+    function resetGame() {
+        document.getElementById('feedback-ui').classList.remove('show');
+        if(currentMode === 'read') {
+            scoreRead = 0;
+            document.getElementById('score-read').textContent = 0;
+            generateReadLevel();
+        } else {
+            scoreDraw = 0;
+            document.getElementById('score-draw').textContent = 0;
+            generateDrawLevel();
+        }
+    }
+
+    // --- Language ---
+    const selectWrapper = document.querySelector('.custom-select-wrapper');
+    const selectCustom = document.querySelector('.custom-select');
+    const options = document.querySelectorAll('.custom-option');
+
+    selectWrapper.addEventListener('click', (e) => {
+        selectCustom.classList.toggle('open');
+        e.stopPropagation();
+    });
+
+    options.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!this.classList.contains('selected')) {
+                const prev = this.parentNode.querySelector('.custom-option.selected');
+                if(prev) prev.classList.remove('selected');
+                this.classList.add('selected');
+                
+                const label = this.textContent;
+                const value = this.getAttribute('data-value');
+                document.getElementById('current-lang-label').textContent = "🗺️ " + label;
+                selectCustom.classList.remove('open');
+                
+                currentLang = value;
+                changeLanguage();
+            }
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (!selectCustom.contains(e.target)) selectCustom.classList.remove('open');
+    });
+
+    function changeLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('tab-read').textContent = t.tabRead;
+        document.getElementById('tab-draw').textContent = t.tabDraw;
+        document.getElementById('instr-read').textContent = t.instRead;
+        document.getElementById('instr-draw').textContent = t.instDraw;
+        document.getElementById('btn-check').textContent = t.btnCheck;
+        document.getElementById('btn-next').textContent = t.btnNext;
+        document.getElementById('btn-restart').textContent = t.btnRestart;
+
+        // Refresh view to update labels
+        if(currentMode === 'read') {
+            generateQuestion(); // Re-gen to get translated text
+            renderGraph('graph-read', currentData, false); // Update labels
+        } else {
+            renderGraph('graph-draw', ANIMALS.map((a,i) => ({...a, count: parseInt(document.querySelectorAll('.bar-col')[i]?.dataset.value || 0)})), true);
+        }
+    }
+
+    // --- Confetti ---
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.classList.add('show');
+
+        const dpr = window.devicePixelRatio || 1;
+        const resize = () => {
+            canvas.width = Math.floor(window.innerWidth * dpr);
+            canvas.height = Math.floor(window.innerHeight * dpr);
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        };
+        resize();
+
+        const colors = ['#FF9F1C', '#2EC4B6', '#06D6A0', '#FFBF69', '#FF595E', '#1982C4'];
+        const pieces = Array.from({ length: 140 }, () => ({
+            x: Math.random() * window.innerWidth,
+            y: -Math.random() * window.innerHeight,
+            vx: (Math.random() - 0.5) * 2.2,
+            vy: Math.random() * 2.5 + 3.2,
+            r: Math.random() * 7 + 4,
+            rot: Math.random() * Math.PI,
+            vr: (Math.random() - 0.5) * 0.25,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            shape: Math.random() < 0.5 ? 'rect' : 'circle'
+        }));
+
+        const start = performance.now();
+        const durationMs = 2600;
+
+        function anim(t) {
+            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            for (const p of pieces) {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.rot += p.vr;
+                p.vy += 0.02;
+
+                if (p.y > window.innerHeight + 30) {
+                    p.y = -20;
+                    p.x = Math.random() * window.innerWidth;
+                    p.vy = Math.random() * 2.5 + 3.2;
+                }
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rot);
+                ctx.fillStyle = p.color;
+                if (p.shape === 'circle') {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.r * 0.45, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * 0.7);
+                }
+                ctx.restore();
+            }
+
+            if (t - start < durationMs) {
+                requestAnimationFrame(anim);
+            } else {
+                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                canvas.classList.remove('show');
+            }
+        }
+
+        requestAnimationFrame(anim);
+    }
+
+    // Init
+    window.onload = init;
+
+</script>
+</body>
+</html>

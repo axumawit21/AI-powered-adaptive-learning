@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phrase Builder</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: url('./assets/underWater2.png') no-repeat;
+            background-position-x: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-weight: bold;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        .main-content {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: stretch;
+            overflow-y: auto;
+        }
+        .row-top {
+            flex-shrink: 0;
+        }
+        .row-words {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            max-height: 45vh;
+        }
+
+        .row {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .row-top {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .row-words {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(3, auto);
+            gap: 15px;
+            padding: 0 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .imageContainer {
+            width: 400px;
+            height: 220px;
+            background-color: white;
+            border: solid rgb(34, 34, 34) 10px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+        }
+
+        .imageContainer img {
+            height: 90%;
+            max-width: 90%;
+            display: block;
+            margin: auto;
+            border-radius: 1vw;
+            object-fit: contain;
+        }
+
+        .answerContainer {
+            background-color: rgb(255, 255, 255);
+            font-size: 1.8rem;
+            color: rgb(119, 0, 255);
+            width: 450px;
+            min-height: 100px;
+            padding: 15px;
+            border-top: solid rgb(255, 94, 0) 10px;
+            border-left: solid rgb(255, 174, 0) 10px;
+            border-bottom: solid rgb(255, 94, 0) 10px;
+            border-right: solid rgb(255, 174, 0) 10px;
+            border-radius: 8px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 10px;
+        }
+        .shake {
+            animation: shake 0.5s;
+        }
+        .error-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .error-modal-content {
+            background: #fff;
+            color: #d32f2f;
+            font-size: 2rem;
+            padding: 32px 48px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        /* Start Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 80%;
+            width: 400px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal h2 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        
+        .modal p {
+            color: #555;
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .start-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .start-btn:hover, .restart-btn:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .restart-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .restart-btn:hover {
+            background-color: #1976D2;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .completion-message {
+            font-size: 2.5rem;
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+        
+        .completion-submessage {
+            font-size: 1.2rem;
+            color: #666;
+        }
+        
+        /* Restart Button Styles */
+        .restart-icon-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            padding: 0;
+        }
+        
+        .restart-icon-btn:hover {
+            background: #f5f5f5;
+            transform: rotate(180deg);
+        }
+        
+        .restart-icon {
+            width: 24px;
+            height: 24px;
+            color: #555;
+        }
+        
+        /* Gifts Container */
+        .gifts-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 25px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        .gift {
+            width: 40px;
+            height: 40px;
+            position: relative;
+            perspective: 1000px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .gift-icon {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            transition: all 0.5s ease;
+            transform: scale(0.8);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .gift-ribbon {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #ffd700, #ffa500);
+            border-radius: 50%;
+            top: -5px;
+            right: -5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        .gift.filled .gift-icon {
+            transform: scale(1.1);
+            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.2));
+            animation: bounce 0.5s ease;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: scale(1.1); }
+            50% { transform: scale(1.3); }
+        }
+        
+        .gift.filled .gift-ribbon {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .gift.lost {
+            animation: shake 0.5s ease-in-out, flashRed 0.5s ease-in-out;
+        }
+        
+        @keyframes flashRed {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.5)); }
+            50% { filter: drop-shadow(0 0 15px rgba(255, 0, 0, 0.8)); }
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+            100% { transform: translateX(0); }
+        }
+
+        .words {
+            background-color: #74e603;
+            border: solid white 7px;
+            background-size: cover;
+            height: 110px;
+            width: 110px;
+            font-size: 18px;
+            border-radius: 50%;
+            color: rgb(255, 255, 255);
+            cursor: pointer;
+            transition: .3s;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            white-space: nowrap;
+            word-break: normal;
+            overflow-wrap: break-word;
+            margin: 0 auto;
+            padding: 8px;
+            line-height: 1.2;
+        }
+        .words span {
+            display: block;
+            width: 100%;
+            font-size: 1em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* Responsive font-size for long words */
+        .words[data-long] {
+            font-size: 15px;
+        }
+        
+        /* Mobile styles */
+        @media (max-width: 768px) {
+            .gifts-container {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                margin: 10px auto;
+                padding: 8px 15px;
+                border-radius: 20px;
+                background: rgba(255, 255, 255, 0.9);
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                width: 90%;
+                max-width: 400px;
+                z-index: 1;
+            }
+            
+            .gift {
+                margin: 0 5px;
+                transform: scale(0.9);
+            }
+            
+            .gift-ribbon {
+                right: -5px;
+                top: -5px;
+                width: 16px;
+                height: 16px;
+                font-size: 9px;
+            }
+            
+            .main-content {
+                padding-top: 10px;
+            }
+            .main-content {
+                min-height: 100vh;
+                max-height: 100vh;
+                overflow-y: auto;
+            }
+            .row-words {
+                max-height: 38vh;
+                min-height: 120px;
+            }
+            .row-top {
+                flex-direction: row;
+                justify-content: center;
+                align-items: stretch;
+                gap: 8px;
+                padding: 0 2vw;
+                width: 100vw;
+                overflow-x: auto;
+            }
+            .imageContainer {
+                width: 68vw;
+                min-width: 140px;
+                max-width: 72vw;
+                height: 180px;
+                border-width: 6px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-left: 0;
+            }
+            .answerContainer {
+                width: 68vw;
+                min-width: 140px;
+                max-width: 72vw;
+                font-size: 1.3rem;
+                min-height: 80px;
+                padding: 10px;
+                border-width: 6px;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                white-space: nowrap;
+                overflow-x: auto;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+            }
+            .words {
+                height: 80px;
+                width: 80px;
+                font-size: 14px;
+                border-width: 4px;
+                padding: 5px;
+            }
+            .row-words {
+                padding: 10px;
+                width: 100%;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+                margin-top: 15px;
+            }
+        }
+        @media (max-width: 480px) {
+            .row-top {
+                flex-direction: row;
+                align-items: stretch;
+                gap: 4px;
+                padding: 0 1vw;
+                width: 100vw;
+                overflow-x: auto;
+            }
+            .imageContainer {
+                width: 70vw;
+                min-width: 110px;
+                max-width: 75vw;
+                height: 120px;
+                border-width: 5px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-left: 0;
+            }
+            .answerContainer {
+                width: 70vw;
+                min-width: 110px;
+                max-width: 75vw;
+                min-height: 45px;
+                font-size: 1.1rem;
+                border-width: 5px;
+                flex-direction: row;
+                white-space: nowrap;
+                overflow-x: auto;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+            }
+            .row-words {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+            }
+            .words {
+                height: 65px;
+                width: 65px;
+                font-size: 13px;
+                padding: 4px;
+            }
+        }
+
+        .words:hover {
+            transform: scale(1.2);
+            transition: .7s;
+            background-image: url("assets/bubble.png");
+        }
+        
+        /* Game Controls Container */
+        .game-controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+        }
+        
+        /* Restart Button Styles */
+        .restart-icon-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #2196F3;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            padding: 0;
+        }
+        
+        .restart-icon {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+        
+        .restart-icon-btn:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Back Button Styles */
+        .back-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            position: absolute;
+            top: 70px;
+           
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background-color: #388E3C;
+            transform: translateY(-2px);
+            
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .back-button svg {
+            width: 24px;
+            height: 24px;
+            
+        }
+    </style>
+</head>
+
+<body>
+    <audio src="" autoplay></audio>
+    
+    <!-- Restart Button -->
+    <div class="game-controls">
+        <button id="restartIconBtn" class="restart-icon-btn hidden" title="Restart Game">
+            <svg class="restart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/>
+            </svg>
+        </button>
+        
+        <!-- Back Button -->
+        <button id="backBtn" class="back-button" title="Go Back">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </button>
+    </div>
+    
+    <!-- Rewards Display -->
+    <div class="gifts-container" id="giftsContainer">
+        <div class="gift">
+            <div class="gift-icon">🚀</div>
+            <div class="gift-ribbon">1</div>
+        </div>
+        <div class="gift">
+            <div class="gift-icon">🎨</div>
+            <div class="gift-ribbon">2</div>
+        </div>
+        <div class="gift">
+            <div class="gift-icon">🎮</div>
+            <div class="gift-ribbon">3</div>
+        </div>
+        <div class="gift">
+            <div class="gift-icon">🏆</div>
+            <div class="gift-ribbon">4</div>
+        </div>
+        <div class="gift">
+            <div class="gift-icon">🎉</div>
+            <div class="gift-ribbon">5</div>
+        </div>
+    </div>
+    
+    <!-- Error Modal -->
+    <div id="errorModal" class="error-modal" style="display:none;">
+        <div class="error-modal-content">❌ Try again!</div>
+    </div>
+    
+    <!-- Start Modal -->
+    <div id="startModal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2>Phrase Builder</h2>
+            <p>Complete the phrases by selecting the correct words. Earn rewards for correct answers!</p>
+            <button id="startBtn" class="start-btn">Start Game</button>
+            <button id="restartBtn" class="restart-btn hidden">Play Again</button>
+        </div>
+    </div>
+    
+    <!-- Completion Modal -->
+    <div id="completionModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2 class="completion-message">Perfect!</h2>
+            <p class="completion-submessage">You're a phrase master! 🎉</p>
+        </div>
+    </div>
+    
+    
+    <div class="main-content" style="display: none;">
+      <div class="row row-top" id="topRow">
+          <div id="imageRow" style="flex: 0 0 auto;"></div>
+          <div id="answerRow" style="flex: 0 0 auto;"></div>
+      </div>
+      <div class="row row-words" id="wordsRow"></div>
+    </div>
+</body>
+<script>
+console.log('Hello from utils mod');
+
+let log = console.log;
+let table = console.table;
+
+let punctuations = /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~.]/ig;
+
+let mostColors = ['aliceblue', 'antiquewhite', 'aqua', 'aquamarine', 'azure', 'beige', 'bisque', 'black', 'blanchedalmond', 'blue', 'blueviolet', 'brown', 'burlywood', 'cadetblue', 'chartreuse', 'chocolate', 'coral', 'cornflowerblue', 'cornsilk', 'crimson', 'cyan', 'darkblue', 'darkcyan', 'darkgoldenrod', 'darkgray', 'darkgrey', 'darkgreen', 'darkkhaki', 'darkmagenta', 'darkolivegreen', 'darkorange', 'darkorchid', 'darkred', 'darksalmon', 'darkseagreen', 'darkslateblue', 'darkslategray', 'darkslategrey', 'darkturquoise', 'darkviolet', 'deeppink', 'deepskyblue', 'dimgray', 'dimgrey', 'dodgerblue', 'firebrick', 'floralwhite', 'forestgreen', 'fuchsia', 'gainsboro', 'ghostwhite', 'gold', 'goldenrod', 'gray', 'grey', 'green', 'greenyellow', 'honeydew', 'hotpink', 'indianred', 'indigo', 'ivory', 'khaki', 'lavender', 'lavenderblush', 'lawngreen', 'lemonchiffon', 'lightblue', 'lightcoral', 'lightcyan', 'lightgoldenrodyellow', 'lightgray', 'lightgrey', 'lightgreen', 'lightpink', 'lightsalmon', 'lightseagreen', 'lightskyblue', 'lightslategray', 'lightslategrey', 'lightsteelblue', 'lightyellow', 'lime', 'limegreen', 'linen', 'magenta', 'maroon', 'mediumaquamarine', 'mediumblue', 'mediumorchid', 'mediumpurple', 'mediumseagreen', 'mediumslateblue', 'mediumspringgreen', 'mediumturquoise', 'mediumvioletred', 'midnightblue', 'mintcream', 'mistyrose', 'moccasin', 'navajowhite', 'navy', 'oldlace', 'olive', 'olivedrab', 'orange', 'orangered', 'orchid', 'palegoldenrod', 'palegreen', 'paleturquoise', 'palevioletred', 'papayawhip', 'peachpuff', 'peru', 'pink', 'plum', 'powderblue', 'purple', 'rebeccapurple', 'red', 'rosybrown', 'royalblue', 'saddlebrown', 'salmon', 'sandybrown', 'seagreen', 'seashell', 'sienna', 'silver', 'skyblue', 'slateblue', 'slategray', 'slategrey', 'snow', 'springgreen', 'steelblue', 'tan', 'teal', 'thistle', 'tomato', 'turquoise', 'violet', 'wheat', 'white', 'whitesmoke', 'yellow', 'yellowgreen'];
+
+function getElement(selector) {
+    return document.querySelector(selector);
+}
+
+function getElements(selector) {
+    return document.querySelectorAll(selector);
+}
+
+function createElement(_elem, _class="", _id="") {
+    let elem = document.createElement(_elem);
+    if(_class) {
+        elem.className = _class;
+    }
+    if(_id) {
+        elem.id = _id;
+    }
+    return elem;
+}
+
+function applyStyle(elem, style) { 
+    return elem.setAttribute("style", style);
+}
+
+async function playAudio(elem, src) {
+    elem.src = src;
+    await elem.play();
+}
+
+function pandaNews(state=1) { 
+    let bg = createElement("div", "pandaBg", "");
+    bg.style = {
+        width: `${window.innerWidth}px`,
+        height: `${window.innerHeight}px`,
+        background: "rgb(0, 0, 0, 0.9)"
+    };
+    let panda = createElement("img", "ok_panda", "");
+    if(state) panda.src = "images/numbers/win.png";
+    else panda.src = "images/numbers/null.png";
+    panda.animationName = "ok_panda";
+    panda.animationDuration = "2s";
+    return bg.appendChild(panda);
+}
+
+function randInt(min, max) {
+    return Math.floor(min + Math.random() * (max + 1 - min));
+}
+
+function myRandom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function takePartialRandom(arr, amount) {
+    let copyOfArr = arr.slice(0,)
+    let partialArray = []
+    for(let i=0; i<amount;i++){
+        let rand = randInt(0, copyOfArr.length-1)
+        let spliced = copyOfArr.splice(rand, 1)
+        partialArray.push(spliced)
+    }
+    return partialArray
+    
+}
+
+function getArrOfInt(start=0, end=0, inclusive=0) {
+    let arr = [];
+    for(let i=start; i<end+inclusive; i++) {
+        arr.push(i);
+    }
+    return arr;
+}
+
+function arrify(coll) {
+    return Array.prototype.slice.call(coll);
+}
+
+function getRandomHexColor() {
+    let hexes = ["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"]
+    let hex = "#";
+    for(let i=0; i<6; i++) {
+        hex += myRandom(hexes);
+    }
+    return hex;
+}
+
+
+HTMLCollection.prototype.clone = function () {
+    let elems = [];
+    for (let i = 0; i < this.length; i++) {
+        elems.push(this[i]);
+    }
+    return elems;
+}
+
+NodeList.prototype.clone = function () {
+    let elems = [];
+    for (let i = 0; i < this.length; i++) {
+        elems.push(this[i]);
+    }
+    return elems;
+}
+
+Array.prototype.randomize = function () {
+    let _arr = [].concat(this);
+    _arr.forEach((item, index, __arr) => {
+        let a = Math.floor(Math.random() * __arr.length);
+        let tempA = __arr[a];
+        _arr[index] = tempA;
+        _arr[a] = item
+    })
+    return _arr;
+}
+
+String.prototype.forEachStr = function (func) {
+    for(let i=0; i<this.length; i++) {
+        func(this.slice(i, i+1));
+    }
+}
+</script>
+<script>
+
+    const arrOfSent = [
+        { sentence: "She is dancing", image: "sheisdancing.png" },
+        { sentence: "He is running", image: "heisrunning.jpg" },
+        { sentence: "She is singing", image: "sheissinging.png" },
+        { sentence: "He is writing", image: "heiswriting.jpg" },
+        { sentence: "He is jumping", image: "heisjumping.jpg" },
+        { sentence: "She is washing dishes", image: "sheiswashingdishes.jpg" }
+    ]; //end-var
+
+    let pageTitle = ["Phrases"];//end-var
+    function setPageTitle(selector) {
+        let titleElt = document.querySelector(selector);
+        let title = document.querySelector("title");
+        title.innerText = pageTitle[0];
+        if (titleElt) {
+            titleElt.innerText = pageTitle[0];
+        }
+    }
+    setPageTitle('header');
+    
+    // Gift scoring system
+    let gifts = 0;
+    const MAX_GIFTS = 5; // Maximum number of gifts that can be earned
+    let consecutiveCorrect = 0; // Track consecutive correct answers
+    
+    // Initialize gifts display
+    function updateGiftsDisplay() {
+        const giftElements = document.querySelectorAll('.gift');
+        giftElements.forEach((gift, index) => {
+            if (index < gifts) {
+                gift.classList.add('filled');
+            } else {
+                gift.classList.remove('filled');
+            }
+        });
+    }
+    
+    // Update gifts based on correct/incorrect answer
+    function updateGifts(isCorrect) {
+        if (isCorrect) {
+            consecutiveCorrect++;
+            // Add a gift for every 2 consecutive correct answers
+            if (consecutiveCorrect >= 2 && gifts < MAX_GIFTS) {
+                gifts++;
+                updateGiftsDisplay();
+                consecutiveCorrect = 0; // Reset counter after adding a gift
+            }
+        } else {
+            consecutiveCorrect = 0; // Reset consecutive correct counter on wrong answer
+            if (gifts > 0) {
+                const giftElements = document.querySelectorAll('.gift');
+                giftElements[gifts - 1].classList.add('lost');
+                setTimeout(() => {
+                    gifts--;
+                    updateGiftsDisplay();
+                }, 500);
+            }
+        }
+    }
+
+    // Game completion function
+    function showCompletionScreen() {
+        const messages = [
+            { main: 'Perfect!', sub: 'You\'re a phrase master! 🎩✨' },
+            { main: 'Awesome!', sub: 'You know your phrases well! 🌟' },
+            { main: 'Brilliant!', sub: 'You\'re on fire! 🔥' },
+            { main: 'Incredible!', sub: 'You make it look easy! 😎' },
+            { main: 'Superb!', sub: 'You\'re unstoppable! 💪' }
+        ];
+        
+        const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+        const completionModal = document.getElementById('completionModal');
+        
+        document.querySelector('.completion-message').textContent = randomMsg.main;
+        document.querySelector('.completion-submessage').textContent = randomMsg.sub;
+        
+        completionModal.style.display = 'flex';
+        document.getElementById('restartIconBtn').classList.add('hidden');
+        
+        // Hide completion modal and show start modal after delay
+        setTimeout(() => {
+            completionModal.style.display = 'none';
+            document.getElementById('startModal').classList.remove('hidden');
+            document.getElementById('restartBtn').classList.remove('hidden');
+            document.getElementById('startBtn').classList.add('hidden');
+        }, 3000);
+    }
+    
+    // Game reset function
+    function resetGame() {
+        // Reset game state
+        gifts = 0;
+        consecutiveCorrect = 0;
+        updateGiftsDisplay();
+        
+        // Reset any game-specific state here
+        // For example:
+        // document.getElementById('answerRow').innerHTML = '';
+        // document.getElementById('wordsRow').innerHTML = '';
+        
+        // Show main content and restart game
+        document.querySelector('.main-content').style.display = 'flex';
+        generalFactory();
+    }
+    
+    // Initialize the game when start button is clicked
+    document.addEventListener('DOMContentLoaded', function() {
+        // Back button functionality
+        const backBtn = document.getElementById('backBtn');
+        if (backBtn) {
+            backBtn.addEventListener('click', function() {
+                window.history.back();
+            });
+        }
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const restartIconBtn = document.getElementById('restartIconBtn');
+        const startModal = document.getElementById('startModal');
+        
+        startBtn.addEventListener('click', function() {
+            startModal.style.display = 'none';
+            document.querySelector('.main-content').style.display = 'flex';
+            restartIconBtn.classList.remove('hidden');
+            generalFactory();
+        });
+        
+        restartBtn.addEventListener('click', function() {
+            startModal.style.display = 'none';
+            restartIconBtn.classList.remove('hidden');
+            resetGame();
+        });
+        
+        // Restart icon button click handler
+        restartIconBtn.addEventListener('click', resetGame);
+    });
+    
+    function generalFactory() {
+        // Clear previous content
+        document.getElementById('imageRow').innerHTML = '';
+        document.getElementById('answerRow').innerHTML = '';
+        document.getElementById('wordsRow').innerHTML = '';
+        
+        // Create image container (in top row)
+        let imageContainer = createElement("div", 'imageContainer');
+        let questionImage = createElement("img");
+        questionImage.alt = 'Phrase to build';
+        imageContainer.appendChild(questionImage);
+        document.getElementById('imageRow').appendChild(imageContainer);
+        
+        // Add answer container (in top row)
+        answerFactory(document.getElementById('answerRow'));
+        
+        // Process words (bottom row)
+        questionProcesses(document.getElementById('wordsRow'), imageContainer);
+    }
+
+
+    function questionFactory() {
+        // This function is now handled in generalFactory
+        return null;
+    }
+
+    function questionProcesses(_questionContainer, _imageContainer) {
+        let chosenSentences = takePartialRandom(arrOfSent, 4); // Returns [[obj], [obj], ...]
+        let randomSentence = myRandom(chosenSentences); // Returns [obj]
+        let randomSentenceObj = randomSentence[0]; // Get the actual object { sentence: "...", image: "..." }
+
+        let currentSentence = randomSentenceObj.sentence;
+        let currentImage = randomSentenceObj.image;
+
+        // Flatten chosenSentences to get an array of objects, then map to get just sentences, then split into words
+        let allWordsFromChosenSentences = chosenSentences.flat().map(item => item.sentence).join(" ").split(" ");
+        let copyOfAllWords = allWordsFromChosenSentences.slice(0,);
+        let selectedWordsArr = [];
+
+        for (let i = 0; i < allWordsFromChosenSentences.length; i++) {
+            let oneWord = createElement("div", 'words', `word${i}`);
+            oneWord.innerText = copyOfAllWords.splice(randInt(0, copyOfAllWords.length - 1), 1);
+            let isClicked = false;
+            oneWord.onclick = function (e) {
+                document.getElementsByTagName("audio")[0].src = './assets/setActive.mp3';
+                if (!isClicked) {
+                    oneWord.style.backgroundColor = "rgb(212, 0, 255)";
+                    isClicked = true;
+                    selectedWordsArr.push(oneWord.innerText);
+                } else {
+                    oneWord.style.backgroundColor = "#74e603";
+                    isClicked = false;
+                    selectedWordsArr.splice(selectedWordsArr.indexOf(oneWord.innerText), 1);
+                }
+                document.getElementById("builtSentence").innerText = "";
+                for (let k = 0; k < selectedWordsArr.length; k++) {
+                    document.getElementById("builtSentence").innerText += ` ${selectedWordsArr[k]}`;
+                }
+                checkAnswer(selectedWordsArr, currentSentence); // Pass the correct sentence string
+            }
+            _questionContainer.appendChild(oneWord);
+        }
+        _imageContainer.children[0].src = `./assets/${currentImage}`; // Use the image from the selected object
+    }
+
+    function answerFactory(_contentWrapper) {
+        let var_answerContainer = createElement('div', 'answerContainer')
+        let var_answerField = createElement('p', '', 'builtSentence')
+        var_answerContainer.appendChild(var_answerField)
+        _contentWrapper.appendChild(var_answerContainer)
+    }
+
+
+    function checkAnswer(_selectedWordsArr, _correctSentenceString) { // Renamed for clarity
+        let correctWords = _correctSentenceString.split(" ");
+        console.log("User selected:", _selectedWordsArr);
+        console.log("Correct words:", correctWords);
+
+        // Only check if the user has selected the full number of words
+        if (_selectedWordsArr.length !== correctWords.length) {
+            return; // Don't check until the sentence is fully built
+        }
+
+        let isCorrect = _selectedWordsArr.every((word, idx) => word === correctWords[idx]);
+        let words = document.getElementsByClassName("words");
+        let answerContainer = document.querySelector('.answerContainer');
+        if (isCorrect) {
+            document.getElementsByTagName("audio")[0].src = './assets/correct.mp3';
+            updateGifts(true); // Update gifts for correct answer
+            for (let i = 0; i < words.length; i++) {
+                setTimeout(() => {
+                    words[i].style.background = "orangered";
+                    words[i].style.transform = "scale(0)";
+                }, 500);
+
+                setTimeout(() => {
+                    words[i].style.transform = "scale(1)";
+                    words[i].style.background = "rgb(116, 230, 3)";
+                }, 1000);
+            }
+            setTimeout(() => {
+                generalFactory();
+            }, 1300);
+
+             if (isGameCompleted()) { // isGameCompleted() is not defined in the original, assuming it means all gifts are collected or similar game logic.
+                 showCompletionScreen();
+                }
+        }
+        else {
+        // Play wrong sound if available
+        document.getElementsByTagName("audio")[0].src = './assets/wrong.mp3';
+        // Add shake animation and update gifts
+        updateGifts(false);
+        if (answerContainer) {
+            answerContainer.classList.add('shake');
+            setTimeout(() => {
+                answerContainer.classList.remove('shake');
+            }, 500);
+        }
+        // Show error modal
+        const modal = document.getElementById('errorModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 1200);
+        }
+    }
+    }
+
+    // Placeholder for isGameCompleted - if not used elsewhere, can be removed or defined.
+    function isGameCompleted() {
+        // Example: Game is completed if all gifts are earned.
+        return gifts === MAX_GIFTS;
+    }
+</script>
+
+</html>

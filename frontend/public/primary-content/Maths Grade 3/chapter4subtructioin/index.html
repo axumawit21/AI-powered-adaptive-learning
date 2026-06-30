@@ -1,0 +1,638 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vertical Subtraction - Grade 3 Math</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --space-bg: #0B0C10;
+            --star-color: #C5C6C7;
+            --neon-blue: #45A29E;
+            --neon-green: #66FCF1;
+            --danger: #FF4B4B;
+            --card-bg: rgba(31, 40, 51, 0.9);
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--space-bg);
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* Space Background Animation */
+        .stars {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; pointer-events: none;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0));
+            background-size: 200px 200px;
+            animation: twinkle 4s linear infinite;
+        }
+        @keyframes twinkle {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-200px); }
+        }
+
+        header {
+            width: 100%; padding: 15px 20px;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            display: grid; grid-template-columns: auto 1fr auto; align-items: center;
+            box-sizing: border-box; border-bottom: 2px solid var(--neon-blue);
+        }
+        h1 { margin: 0; font-size: 1.5rem; color: var(--neon-green); text-shadow: 0 0 6px var(--neon-blue); text-align: center; }
+
+        .header-item-left { display: flex; justify-content: flex-start; }
+        .header-item-right { display: flex; justify-content: flex-end; }
+
+        .grade-badge {
+            background: var(--neon-green); color: #000; width: 50px; height: 50px;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.8rem; border: 2px solid #fff;
+            box-shadow: 0 0 12px rgba(102, 252, 241, 0.5); transform: rotate(-5deg);
+        }
+
+        /* Custom Dropdown */
+        .custom-select-wrapper { position: relative; display: inline-block; cursor: pointer; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 14px; font-weight: 700; color: var(--neon-green);
+            height: 40px; background: rgba(0,0,0,0.6); border-radius: 20px;
+            width: 160px; border: 2px solid var(--neon-blue);
+        }
+        .custom-options {
+            position: absolute; top: 115%; right: 0; left: 0;
+            background: #0B0C10; opacity: 0; visibility: hidden;
+            pointer-events: none; transform: translateY(-10px);
+            transition: all 0.3s ease; display: flex; flex-direction: column;
+            border-radius: 12px; padding: 6px; box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+            border: 1px solid var(--neon-blue); z-index: 200;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; pointer-events: all; transform: translateY(0); }
+        .custom-option { padding: 8px; border-radius: 8px; cursor: pointer; font-weight: 600; color: #E5E7EB; }
+        .custom-option:hover { background: rgba(102, 252, 241, 0.1); color: var(--neon-green); }
+
+        #game-container {
+            flex: 1; width: 100%; max-width: 600px;
+            padding: 20px; box-sizing: border-box;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Glass Card */
+        .card {
+            background: var(--card-bg);
+            border: 2px solid var(--neon-blue);
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.2);
+            padding: 30px 20px;
+            width: 100%;
+            position: relative;
+        }
+
+        .grid-container {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;
+            text-align: center; position: relative; padding-left: 30px;
+        }
+
+        .col-wrapper {
+            display: flex; flex-direction: column; align-items: center;
+            position: relative;
+            padding: 5px;
+            border-radius: 10px;
+            transition: background 0.3s;
+        }
+
+        .label { font-size: 0.8rem; color: #888; margin-bottom: 5px; font-family: monospace; }
+
+        /* Borrow Input (Top Bubble) */
+        .row-borrow { height: 50px; display: flex; align-items: flex-end; justify-content: center; width: 100%; }
+        .input-borrow {
+            width: 45px; height: 45px; border-radius: 50%;
+            border: 2px solid var(--neon-green); background: #000;
+            color: var(--neon-green); font-size: 1.5rem; text-align: center;
+            font-weight: bold; outline: none;
+            box-shadow: 0 0 5px var(--neon-green);
+            /* transform: scale(0); transition: transform 0.2s; */
+        }
+        /* .input-borrow.active { transform: scale(1); } */
+
+        /* Digits */
+        .row-digit {
+            height: 60px; font-size: 3rem; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            color: white; position: relative; cursor: pointer;
+            user-select: none;
+        }
+        
+        /* Strikethrough Effect */
+        .strikethrough::after {
+            content: ''; position: absolute;
+            width: 80%; height: 4px; background: var(--danger);
+            top: 50%; left: 10%;
+            transform: rotate(-20deg);
+            box-shadow: 0 0 5px var(--danger);
+            animation: slash 0.2s ease-out;
+        }
+        @keyframes slash { from { width: 0; } to { width: 80%; } }
+
+        .operator {
+            position: absolute; left: 5px; top: 170px;
+            font-size: 3rem; font-weight: bold; color: var(--neon-green);
+        }
+
+        /* Result Inputs */
+        .divider { height: 4px; background: var(--neon-blue); width: 100%; border-radius: 2px; margin: 5px 0; box-shadow: 0 0 5px var(--neon-blue); }
+        
+        input.input-result {
+            width: 100%; height: 60px; font-size: 2.5rem;
+            background: rgba(255,255,255,0.1); border: 2px solid #444;
+            border-radius: 10px; color: white; text-align: center;
+            font-weight: bold; outline: none;
+        }
+        input.input-result:focus { border-color: white; background: rgba(255,255,255,0.2); }
+
+        /* Controls */
+        .controls-panel { display: flex; gap: 10px; margin-top: 25px; width: 100%; }
+        .btn {
+            flex: 1; padding: 15px; border: none; border-radius: 50px;
+            font-size: 1.1rem; font-weight: bold; cursor: pointer;
+            font-family: 'Fredoka', sans-serif;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        .btn:active { transform: translateY(2px); }
+        
+        .btn-check { background: var(--neon-green); color: #000; box-shadow: 0 4px 0 #45A29E; }
+        .btn-explain { background: #FFD700; color: #000; box-shadow: 0 4px 0 #DAA520; }
+        .btn-next { background: #2196F3; color: white; box-shadow: 0 4px 0 #1976D2; }
+
+        /* Explanation */
+        .explanation-box {
+            background: rgba(0,0,0,0.8); border: 1px solid var(--neon-green);
+            padding: 15px; margin-top: 15px; border-radius: 10px;
+            font-size: 1.1rem; line-height: 1.4; display: none;
+            box-shadow: 0 0 15px rgba(102, 252, 241, 0.1);
+        }
+
+        .col-highlight { background: rgba(255, 255, 255, 0.1); box-shadow: 0 0 15px rgba(255, 255, 255, 0.1); }
+        .correct-input { border-color: #00E676 !important; color: #00E676 !important; }
+        .wrong-input { border-color: var(--danger) !important; animation: shake 0.4s; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+        /* Feedback Modal */
+        #feedback-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
+        #feedback-modal.show { opacity: 1; pointer-events: all; }
+        .modal-content { background: #1F2833; border: 2px solid var(--neon-green); color: white; padding: 30px; border-radius: 20px; text-align: center; transform: scale(0.8); transition: 0.3s; box-shadow: 0 0 30px var(--neon-green); }
+        #feedback-modal.show .modal-content { transform: scale(1); }
+        .modal-icon { font-size: 4rem; display: block; margin-bottom: 10px; }
+
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+
+    <header>
+        <div class="header-item-left"><div class="grade-badge">3</div></div>
+        <h1 id="app-title">ምጉዳል (Subtraction)</h1>
+        <div class="header-item-right">
+            <div class="custom-select-wrapper" id="lang-dropdown">
+                <div class="custom-select">
+                    <div class="custom-select__trigger">
+                        <span id="current-lang-text">🗺️ ትግርኛ</span>
+                        <span style="font-size:0.8rem">▼</span>
+                    </div>
+                    <div class="custom-options">
+                        <div class="custom-option" data-value="ti">ትግርኛ</div>
+                        <div class="custom-option" data-value="am">አማርኛ</div>
+                        <div class="custom-option" data-value="en">English</div>
+                        <div class="custom-option" data-value="om">Afan Oromoo</div>
+                        <div class="custom-option" data-value="so">Soomaali</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="game-container">
+        <div class="card">
+            <div class="operator">−</div>
+            <div class="grid-container" id="grid">
+                <!-- Columns (Thousands to Ones) -->
+                <!-- Columns generated via JS to ensure IDs match logic -->
+            </div>
+
+            <div id="explanation" class="explanation-box"></div>
+
+            <div class="controls-panel">
+                <button class="btn btn-check" id="btn-check" onclick="checkAnswer()">✓ Check</button>
+                <button class="btn btn-explain" id="btn-explain" onclick="startWalkthrough()">💡 Explain</button>
+                <button class="btn btn-next" id="btn-next" onclick="generateProblem()">↻ Next</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="feedback-modal">
+        <div class="modal-content">
+            <span class="modal-icon" id="fb-icon"></span>
+            <h3 id="fb-title"></h3>
+            <button class="btn btn-next" style="margin-top:20px" onclick="closeModal()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        let num1 = 0, num2 = 0;
+        let explainStep = -1;
+
+        const subTranslations = {
+            ti: {
+                title: "ምጉዳል (Subtraction)",
+                check: "✓ ፈትሽ",
+                explain: "💡 ኣረድአኒ",
+                next: "↻ ቀፃሊ",
+                correctTitle: "ትኽክል!",
+                wrongTitle: "ጌጋ! እንደገና ፈትን",
+                explainBorrow: "ካብ {valStart}። {botVal} ክንቅንስ ኣይንክእልን። ስለዚ ካብ ቀፃሊ ዘሎ 1 ንምልቃሕ ንሓቶ። ሕጂ ኣብዚ {newVal} አለና {newVal} − {botVal} = {res}።",
+                explainNoBorrow: "{valStart} እኩል እዩ። {valStart} − {botVal} = {res}።"
+            },
+            am: {
+                title: "መቀነስ (Subtraction)",
+                check: "✓ ፈትሽ",
+                explain: "💡 አስረዳ",
+                next: "↻ ቀጣይ",
+                correctTitle: "ትክክል!",
+                wrongTitle: "ስህተት! እንደገና ፈትሽ",
+                explainBorrow: "እዚ ላይ {valStart} አለን። ግን {botVal} ማቀነስ አንችልም። ከሚከተለው ቦታ 1 አንበደራለን። አሁን {newVal} አለን። {newVal} − {botVal} = {res}።",
+                explainNoBorrow: "{valStart} በቂ ነው። {valStart} − {botVal} = {res}።"
+            },
+            en: {
+                title: "Subtraction",
+                check: "✓ Check",
+                explain: "💡 Explain",
+                next: "↻ Next",
+                correctTitle: "Mission Accomplished!",
+                wrongTitle: "Off Course! Try Again.",
+                explainBorrow: "We have {valStart}, but need to subtract {botVal}. We can't, so we borrow 1 from the next column. Now we have {newVal}. {newVal} − {botVal} = {res}.",
+                explainNoBorrow: "{valStart} is big enough. {valStart} − {botVal} = {res}."
+            },
+            om: {
+                title: "Hir'isu",
+                check: "✓ Mirkaneessi",
+                explain: "💡 Hiiki",
+                next: "↻ Itti Aanu",
+                correctTitle: "Sirrii!",
+                wrongTitle: "Dogoggora! Irra deebi'i",
+                explainBorrow: "As {valStart} qabna; garuu {botVal} hir'isu hin dandeenyu. Kolomii bitaa irraa 1 liqeeffanna. Amma {newVal} qabna. {newVal} − {botVal} = {res}.",
+                explainNoBorrow: "{valStart} gahaa dha. {valStart} − {botVal} = {res}."
+            },
+            so: {
+                title: "Iska-jarka",
+                check: "✓ Hubi",
+                explain: "💡 Sharax",
+                next: "↻ Xiga",
+                correctTitle: "Sax!",
+                wrongTitle: "Qalad! Mar kale isku day",
+                explainBorrow: "Waxaan haysannaa {valStart}, laakiin ma goyn karno {botVal}. Hal ka amaah qolooyinka bidix. Hadda waxaan leenahay {newVal}. {newVal} − {botVal} = {res}.",
+                explainNoBorrow: "{valStart} waa ku filan yahay. {valStart} − {botVal} = {res}."
+            }
+        };
+
+        let currentLang = 'ti';
+
+        function updateLanguage() {
+            const t = subTranslations[currentLang] || subTranslations.ti;
+            document.getElementById('app-title').textContent = t.title;
+            document.getElementById('btn-check').textContent = t.check;
+            document.getElementById('btn-explain').textContent = t.explain;
+            document.getElementById('btn-next').textContent = t.next;
+
+            // Update feedback modal title if visible
+            const modal = document.getElementById('feedback-modal');
+            if (modal && modal.classList.contains('show')) {
+                const title = document.getElementById('fb-title');
+                if (title && title.textContent) {
+                    // If it currently shows the English correct text, map to localized correct
+                    if (title.textContent === (subTranslations.en.correctTitle || 'Mission Accomplished!')) {
+                        title.textContent = t.correctTitle;
+                    } else {
+                        // Otherwise assume it's the wrong-title variant
+                        title.textContent = t.wrongTitle;
+                    }
+                }
+            }
+
+            // If explanation box is open, re-render current step text in new language
+            const explBox = document.getElementById('explanation');
+            if (explBox && explBox.style.display === 'block') {
+                renderExplanationForCurrentStep();
+            }
+        }
+
+        window.onload = () => {
+            createGrid();
+            generateProblem();
+            setupLanguageDropdown();
+            updateLanguage();
+        };
+
+        function createGrid() {
+            const container = document.getElementById('grid');
+            const labels = ['Th', 'H', 'T', 'O'];
+            let html = '';
+            
+            // Create 4 columns (3 down to 0)
+            for(let i=3; i>=0; i--) {
+                html += `
+                <div class="col-wrapper" id="col-${i}">
+                    <div class="label">${labels[3-i]}</div>
+                    <div class="row-borrow"><input type="number" class="input-borrow" id="borrow-${i}" placeholder=""></div>
+                    <div class="row-digit" id="top-${i}" onclick="toggleStrike(${i})">0</div>
+                    <div class="row-digit" id="bot-${i}">0</div>
+                    <div class="divider"></div>
+                    <div><input type="number" class="input-result" id="res-${i}"></div>
+                </div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function generateProblem() {
+            resetState();
+            // Generate Top > Bottom, ensuring some borrowing is needed
+            // Strategy: Generate digit by digit, but sometimes ensure Top < Bottom to force borrow
+            let n1_digits = [], n2_digits = [];
+            
+            // Thousands (Top must be >= Bottom)
+            let t1 = Math.floor(Math.random() * 9) + 1; // 1-9
+            let t2 = Math.floor(Math.random() * t1); // 0 to t1-1
+            
+            n1_digits[3] = t1; n2_digits[3] = t2;
+
+            // Hundreds, Tens, Ones
+            // Force at least one borrow scenario
+            let forcedBorrowIndex = Math.floor(Math.random() * 3); // 0, 1, or 2
+
+            for(let i=2; i>=0; i--) {
+                let d1 = Math.floor(Math.random() * 10);
+                let d2 = Math.floor(Math.random() * 10);
+                
+                if(i === forcedBorrowIndex) {
+                    // Force d1 < d2
+                    if(d1 >= d2) d1 = Math.max(0, d2 - 1); // Ensure d1 is smaller
+                    // Special case if d2 is 0 (rare), fix d1
+                    if(d2 === 0) { d2 = 5; d1 = 3; }
+                }
+                
+                n1_digits[i] = d1;
+                n2_digits[i] = d2;
+            }
+
+            // Construct numbers
+            num1 = n1_digits[3]*1000 + n1_digits[2]*100 + n1_digits[1]*10 + n1_digits[0];
+            num2 = n2_digits[3]*1000 + n2_digits[2]*100 + n2_digits[1]*10 + n2_digits[0];
+
+            // Safety check (unlikely but possible logic edge case)
+            if(num1 <= num2) { generateProblem(); return; }
+
+            // Render
+            for(let i=0; i<=3; i++) {
+                document.getElementById(`top-${i}`).textContent = n1_digits[i];
+                document.getElementById(`bot-${i}`).textContent = n2_digits[i];
+            }
+        }
+
+        function resetState() {
+            explainStep = -1;
+            document.getElementById('explanation').style.display = 'none';
+            document.querySelectorAll('.col-wrapper').forEach(el => el.classList.remove('col-highlight'));
+            document.querySelectorAll('.row-digit').forEach(el => el.classList.remove('strikethrough'));
+            document.querySelectorAll('input').forEach(el => {
+                el.value = '';
+                el.classList.remove('correct-input', 'wrong-input');
+            });
+        }
+
+        function toggleStrike(idx) {
+            // User interaction: Click top digit to simulate borrowing
+            const el = document.getElementById(`top-${idx}`);
+            const inp = document.getElementById(`borrow-${idx}`);
+            
+            if (el.classList.contains('strikethrough')) {
+                el.classList.remove('strikethrough');
+                // Optional: clear borrow input
+            } else {
+                el.classList.add('strikethrough');
+                inp.focus();
+            }
+        }
+
+        function checkAnswer() {
+            document.getElementById('explanation').style.display = 'none';
+            const expectedDiff = num1 - num2;
+            
+            // Get user result
+            let userResStr = '';
+            for(let i=3; i>=0; i--) {
+                const val = document.getElementById(`res-${i}`).value;
+                userResStr += val === '' ? '0' : val; // Handle leading blanks as 0 if logical, mostly user inputs right to left
+            }
+            const userRes = parseInt(userResStr);
+
+            // Validate individual boxes
+            const diffStr = expectedDiff.toString().padStart(4, '0');
+            let allCorrect = true;
+
+            for(let i=0; i<=3; i++) {
+                const inp = document.getElementById(`res-${i}`);
+                const digit = parseInt(diffStr[3-i]); // diffStr index 0 is thousands
+                
+                // Allow empty if leading zero
+                const userVal = inp.value === '' ? 0 : parseInt(inp.value);
+                
+                if (i===3 && digit===0 && inp.value==='') {
+                    // Leading zero empty is fine
+                    inp.classList.remove('wrong-input');
+                } else if (userVal === digit) {
+                    inp.classList.add('correct-input');
+                    inp.classList.remove('wrong-input');
+                } else {
+                    inp.classList.add('wrong-input');
+                    inp.classList.remove('correct-input');
+                    allCorrect = false;
+                }
+            }
+
+            showFeedback(allCorrect);
+        }
+
+        function showFeedback(isCorrect) {
+            const modal = document.getElementById('feedback-modal');
+            const icon = document.getElementById('fb-icon');
+            const title = document.getElementById('fb-title');
+            const t = subTranslations[currentLang] || subTranslations.ti;
+            
+            if(isCorrect) {
+                icon.textContent = '🚀';
+                title.textContent = t.correctTitle;
+                title.style.color = 'var(--neon-green)';
+            } else {
+                icon.textContent = '☄️';
+                title.textContent = t.wrongTitle;
+                title.style.color = 'var(--danger)';
+            }
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('feedback-modal').classList.remove('show');
+            const t = subTranslations[currentLang] || subTranslations.ti;
+            if (document.getElementById('fb-title').textContent === t.correctTitle) {
+                generateProblem();
+            }
+        }
+
+        function setupLanguageDropdown() {
+            const dropdown = document.getElementById('lang-dropdown');
+            if (!dropdown) return;
+            const trigger = dropdown.querySelector('.custom-select__trigger');
+            const options = dropdown.querySelectorAll('.custom-option');
+
+            trigger.addEventListener('click', (e) => {
+                dropdown.querySelector('.custom-select').classList.toggle('open');
+                e.stopPropagation();
+            });
+
+            options.forEach(opt => {
+                opt.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    currentLang = this.dataset.value;
+                    document.getElementById('current-lang-text').textContent = "🗺️ " + this.textContent;
+                    dropdown.querySelector('.custom-select').classList.remove('open');
+                    updateLanguage();
+                });
+            });
+
+            window.addEventListener('click', () => dropdown.querySelector('.custom-select').classList.remove('open'));
+        }
+
+        function startWalkthrough() {
+            // Clean UI and advance to next step
+            document.querySelectorAll('.col-wrapper').forEach(el => el.classList.remove('col-highlight'));
+
+            explainStep = (explainStep + 1) % 4; // 0=Ones, 1=Tens...
+
+            renderExplanationForCurrentStep();
+        }
+
+        function renderExplanationForCurrentStep() {
+            // Ensure a valid step
+            if (explainStep < 0) explainStep = 0;
+
+            // We need to calculate current state considering borrows
+            // This logic is complex to simulate perfectly without a state machine, 
+            // but we will calculate what the value *should* be at this column.
+            
+            // Simple Walkthrough: Just look at column i. If top < bottom, explain borrow.
+            
+            const i = explainStep;
+            const col = document.getElementById(`col-${i}`);
+            col.classList.add('col-highlight');
+            
+            const topVal = parseInt(document.getElementById(`top-${i}`).textContent);
+            const botVal = parseInt(document.getElementById(`bot-${i}`).textContent);
+            
+            // We need to know if this column *was* borrowed from (by i-1) 
+            // and if it needs to borrow (from i+1).
+            // Let's re-calculate the full array state.
+            let currentTops = [
+                parseInt(document.getElementById('top-0').textContent),
+                parseInt(document.getElementById('top-1').textContent),
+                parseInt(document.getElementById('top-2').textContent),
+                parseInt(document.getElementById('top-3').textContent)
+            ];
+
+            // Apply borrows from right to left up to current step?
+            // Actually standard algorithm goes Right to Left.
+            
+            // Re-simulate borrows for the explanation text
+            let borrowedFromNext = false;
+            let actualTop = currentTops[i];
+            
+            // Check if right neighbor needed to borrow from me
+            // This requires lookahead. 
+            // Let's just compute the borrow chain for the whole number first.
+            let borrows = [0, 0, 0, 0]; // 1 if borrowed from next
+            
+            // Calculate necessary borrows
+            let tempTops = [...currentTops];
+            for(let k=0; k<3; k++) {
+                if (tempTops[k] < parseInt(document.getElementById(`bot-${k}`).textContent)) {
+                    borrows[k] = 1; // k borrows from k+1
+                    tempTops[k] += 10;
+                    tempTops[k+1] -= 1;
+                }
+            }
+
+            const t = subTranslations[currentLang] || subTranslations.ti;
+            // Now describe step i
+            let txt = '';
+            
+            // 1. Did I lose 1 to the right?
+            let valStart = currentTops[i];
+            if (i > 0 && borrows[i-1]) {
+                valStart -= 1;
+                // Visual: Strike current, show decremented value
+                document.getElementById(`top-${i}`).classList.add('strikethrough');
+                document.getElementById(`borrow-${i}`).value = valStart;
+            }
+
+            // 2. Do I need to borrow from left?
+            if (valStart < botVal) {
+                // Visual: Cross out next
+                if(i < 3) {
+                    document.getElementById(`top-${i+1}`).classList.add('strikethrough');
+                    let nextVal = currentTops[i+1] - 1;
+                    document.getElementById(`borrow-${i+1}`).value = nextVal;
+                }
+                
+                // Show my new value (e.g. 2 becomes 12)
+                let newVal = valStart + 10;
+                document.getElementById(`borrow-${i}`).value = newVal;
+                document.getElementById(`top-${i}`).classList.add('strikethrough'); // Strike original if not already
+                
+                const res = newVal - botVal;
+                txt = t.explainBorrow
+                    .replace('{valStart}', valStart)
+                    .replace('{botVal}', botVal)
+                    .replace('{newVal}', newVal)
+                    .replace('{res}', res);
+                
+                // Auto fill result
+                document.getElementById(`res-${i}`).value = newVal - botVal;
+                document.getElementById(`res-${i}`).classList.add('correct-input');
+
+            } else {
+                const res = valStart - botVal;
+                txt = t.explainNoBorrow
+                    .replace('{valStart}', valStart)
+                    .replace('{botVal}', botVal)
+                    .replace('{res}', res);
+                document.getElementById(`res-${i}`).value = res;
+                document.getElementById(`res-${i}`).classList.add('correct-input');
+            }
+
+            const box = document.getElementById('explanation');
+            box.innerText = txt;
+            box.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

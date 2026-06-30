@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="ti">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Word Jumble Fun!</title>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1 data-i18n="title">Word Jumble Fun!</h1>
+            <div class="lang-switcher">
+                <label for="langSelect" class="visually-hidden">Language</label>
+                <button id="muteBtn" type="button" class="mute-btn" aria-label="Mute" title="Mute">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <select id="langSelect" aria-label="Language" class="lang-select">
+                    <option value="ti">ትግርኛ</option>
+                    <option value="am">አማርኛ</option>
+                    <option value="en">English</option>
+                    <option value="om">Afaan Oromoo</option>
+                    <option value="so">Soomaali</option>
+                </select>
+            </div>
+            <div class="score-container">
+                <div class="score">
+                    <span class="reward-label" data-i18n="rewards">Rewards:</span>
+                    <div class="rewards-container" id="rewards-container">
+                        <i class="fas fa-star empty"></i>
+                    </div>
+                </div>
+                <div class="level"><span data-i18n="level">Level:</span> <span id="level">1</span></div>
+            </div>
+        </div>
+        <div class="main-game">
+            <div class="ans-div">
+                <p class="instruction" data-i18n="dragHere">Drag letters here to form the word</p>
+                <div class="answer-slots"></div>
+            </div>
+            <div class="ques-div">
+                <p class="instruction" data-i18n="dragFrom">Drag from here</p>
+                <div class="letter-tiles"></div>
+            </div>
+        </div>
+        <div class="feedback">
+            <div id="feedback" class="feedback-message">
+                <div class="success-container hidden">
+                    <div class="checkmark">
+                        <div class="check-icon">
+                            <span class="icon-line line-tip"></span>
+                            <span class="icon-line line-long"></span>
+                        </div>
+                    </div>
+                    <h2 class="success-message" data-i18n="greatJob">Great Job!</h2>
+                    <p class="encouragement" data-i18n="encouragement">You're doing amazing!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <audio src="" id="sound" autoplay></audio>
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <!-- Completion Modal -->
+    <div id="completionModal" class="modal">
+        <div class="modal-content">
+            <h2 data-i18n="congrats">Congratulations! 🎉</h2>
+            <p data-i18n="completed">You've completed all the words!</p>
+            <div class="final-stars">
+                <i class="fas fa-star"></i>
+                <span id="finalScore">0</span> <span data-i18n="starsCollected">Stars Collected</span>
+            </div>
+            <button id="restartButton" data-i18n="playAgain">Play Again</button>
+        </div>
+    </div>
+</body>
+
+<script>
+    console.log('Hello from utils mod');
+
+    let log = console.log;
+    let table = console.table;
+
+    let punctuations = /[!"#$%&'()*+,-\./:;<=>?@[\]^_`{|}~.]/ig;
+
+    let mostColors = ['aliceblue', 'antiquewhite', 'aqua', 'aquamarine', 'azure', 'beige', 'bisque', 'black', 'blanchedalmond', 'blue', 'blueviolet', 'brown', 'burlywood', 'cadetblue', 'chartreuse', 'chocolate', 'coral', 'cornflowerblue', 'cornsilk', 'crimson', 'cyan', 'darkblue', 'darkcyan', 'darkgoldenrod', 'darkgray', 'darkgrey', 'darkgreen', 'darkkhaki', 'darkmagenta', 'darkolivegreen', 'darkorange', 'darkorchid', 'darkred', 'darksalmon', 'darkseagreen', 'darkslateblue', 'darkslategray', 'darkslategrey', 'darkturquoise', 'darkviolet', 'deeppink', 'deepskyblue', 'dimgray', 'dimgrey', 'dodgerblue', 'firebrick', 'floralwhite', 'forestgreen', 'fuchsia', 'gainsboro', 'ghostwhite', 'gold', 'goldenrod', 'gray', 'grey', 'green', 'greenyellow', 'honeydew', 'hotpink', 'indianred', 'indigo', 'ivory', 'khaki', 'lavender', 'lavenderblush', 'lawngreen', 'lemonchiffon', 'lightblue', 'lightcoral', 'lightcyan', 'lightgoldenrodyellow', 'lightgray', 'lightgrey', 'lightgreen', 'lightpink', 'lightsalmon', 'lightseagreen', 'lightskyblue', 'lightslategray', 'lightslategrey', 'lightsteelblue', 'lightyellow', 'lime', 'limegreen', 'linen', 'magenta', 'maroon', 'mediumaquamarine', 'mediumblue', 'mediumorchid', 'mediumpurple', 'mediumseagreen', 'mediumslateblue', 'mediumspringgreen', 'mediumturquoise', 'mediumvioletred', 'midnightblue', 'mintcream', 'mistyrose', 'moccasin', 'navajowhite', 'navy', 'oldlace', 'olive', 'olivedrab', 'orange', 'orangered', 'orchid', 'palegoldenrod', 'palegreen', 'paleturquoise', 'palevioletred', 'papayawhip', 'peachpuff', 'peru', 'pink', 'plum', 'powderblue', 'purple', 'rebeccapurple', 'red', 'rosybrown', 'royalblue', 'saddlebrown', 'salmon', 'sandybrown', 'seagreen', 'seashell', 'sienna', 'silver', 'skyblue', 'slateblue', 'slategray', 'slategrey', 'snow', 'springgreen', 'steelblue', 'tan', 'teal', 'thistle', 'tomato', 'turquoise', 'violet', 'wheat', 'white', 'whitesmoke', 'yellow', 'yellowgreen'];
+
+    function getElement(selector) {
+        return document.querySelector(selector);
+    }
+
+
+    function getElements(selector) {
+        return document.querySelectorAll(selector);
+    }
+
+    function createElement(_elem, _class = "", _id = "") {
+        let elem = document.createElement(_elem);
+        if (_class) {
+            elem.className = _class;
+        }
+        if (_id) {
+            elem.id = _id;
+        }
+        return elem;
+    }
+
+    function applyStyle(elem, style) {
+        return elem.setAttribute("style", style);
+    }
+
+    async function playAudio(elem, src) {
+        elem.src = src;
+        await elem.play();
+    }
+
+    function pandaNews(state = 1) {
+        let bg = createElement("div", "pandaBg", "");
+        bg.style = {
+            width: `${window.innerWidth}px`,
+            height: `${window.innerHeight}px`,
+            background: "rgb(0, 0, 0, 0.9)"
+        };
+        let panda = createElement("img", "ok_panda", "");
+        if (state) panda.src = "images/numbers/win.png";
+        else panda.src = "images/numbers/null.png";
+        panda.animationName = "ok_panda";
+        panda.animationDuration = "2s";
+        return bg.appendChild(panda);
+    }
+
+    function celebrateStarfish(audiosource, check) {
+
+        let bg = createElement("div", "bg")
+        bg.style.position = "absolute"
+        bg.style.top = "0px"
+        bg.style.width = "100%"
+        bg.style.height = "100vh"
+        bg.style.backgroundColor = "#0000007a"
+        bg.style.backgroundPosition = "center"
+        bg.style.backgroundRepeat = "no-repeat"
+        if(check){
+            bg.style.backgroundImage = "url('./assets/color images16.png')"
+            getElement("#sound").src = "./assets/EpisodeRaceClaimReward.ogg"
+
+        }else{
+            bg.style.backgroundImage = "url('./assets/bg_wrong_smiley.png')"
+            getElement(audiosource).src = './assets/wrong.mp3'
+        }
+        getElement("body").appendChild(bg)
+        setTimeout(function () {
+            getElement("body").removeChild(bg)
+        }, 2000)
+
+    }
+
+    function randInt(min, max) {
+        return Math.floor(min + Math.random() * (max + 1 - min));
+    }
+
+    function myRandom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function getArrOfInt(start = 0, end = 0, inclusive = 0) {
+        let arr = [];
+        for (let i = start; i < end + inclusive; i++) {
+            arr.push(i);
+        }
+        return arr;
+    }
+
+    function arrify(coll) {
+        return Array.prototype.slice.call(coll);
+    }
+
+    function getRandomHexColor() {
+        let hexes = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"]
+        let hex = "#";
+        for (let i = 0; i < 6; i++) {
+            hex += myRandom(hexes);
+        }
+        return hex;
+    }
+
+
+    HTMLCollection.prototype.clone = function () {
+        let elems = [];
+        for (let i = 0; i < this.length; i++) {
+            elems.push(this[i]);
+        }
+        return elems;
+    }
+
+    NodeList.prototype.clone = function () {
+        let elems = [];
+        for (let i = 0; i < this.length; i++) {
+            elems.push(this[i]);
+        }
+        return elems;
+    }
+
+    Array.prototype.randomize = function () {
+        let _arr = [].concat(this);
+        _arr.forEach((item, index, __arr) => {
+            let a = Math.floor(Math.random() * __arr.length);
+            let tempA = __arr[a];
+            _arr[index] = tempA;
+            _arr[a] = item
+        })
+        return _arr;
+    }
+
+    String.prototype.forEachStr = function (func) {
+        for (let i = 0; i < this.length; i++) {
+            func(this.slice(i, i + 1));
+        }
+    }
+</script>
+
+<script>
+    // i18n translations and language handling
+    const translations = {
+      en: {
+        title: 'Construct Words',
+        rewards: 'Rewards:',
+        level: 'Level:',
+        dragHere: 'Drag letters here to form the word',
+        dragFrom: 'Drag from here',
+        greatJob: 'Great Job!',
+        encouragement: "You're doing amazing!",
+        congrats: 'Congratulations! 🎉',
+        completed: "You've completed all the words!",
+        starsCollected: 'Stars Collected',
+        playAgain: 'Play Again'
+      },
+      am: {
+        title: 'ቃላት መመስረት',
+        rewards: 'ሽልማቶች:',
+        level: 'ደረጃ:',
+        dragHere: 'ፊደሎችን እዚህ ጎትት እና ቃሉን አበጁ',
+        dragFrom: 'ከዚህ ጎትት',
+        greatJob: 'እጅግ ጥሩ!',
+        encouragement: 'በጣም ጥሩ!',
+        congrats: 'እንኳን ደስ አለዎት! 🎉',
+        completed: 'ሁሉንም ቃላት ጨርሰዋል!',
+        starsCollected: 'ኮከቦች ተሰብስበዋል',
+        playAgain: 'እንደገና ይጫወቱ'
+      },
+      ti: {
+        title: 'ቃላት ምምስራት',
+        rewards: 'ሽልማታት:',
+        level: 'ደረጃ:',
+        dragHere: 'ፊደላት ናብዚ ጎትት መልሲ ፍጠር',
+        dragFrom: 'ካብዚ ጎትቱ',
+        greatJob: 'ጽቡቕ ስራሕ!',
+        encouragement: 'ብጣዕሚ ጽቡቕ!',
+        congrats: '🎉',
+        completed: 'ኩሎም ቃላት ተመሊሶም!',
+        starsCollected: 'ኮከባት ተኣኪቦም!',
+        playAgain: 'ደጊሞም ይጻወቱ'
+      },
+      om: {
+        title: 'Jechoota',
+        rewards: 'Badhaasa:',
+        level: 'Sadarkaa:',
+        dragHere: 'Qubee asitti harkisi jecha ijaari',
+        dragFrom: 'Asii harkisi',
+        greatJob: 'Hojii gaarii!',
+        encouragement: 'Baayʼee bareedaa gootaa!',
+        congrats: 'Baga gammaddan! 🎉',
+        completed: 'Jechoota hundaa xumurtte!',
+        starsCollected: 'Urjii walitti qabamte',
+        playAgain: 'Itti taphadhu'
+      },
+      so: {
+        title: 'Weedho Erayo',
+        rewards: 'Abaalmarinno:',
+        level: 'Heer:',
+        dragHere: 'Halkan ka jiid xarafyada si aad ereyga u sameyso',
+        dragFrom: 'Halkan ka jiid',
+        greatJob: 'Shaqo wacan!',
+        encouragement: 'Aad baad u fiican tahay!',
+        congrats: 'Hambalyo! 🎉',
+        completed: 'Dhammaan erayadii ayaad dhammaystirtay!',
+        starsCollected: 'Xiddigo la ururiyay',
+        playAgain: 'Ciyaar mar kale'
+      }
+    };
+
+    let currentLang = (localStorage.getItem('lang') || 'ti');
+
+    let isMuted = (localStorage.getItem('muted') === '1');
+
+    function updateMuteButton() {
+      const btn = document.getElementById('muteBtn');
+      if (!btn) return;
+      btn.innerHTML = isMuted
+        ? '<i class="fas fa-volume-mute"></i>'
+        : '<i class="fas fa-volume-up"></i>';
+      btn.setAttribute('aria-label', isMuted ? 'Unmute' : 'Mute');
+      btn.setAttribute('title', isMuted ? 'Unmute' : 'Mute');
+    }
+
+    function applyMuteState() {
+      const audio = document.getElementById('sound');
+      if (audio) audio.muted = isMuted;
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      localStorage.setItem('muted', isMuted ? '1' : '0');
+      applyMuteState();
+      updateMuteButton();
+    }
+
+    function applyLanguage(lang) {
+      currentLang = translations[lang] ? lang : 'en';
+      document.documentElement.lang = currentLang;
+      const els = document.querySelectorAll('[data-i18n]');
+      els.forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const val = (translations[currentLang] && translations[currentLang][key]) || translations.en[key];
+        if (val) el.textContent = val;
+      });
+      setPageTitle();
+    }
+
+    // Ensure selector reflects stored language and bind change
+    document.addEventListener('DOMContentLoaded', () => {
+      const sel = document.getElementById('langSelect');
+      if (sel) {
+        sel.value = currentLang;
+        sel.addEventListener('change', (e) => {
+          const val = e.target.value;
+          localStorage.setItem('lang', val);
+          applyLanguage(val);
+        });
+      }
+
+      const muteBtn = document.getElementById('muteBtn');
+      if (muteBtn) {
+        muteBtn.addEventListener('click', toggleMute);
+      }
+      applyMuteState();
+      updateMuteButton();
+
+      applyLanguage(currentLang);
+    });
+
+    let pageTitle = ["WordSentences"];//end-var
+    function setPageTitle() {
+      let title = document.querySelector("title");
+      const t = (translations[currentLang] && translations[currentLang]['title']) || translations.en['title'] || pageTitle[0];
+      title.innerText = t;
+    }
+    // h1 is updated via i18n; title tag is set in applyLanguage -> setPageTitle
+    let arrOfStr = ["ኣይተ", "ጳውሎስ", "ደቆም", "እንዳ", "ስፌት", "ከዱ", "ሳፌታ", "ፍሽኽ", "እናበለ", "ድልየቶም", "ሓተቶም"];//end-var
+    let chosen = [];
+    let correctAnswers = 0;
+    let currentLevel = 1;
+    let maxWordLength = 2; // Start with 2-letter words
+    let randSent;
+    getRandomSent()
+
+    let active = null;
+
+    createBoth();
+
+    function returnLetterToTiles(box) {
+        const letter = box.querySelector('.box-span');
+        if (letter) {
+            // Find the first empty tile in the letters area (JS-based, mobile-friendly)
+            const emptyTile = getFirstEmptyQuesTile();
+            if (emptyTile) {
+                emptyTile.appendChild(letter);
+                // Reset the box
+                box.innerHTML = '';
+                box.classList.remove('filled');
+                // Play sound
+                getElement("#sound").src = "./assets/click1.mp3";
+                getElement("#sound").play().catch(e => console.log("Audio play failed:", e));
+            }
+        }
+    }
+
+    function sendTileToFirstEmptyAnswer(tileSpan) {
+        const emptyAnswerBox = getFirstEmptyAnswerBox();
+        if (emptyAnswerBox && tileSpan) {
+            emptyAnswerBox.appendChild(tileSpan);
+            emptyAnswerBox.classList.add('filled');
+            getElement("#sound").src = "./assets/click1.mp3";
+            getElement("#sound").play().catch(e => console.log("Audio play failed:", e));
+            checkAnswer();
+        }
+    }
+
+    function getFirstEmptyAnswerBox() {
+        const boxes = document.querySelectorAll('.box-div');
+        for (const b of boxes) {
+            if (!b.querySelector('.box-span')) return b;
+        }
+        return null;
+    }
+
+    function getFirstEmptyQuesTile() {
+        const tiles = document.querySelectorAll('.ques-box-div');
+        for (const t of tiles) {
+            if (!t.querySelector('.box-span')) return t;
+        }
+        return null;
+    }
+
+    function createAnsweringDiv(mainDiv) {
+        let ansDiv = getElement(".answer-slots");
+        ansDiv.innerHTML = ''; // Clear any existing content
+
+        randSent.split("").forEach((_box, index, arr) => {
+            let box = createElement("div", "box-div", "");
+            box.ondrop = drop;
+            box.ondragover = allowDrop;
+            box.onclick = () => returnLetterToTiles(box);
+            box.setAttribute("maxlength", 1);
+            ansDiv.appendChild(box);
+        });
+    }
+
+    function createQuesDiv() {
+        let letterTiles = getElement(".letter-tiles");
+        letterTiles.innerHTML = ''; // Clear any existing content
+
+        let arr = randSent.split("").randomize();
+        arr.forEach((word, index) => {
+            let box = createElement("div", "ques-box-div", "");
+            let boxSpan = createElement("span", "box-span", "");
+            boxSpan.innerText = word;
+            boxSpan.setAttribute("draggable", true);
+            boxSpan.ondragstart = dragStart;
+            boxSpan.dataset.index = index;
+            box.appendChild(boxSpan);
+            box.onclick = () => {
+                const currentSpan = box.querySelector('.box-span');
+                if (currentSpan) sendTileToFirstEmptyAnswer(currentSpan);
+            };
+            letterTiles.appendChild(box);
+        });
+    }
+
+    function createBoth() {
+        createAnsweringDiv();
+        createQuesDiv();
+    }
+
+    function dragStart(event) {
+        active = event.target;
+        event.dataTransfer.setData("Text", event.target.id);
+    }
+
+    function allowDrop(event) {
+        event.preventDefault();
+    }
+
+    function drop(event) {
+        event.preventDefault();
+        var data = event.dataTransfer.getData("Text");
+        getElement("#sound").src = "./assets/click1.mp3";
+        
+        // If dropping onto an answer box
+        if (event.target.className === "box-div") {
+            // If the box already has a letter, return it to tiles first
+            if (event.target.hasChildNodes()) {
+                returnLetterToTiles(event.target);
+            }
+            event.target.appendChild(active);
+            event.target.classList.add('filled');
+        } 
+        // If dropping back to tiles area
+        else if (active.className === 'box-span' && event.target.className === "ques-box-div") {
+            event.target.appendChild(active);
+            // Find and remove the 'filled' class from the box the letter came from
+            const boxes = document.querySelectorAll('.box-div');
+            boxes.forEach(box => {
+                if (box.contains(active)) {
+                    box.classList.remove('filled');
+                }
+            });
+        }
+        
+        checkAnswer();
+    }
+
+    function checkAnswer() {
+        let boxDiv = getElements(".box-div").clone();
+        let sent = boxDiv.map(item => item.innerText);
+        if (sent.indexOf("") === -1) {
+            effect(sent);
+        }
+    }
+
+    function getRandomSent() {
+        // Filter words by current level (word length)
+        const availableWords = arrOfStr.filter(word => word.length === maxWordLength);
+        
+        if (availableWords.length === 0) {
+            // If no words of current length, try next length
+            maxWordLength++;
+            if (maxWordLength > 10) { // Arbitrary max word length
+                showCompletionModal();
+                return;
+            }
+            return getRandomSent();
+        }
+        
+        const randomIndex = randInt(0, availableWords.length - 1);
+        randSent = availableWords[randomIndex];
+        
+        // Remove the selected word from the array
+        const index = arrOfStr.indexOf(randSent);
+        if (index > -1) {
+            arrOfStr.splice(index, 1);
+        }
+        
+        chosen.push(randSent);
+    }
+
+    function showCompletionModal() {
+        const modal = document.getElementById('completionModal');
+        const finalScore = document.querySelectorAll('.rewards-container i:not(.empty)').length;
+        document.getElementById('finalScore').textContent = finalScore;
+        modal.style.display = 'flex';
+        
+        // Restart button handler
+        document.getElementById('restartButton').onclick = function() {
+            location.reload();
+        };
+    }
+    
+    function showSuccessMessage() {
+        const successContainer = document.querySelector('.success-container');
+        const feedback = document.getElementById('feedback');
+        
+        // Show success message
+        successContainer.classList.remove('hidden');
+        feedback.classList.add('show-feedback');
+        
+        // Update correct answers and check level up
+        correctAnswers++;
+        if (correctAnswers % 2 === 0) {
+            currentLevel++;
+            document.getElementById('level').textContent = currentLevel;
+        }
+        
+        // After a delay, hide the message and load next question
+        setTimeout(() => {
+            successContainer.classList.add('hidden');
+            feedback.classList.remove('show-feedback');
+            
+            // Load next question
+            if (arrOfStr.length > 0) {
+                getRandomSent();
+                createBoth();
+            } else if (chosen.length > 0) {
+                // If no more words but there are chosen ones, reset with chosen words
+                arrOfStr = [].concat(chosen);
+                chosen = [];
+                getRandomSent();
+                createBoth();
+            } else {
+                // No more words at all, show completion
+                showCompletionModal();
+            }
+        }, 1500); // 1.5 seconds delay
+    }
+
+    function updateScore(points) {
+        const rewardsContainer = document.getElementById('rewards-container');
+        const currentStars = rewardsContainer.querySelectorAll('.fas.fa-star:not(.empty)').length;
+        
+        // Add a new star for each point
+        for (let i = 0; i < points; i++) {
+            const newStar = document.createElement('i');
+            newStar.className = 'fas fa-star';
+            newStar.style.animationDelay = `${i * 0.1}s`;
+            newStar.style.opacity = '0';
+            
+            // Replace the first empty star or append to the end
+            const emptyStar = rewardsContainer.querySelector('.empty');
+            if (emptyStar) {
+                rewardsContainer.replaceChild(newStar, emptyStar);
+            } else {
+                rewardsContainer.appendChild(document.createTextNode(' '));
+                rewardsContainer.appendChild(newStar);
+            }
+            
+            // Trigger animation
+            setTimeout(() => {
+                newStar.style.transition = 'opacity 0.3s ease-in';
+                newStar.style.opacity = '1';
+                newStar.classList.add('reward-added');
+                setTimeout(() => newStar.classList.remove('reward-added'), 800);
+            }, 50);
+        }
+        
+        // Add pulse effect to the container
+        rewardsContainer.classList.add('reward-pulse');
+        setTimeout(() => rewardsContainer.classList.remove('reward-pulse'), 800);
+    }
+    
+    function effect(arr) {
+        if (arr.join("") === randSent) {
+            celebrateStarfish("#sound", true);
+            updateScore(1);
+            showSuccessMessage();
+        } else {
+            celebrateStarfish("#sound", false);
+        }
+    }
+
+    function reset() {
+        getElement(".main-div").remove();
+    }
+</script>
+
+<style>
+    * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+        font-family: 'Fredoka One', 'Comic Neue', cursive, sans-serif;
+    }
+    
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    body {
+        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        min-height: 100vh;
+        max-height: 100vh;
+        padding: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .game-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 30px;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+        width: 95%;
+        max-width: 800px;
+        max-height: 98vh;
+        padding: 15px;
+        text-align: center;
+        border: 5px solid white;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+    }
+    
+    .game-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 8px;
+        background: linear-gradient(90deg, #ff9a9e, #fad0c4, #fbc2eb, #a6c1ee, #ff9a9e);
+        background-size: 200% auto;
+        animation: gradient 3s linear infinite;
+    }
+
+    .header {
+        margin-bottom: 30px;
+        position: relative;
+        padding-top: 12px; /* room for top-right control */
+    }
+
+    /* Utility for accessible hidden labels */
+    .visually-hidden {
+        position: absolute !important;
+        width: 1px; height: 1px;
+        padding: 0; margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap; border: 0;
+    }
+
+    /* Language selector: modern, glassy pill */
+    .lang-switcher {
+        position: absolute;
+        right: 12px;
+        top: 12px;
+        z-index: 2;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .mute-btn {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        border: 1.5px solid rgba(108, 92, 231, 0.45);
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(6px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        cursor: pointer;
+        color: #fff;
+        transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+        background-image: linear-gradient(45deg, #6c5ce7, #a55ee9);
+    }
+
+    .mute-btn:hover {
+        box-shadow: 0 10px 24px rgba(108, 92, 231, 0.35);
+        transform: translateY(-1px);
+    }
+
+    .mute-btn:active {
+        transform: translateY(0px);
+    }
+
+    .mute-btn:focus {
+        outline: none;
+        border-color: #6c5ce7;
+        box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.25), 0 10px 24px rgba(108, 92, 231, 0.25);
+    }
+
+    .lang-select {
+        -webkit-appearance: none;
+        appearance: none;
+        border: 1.5px solid rgba(108, 92, 231, 0.45);
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(6px);
+        border-radius: 999px;
+        padding: 8px 36px 8px 14px; /* space for arrow */
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #333;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        outline: none;
+        transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+        background-image: linear-gradient(45deg, #6c5ce7, #a55ee9);
+        background-clip: padding-box;
+        color: #fff;
+    }
+
+    /* Custom arrow overlay */
+    .lang-select {
+        background-image: linear-gradient(45deg, #6c5ce7, #a55ee9),
+                          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat, no-repeat;
+        background-position: 0 0, right 12px center;
+        background-size: 100% 100%, 14px 14px;
+    }
+
+    .lang-select:hover {
+        box-shadow: 0 10px 24px rgba(108, 92, 231, 0.35);
+        transform: translateY(-1px);
+    }
+
+    .lang-select:focus {
+        border-color: #6c5ce7;
+        box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.25), 0 10px 24px rgba(108, 92, 231, 0.25);
+    }
+
+    .lang-select option {
+        color: #333;
+        background: #fff;
+    }
+
+    /* Mobile: stack under title, keep centered spacing */
+    @media (max-width: 768px) {
+        .lang-switcher {
+            position: static;
+            margin: 6px auto 4px;
+            justify-content: center;
+        }
+        .header {
+            padding-top: 6px;
+        }
+        .lang-select {
+            width: auto;
+            min-width: 160px;
+        }
+    }
+
+    h1 {
+        background: linear-gradient(45deg, #6c5ce7, #a55ee9, #fd79a8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 5px 0 15px;
+        font-size: 2.2rem;
+        text-shadow: 3px 3px 0 rgba(0,0,0,0.05);
+        letter-spacing: 1px;
+        position: relative;
+        display: inline-block;
+        padding: 0 25px;
+        font-family: 'Fredoka One', cursive;
+    }
+
+    h1::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 4px;
+        background: linear-gradient(90deg, #6c5ce7, #a55ee9);
+        border-radius: 2px;
+    }
+
+    .score-container {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 10px auto;
+        flex-wrap: wrap;
+    }
+
+    .score, .level {
+        background: linear-gradient(135deg, #6c5ce7, #a55ee9);
+        color: white;
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        font-size: 1.3rem;
+        border: 2px solid white;
+    }
+
+    .score:hover, .level:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .score i, .level i {
+        color: #ffd700;
+        animation: bounce 1.5s infinite;
+    }
+    
+    .reward-label {
+        font-size: 0.8em;
+        opacity: 0.8;
+        margin-left: 5px;
+    }
+    
+    .score {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .rewards-container {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .rewards-container i {
+        color: #ffd700;
+        font-size: 1.2em;
+        transition: all 0.3s ease;
+    }
+    
+    .rewards-container i.empty {
+        color: #e0e0e0;
+    }
+    
+    .rewards-container i.reward-added {
+        animation: bounce 0.5s ease;
+    }
+    
+    .rewards-container.reward-pulse {
+        animation: pulse 0.8s ease-out;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .score::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 215, 0, 0.1);
+        border-radius: 50px;
+        transform: scale(0);
+        transition: transform 0.3s ease-out;
+    }
+    
+    .score.reward-added::after {
+        animation: rewardPulse 0.8s ease-out;
+    }
+    
+    @keyframes rewardPulse {
+        0% { transform: scale(0); opacity: 0.8; }
+        50% { transform: scale(1.5); opacity: 0.4; }
+        100% { transform: scale(2); opacity: 0; }
+    }
+
+    .ans-div {
+        background: linear-gradient(145deg, #f8f9fa, #ffffff);
+        padding: 10px;
+        border-radius: 20px;
+        margin: 8px auto;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border: 4px dashed rgba(108, 92, 231, 0.3);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        flex: 0 0 auto;
+        max-width: 100%;
+    }
+
+    .ans-div::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3));
+        z-index: 0;
+        border-radius: 15px;
+    }
+
+    .ans-div:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        border-color: #6c5ce7;
+    }
+
+    .answer-slots {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 20px;
+        min-height: 100px;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .instruction {
+        color: #6c5ce7;
+        font-weight: bold;
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+        position: relative;
+        display: inline-block;
+        background: linear-gradient(135deg, #6c5ce7, #a55ee9);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        padding: 0 15px;
+    }
+
+    .instruction i {
+        margin: 0 8px;
+        animation: float 2s infinite;
+    }
+
+    .ques-div {
+        background: linear-gradient(145deg, #f0f0f0, #ffffff);
+        border-radius: 20px;
+        padding: 10px;
+        margin: 8px 0;
+        text-align: center;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border: 3px solid rgba(108, 92, 231, 0.2);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ques-div::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3));
+        z-index: 0;
+        border-radius: 15px;
+    }
+
+    .ques-div:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        border-color: #ff7675;
+    }
+
+    .letter-tiles {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+        position: relative;
+        z-index: 1;
+        overflow-y: auto;
+        padding: 5px;
+        flex: 1;
+        min-height: 0;
+        align-content: flex-start;
+        scrollbar-width: thin;
+        scrollbar-color: #a5a5a5 transparent;
+    }
+    
+    .letter-tiles::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .letter-tiles::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .letter-tiles::-webkit-scrollbar-thumb {
+        background-color: #a5a5a5;
+        border-radius: 3px;
+    }
+
+    .box-div {
+        width: 50px;
+        height: 50px;
+        border: 2px dashed #4a90e2;
+        margin: 5px;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+    }
+    
+    .box-div.filled {
+        border-style: solid;
+        background: #e8f4ff;
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .box-div.filled::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.5);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .box-div.filled:hover::after {
+        opacity: 1;
+    }
+    
+    .box-div::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 50%;
+        background: rgba(255, 255, 255, 0.7);
+        z-index: -1;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .box-div:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        background: #f8f4ff;
+        border-color: #a55ee9;
+    }
+
+    .box-div:active {
+        transform: translateY(0) scale(0.98);
+    }
+
+    .ques-box-div {
+        background: linear-gradient(135deg, #ff7675, #ff9f7f);
+        border-radius: 15px;
+        width: 65px;
+        height: 65px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 3rem;
+        font-weight: bold;
+        color: white;
+        cursor: grab;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .ques-box-div::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        z-index: -1;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .ques-box-div:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(135deg, #ff8e8e, #ffb08f);
+    }
+
+    .ques-box-div:active {
+        cursor: grabbing;
+        transform: translateY(0) scale(0.98);
+    }
+
+    .box-div:hover, .ques-box-div:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .box-div:active, .ques-box-div:active {
+        transform: translateY(0) scale(0.98);
+    }
+
+    .feedback {
+        margin-top: 10px;
+        min-height: 40px;
+        text-align: center;
+        flex: 0 0 auto;
+    }
+
+    .feedback-message {
+        padding: 15px 30px;
+        border-radius: 50px;
+        font-weight: bold;
+        font-size: 1.3rem;
+        display: inline-block;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .feedback-message::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.2);
+        z-index: -1;
+        border-radius: 50px;
+    }
+
+    .feedback-message.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .correct {
+        background: linear-gradient(135deg, #00b09b, #96c93d);
+        color: white;
+    }
+
+    .incorrect {
+        background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        color: white;
+    }
+    
+    /* Completion Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    .modal-content {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 20px;
+        text-align: center;
+        max-width: 90%;
+        width: 400px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        transform: scale(0.9);
+        animation: modalAppear 0.3s ease-out forwards;
+    }
+    
+    .modal h2 {
+        color: #6c5ce7;
+        margin-bottom: 15px;
+        font-size: 2em;
+    }
+    
+    .modal p {
+        font-size: 1.2em;
+        margin-bottom: 25px;
+        color: #555;
+    }
+    
+    .final-stars {
+        font-size: 2.5em;
+        margin: 20px 0;
+        color: #ffd700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .final-stars i {
+        filter: drop-shadow(0 2px 5px rgba(255, 215, 0, 0.4));
+    }
+    
+    #restartButton {
+        background: linear-gradient(135deg, #6c5ce7, #a55ee9);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        font-size: 1.1em;
+        border-radius: 50px;
+        cursor: pointer;
+        margin-top: 15px;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+    
+    #restartButton:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+    
+    #restartButton:active {
+        transform: translateY(1px);
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes modalAppear {
+        to { transform: scale(1); }
+    }
+
+    .correct, .incorrect {
+        color: white;
+    }
+
+    .incorrect {
+        background-color: #d63031;
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .game-container {
+            width: 95%;
+            padding: 15px;
+        }
+
+        .box-div {
+            width: 60px;
+            height: 60px;
+            font-size: 2rem;
+        }
+
+        .ques-box-div {
+            width: 70px;
+            height: 70px;
+            font-size: 2rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+
+</html>

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Decimal Master | ምውድዳር ዕስሪት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #facc15;
+            --secondary: #2dd4bf;
+            --accent: #f472b6;
+            --danger: #f43f5e;
+            --success: #10b981;
+            --bg-deep: #0f172a;
+            --glass: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(250, 204, 21, 0.3);
+            --safe-top: env(safe-area-inset_top, 20px);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--bg-deep);
+            background-image: 
+                radial-gradient(at 0% 0%, #1e1b4b 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #312e81 0px, transparent 50%),
+                radial-gradient(at 50% 100%, #1e1b4b 0px, transparent 50%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #fff;
+            overflow-x: hidden;
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+        header {
+            width: 100%;
+            max-width: 1300px;
+            padding: var(--safe-top) 15px 15px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .stats-bar { 
+            display: flex; 
+            gap: 8px; 
+            justify-content: center; 
+            flex-wrap: wrap; 
+            width: 100%;
+        }
+
+        .pill {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            padding: 8px 14px;
+            border-radius: 50px;
+            border: 2px solid var(--card-border);
+            font-weight: 800;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .pill-score { border-color: var(--secondary); color: var(--secondary); }
+        .pill-high { border-color: var(--primary); color: var(--primary); }
+        .pill-lvl { border-color: var(--accent); color: var(--accent); }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-mute {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: 0.2s;
+        }
+        .btn-mute:hover { background: rgba(255,255,255,0.2); }
+
+        /* Updated Language Selector Color */
+        .lang-select {
+            padding: 10px 15px;
+            border-radius: 18px;
+            background: var(--secondary);
+            color: var(--bg-deep);
+            border: 2px solid white;
+            font-family: inherit;
+            font-weight: 800;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(45, 212, 191, 0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%230f172a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 35px;
+        }
+
+        .lang-select:hover {
+            transform: scale(1.05);
+            background-color: white;
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .lang-select option {
+            background: white;
+            color: var(--bg-deep);
+            font-weight: 600;
+            padding: 10px;
+        }
+
+        .container {
+            flex: 1;
+            width: 100%;
+            max-width: 1400px;
+            padding: 10px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .game-card {
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            border-radius: 30px;
+            width: 100%;
+            padding: 30px 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            border: 2px solid var(--card-border);
+            text-align: center;
+            position: relative;
+            animation: slideUp 0.6s ease-out;
+            max-width: 850px;
+        }
+
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .quest-text { 
+            font-size: clamp(1.2rem, 4vw, 2rem); 
+            font-weight: 800; 
+            color: var(--primary); 
+            margin-bottom: 25px; 
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.3); 
+        }
+
+        .compare-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .num-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+        }
+        .decimal-val { 
+            font-size: clamp(1.8rem, 7vw, 4.5rem); 
+            font-weight: 900; 
+            color: #fff; 
+            letter-spacing: 1px;
+        }
+        .op-slot {
+            width: clamp(60px, 14vw, 110px);
+            height: clamp(60px, 14vw, 110px);
+            background: rgba(0,0,0,0.3);
+            border: 3px dashed var(--secondary);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(2rem, 8vw, 4.5rem);
+            font-weight: 900;
+            color: var(--secondary);
+            transition: 0.3s;
+            flex-shrink: 0;
+        }
+        .op-slot.filled { border-style: solid; border-color: var(--primary); background: rgba(250, 204, 21, 0.1); color: var(--primary); }
+
+        .grid-preview {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 1px;
+            width: 100%;
+            max-width: 140px;
+            aspect-ratio: 1 / 1;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 1px;
+            border-radius: 4px;
+        }
+        .cell { background: rgba(255,255,255,0.05); border-radius: 1px; }
+        .cell.filled { background: var(--secondary); box-shadow: 0 0 4px var(--secondary); }
+
+        .order-row { 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            gap: 12px; 
+            width: 100%; 
+        }
+        .order-item {
+            padding: 20px 25px;
+            background: rgba(255,255,255,0.05);
+            border: 3px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            font-size: clamp(1.4rem, 5vw, 2.5rem);
+            font-weight: 900;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            flex: 1 1 120px;
+            max-width: 180px;
+        }
+        .order-item:hover { border-color: var(--secondary); background: rgba(45, 212, 191, 0.1); transform: translateY(-3px); }
+        .order-item.selected { 
+            background: var(--primary); color: var(--bg-deep); border-color: #fff; transform: scale(1.05);
+            box-shadow: 0 0 25px var(--primary);
+        }
+        .rank-badge { 
+            width: 32px; height: 32px; border-radius: 50%; background: var(--bg-deep); 
+            color: #fff; font-size: 0.9rem; display: flex; align-items: center; 
+            justify-content: center; font-weight: 800; border: 2px solid white;
+        }
+
+        .btn-reset-order {
+            margin-top: 20px; padding: 10px 20px; border-radius: 15px; border: none;
+            background: rgba(255,255,255,0.1); color: white; font-weight: 700; cursor: pointer;
+        }
+
+        .keypad-section {
+            width: 100%;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .keypad { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 12px; 
+            width: 100%; 
+        }
+        .btn-op {
+            height: clamp(65px, 12vw, 90px);
+            border-radius: 20px;
+            border: none;
+            background: white;
+            color: var(--bg-deep);
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #cbd5e1;
+            transition: 0.1s;
+        }
+        .btn-op:active { transform: translateY(4px); box-shadow: 0 2px 0 #cbd5e1; }
+
+        #wrong-overlay {
+            position: fixed; inset: 0; background: rgba(244, 63, 94, 0.3);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9500; pointer-events: none;
+        }
+        #wrong-overlay span { font-size: 10rem; color: #fff; animation: popX 0.4s forwards; }
+
+        #overlay {
+            position: fixed; inset: 0; background: rgba(2, 6, 23, 0.98);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9000; backdrop-filter: blur(20px); text-align: center;
+            padding: 20px;
+        }
+        .ovl-icon { font-size: 6rem; margin-bottom: 20px; animation: bounceIn 0.8s; }
+        .ovl-title { font-size: clamp(2.5rem, 8vw, 4rem); color: var(--success); text-shadow: 0 0 20px var(--success); margin-bottom: 10px; }
+        .ovl-sub { font-size: clamp(1.2rem, 4vw, 1.8rem); color: #94a3b8; }
+
+        .shake { animation: shakeAnim 0.5s; }
+        @keyframes shakeAnim {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        @media (min-width: 1024px) {
+            header { flex-direction: row; justify-content: space-between; padding: 25px 40px; }
+            .container { flex-direction: row; align-items: center; gap: 40px; padding: 40px; }
+            .game-card { flex: 1.5; padding: 50px 30px; border-radius: 50px; max-width: none; }
+            .keypad-section { flex: 0.5; max-width: 350px; }
+            .keypad { grid-template-columns: 1fr; gap: 15px; }
+            .btn-op { height: 100px; width: 100%; border-radius: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <div id="wrong-overlay"><span>❌</span></div>
+
+    <header>
+        <div class="stats-bar">
+            <div class="pill pill-lvl">🆙 <span id="lblLvl">ደረጃ</span>: <span id="valLvl">1</span></div>
+            <div class="pill pill-high">👑 <span id="lblHigh">ዝለዓለ</span>: <span id="valHigh">0</span></div>
+            <div class="pill pill-score">⭐ <span id="lblScore">ነጥቢ</span>: <span id="valScore">0</span></div>
+        </div>
+        <div class="header-controls">
+            <button class="btn-mute" onclick="toggleMute()" id="btnMute">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+                <option value="ti" selected>ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="game-card" id="gameCard">
+            <div class="quest-text" id="txtQuest">ነዞም ዕስሪት ቁፅርታት ኣወዳድሮም</div>
+            
+            <div id="compareView">
+                <div class="compare-row">
+                    <div class="num-block">
+                        <div class="decimal-val" id="valA">0.5</div>
+                        <div class="grid-preview" id="gridA"></div>
+                    </div>
+                    <div class="op-slot" id="opBox">?</div>
+                    <div class="num-block">
+                        <div class="decimal-val" id="valB">0.42</div>
+                        <div class="grid-preview" id="gridB"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="orderView" style="display: none;">
+                <div class="order-row" id="orderGrid"></div>
+                <button class="btn-reset-order" onclick="resetOrder()" id="btnResetOrder">Reset Selection</button>
+            </div>
+        </div>
+
+        <div class="keypad-section" id="keypadSection">
+            <div class="keypad" id="compControls">
+                <button class="btn-op" onclick="checkAnswer('<')">&lt;</button>
+                <button class="btn-op" onclick="checkAnswer('=')">=</button>
+                <button class="btn-op" onclick="checkAnswer('>')">&gt;</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="overlay">
+        <div class="ovl-icon" id="successEmoji">🏆</div>
+        <h2 class="ovl-title" id="txtWin">ፅቡቅ ስራሕ!</h2>
+        <p class="ovl-sub" id="txtWinSub">ብትኽክል ተመሊሱ!</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { compare: "ነዞም ዕስሪት ቁፅርታት ኣወዳድሮም", asc: "ካብ ዝነኣሰ ናብ ዝዓበየ ስራዕ", desc: "ካብ ዝዓበየ ናብ ዝነኣሰ ስራዕ", win: "ፅቡቅ ስራሕ!", winsub: "ብትኽክል ተመሊሱ!", score: "ነጥቢ", high: "ዝለዓለ", level: "ደረጃ", reset: "ዝመረጽካዮ ደምስስ" },
+            am: { compare: "የአስርዮሽ ቁጥሮችን አወዳድር", asc: "ከትንሽ ወደ ትልቅ ደርድር", desc: "ከትልቅ ወደ ትንሽ ደርድር", win: "ድንቅ ስራ!", winsub: "በትክክል መልሰዋል!", score: "ነጥብ", high: "ከፍተኛ", level: "ደረጃ", reset: "ምርጫን ሰርዝ" },
+            en: { compare: "Compare the decimals", asc: "Order from Smallest to Largest", desc: "Order from Largest to Smallest", win: "Great Job!", winsub: "You answered correctly!", score: "Score", high: "High", level: "Level", reset: "Reset Selection" },
+            om: { compare: "Ddesimaalota wal dorgomsiisi", asc: "Xiqqaarraa gara guddaatti hiriirsi", desc: "Guddaarraa gara xiqqaatti hiriirsi", win: "Hojii Gaarii!", winsub: "Sirriitti deebisteetta!", score: "Qabxii", high: "Olaanaa", level: "Sadarkaa", reset: "Filannoo haq" },
+            so: { compare: "Is barbar dhig jajabyada", asc: "U kala horeey kordhin", desc: "U kala horeey dhiman", win: "Shaqo Fiican!", winsub: "Si sax ah ayaad u jawaabtay!", score: "Dhibco", high: "Sare", level: "Heerka", reset: "Dib u deji" }
+        };
+
+        let state = {
+            lang: 'ti', score: 0, level: 1,
+            highScore: parseInt(localStorage.getItem('dec_master_high_v3')) || 0,
+            mode: 'compare', currentQ: null, userOrder: [],
+            busy: false, muted: false, particles: []
+        };
+
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (state.muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type==='win') { o.type='triangle'; [523,659,783,1046].forEach((f,i)=>o.frequency.setValueAtTime(f,n+i*0.1)); g.gain.setValueAtTime(0.1,n); o.start(); o.stop(n+0.6); }
+            else if(type==='tap') { o.type='sine'; o.frequency.setValueAtTime(600,n); g.gain.setValueAtTime(0.05,n); o.start(); o.stop(n+0.1); }
+            else { o.type='sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.linearRampToValueAtTime(50, n + 0.3); g.gain.setValueAtTime(0.1,n); o.start(); o.stop(n+0.3); }
+        }
+
+        function generate() {
+            state.busy = false;
+            state.level = Math.floor(state.score / 100) + 1;
+            
+            const r = Math.random();
+            if (r < 0.4) state.mode = 'compare';
+            else if (r < 0.7) state.mode = 'asc';
+            else state.mode = 'desc';
+
+            if (state.mode === 'compare') {
+                const n1 = (Math.random() * 0.99).toFixed(2);
+                const n2 = Math.random() > 0.8 ? n1 : (Math.random() * 0.99).toFixed(2);
+                state.currentQ = { n1, n2, ans: n1 > n2 ? '>' : (n1 < n2 ? '<' : '=') };
+                document.getElementById('compareView').style.display = 'block';
+                document.getElementById('orderView').style.display = 'none';
+                document.getElementById('keypadSection').style.display = 'flex';
+                document.getElementById('valA').innerText = n1;
+                document.getElementById('valB').innerText = n2;
+                renderGrid('gridA', n1);
+                renderGrid('gridB', n2);
+                document.getElementById('opBox').innerText = "?";
+                document.getElementById('opBox').classList.remove('filled');
+            } else {
+                let nums = [];
+                const itemCount = state.level < 4 ? 3 : 4;
+                while(nums.length < itemCount) {
+                    let rNum = (Math.random() * 0.99).toFixed(2);
+                    if(!nums.includes(rNum)) nums.push(rNum);
+                }
+                const sorted = [...nums].sort((a,b) => state.mode === 'asc' ? a - b : b - a);
+                state.currentQ = { nums, sorted };
+                state.userOrder = [];
+                document.getElementById('compareView').style.display = 'none';
+                document.getElementById('orderView').style.display = 'block';
+                document.getElementById('keypadSection').style.display = 'none';
+                renderOrderGrid();
+            }
+            updateUI();
+        }
+
+        function renderGrid(id, val) {
+            const grid = document.getElementById(id);
+            grid.innerHTML = '';
+            const count = Math.round(parseFloat(val) * 100);
+            for(let i=0; i<100; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell' + (i < count ? ' filled' : '');
+                grid.appendChild(cell);
+            }
+        }
+
+        function renderOrderGrid() {
+            const grid = document.getElementById('orderGrid');
+            grid.innerHTML = '';
+            state.currentQ.nums.forEach(n => {
+                const idx = state.userOrder.indexOf(n);
+                const div = document.createElement('div');
+                div.className = 'order-item' + (idx > -1 ? ' selected' : '');
+                div.innerHTML = `<span>${n}</span>`;
+                if(idx > -1) div.innerHTML += `<div class="rank-badge">${idx + 1}</div>`;
+                div.onclick = () => selectOrder(n);
+                grid.appendChild(div);
+            });
+        }
+
+        function selectOrder(n) {
+            if (state.busy) return;
+            sfx('tap');
+            const i = state.userOrder.indexOf(n);
+            if (i > -1) state.userOrder.splice(i, 1);
+            else state.userOrder.push(n);
+            renderOrderGrid();
+            if (state.userOrder.length === state.currentQ.nums.length) {
+                const correct = state.userOrder.every((val, idx) => val === state.currentQ.sorted[idx]);
+                if (correct) handleSuccess();
+                else handleError();
+            }
+        }
+
+        function resetOrder() {
+            if (state.busy) return;
+            sfx('tap');
+            state.userOrder = [];
+            renderOrderGrid();
+        }
+
+        function checkAnswer(op) {
+            if (state.busy) return;
+            if (state.mode !== 'compare') return;
+            sfx('tap');
+            document.getElementById('opBox').innerText = op;
+            document.getElementById('opBox').classList.add('filled');
+            if (op === state.currentQ.ans) handleSuccess();
+            else handleError();
+        }
+
+        function handleSuccess() {
+            state.busy = true;
+            state.score += 10;
+            if (state.score > state.highScore) {
+                state.highScore = state.score;
+                localStorage.setItem('dec_master_high_v3', state.highScore);
+            }
+            sfx('win');
+            burst(300);
+            const ovl = document.getElementById('overlay');
+            const t = i18n[state.lang];
+            document.getElementById('txtWin').innerText = t.win;
+            document.getElementById('txtWinSub').innerText = t.winsub;
+            ovl.style.display = 'flex';
+            setTimeout(() => {
+                ovl.style.display = 'none';
+                generate();
+            }, 2000);
+        }
+
+        function handleError() {
+            sfx('err');
+            document.getElementById('gameCard').classList.add('shake');
+            document.getElementById('wrong-overlay').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('gameCard').classList.remove('shake');
+                document.getElementById('wrong-overlay').style.display = 'none';
+                if (state.mode === 'compare') {
+                    document.getElementById('opBox').innerText = "?";
+                    document.getElementById('opBox').classList.remove('filled');
+                } else {
+                    state.userOrder = [];
+                    renderOrderGrid();
+                }
+            }, 800);
+        }
+
+        function updateUI() {
+            const t = i18n[state.lang];
+            const qEl = document.getElementById('txtQuest');
+            qEl.innerText = t[state.mode] || t.compare;
+            
+            // Update prompt color for ordering
+            if (state.mode === 'asc') qEl.style.color = 'var(--success)';
+            else if (state.mode === 'desc') qEl.style.color = 'var(--primary)';
+            else qEl.style.color = 'var(--primary)';
+
+            document.getElementById('valScore').innerText = state.score;
+            document.getElementById('valHigh').innerText = state.highScore;
+            document.getElementById('valLvl').innerText = state.level;
+            document.getElementById('lblScore').innerText = t.score;
+            document.getElementById('lblHigh').innerText = t.high;
+            document.getElementById('lblLvl').innerText = t.level;
+            document.getElementById('btnResetOrder').innerText = t.reset;
+        }
+
+        function changeLang(l) { state.lang = l; updateUI(); if(state.mode !== 'compare') renderOrderGrid(); }
+        function toggleMute() { state.muted = !state.muted; document.getElementById('btnMute').innerText = state.muted ? '🔇' : '🔊'; }
+
+        function burst(count) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#facc15', '#2dd4bf', '#f472b6', '#ffffff', '#10b981'];
+            for(let i=0; i<count; i++) state.particles.push({
+                x: Math.random() * c.width, y: c.height + 20, vx: (Math.random()-0.5)*35, vy: (Math.random()-0.8)*50,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], l: 1.5, r: Math.random()*360, rv: (Math.random()-0.5)*20
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=state.particles.length-1; i>=0; i--){
+                    const p=state.particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.8; p.l-=0.012; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else state.particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => { generate(); };
+    </script>
+</body>
+</html>

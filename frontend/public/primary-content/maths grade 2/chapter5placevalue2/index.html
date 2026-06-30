@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Expanded Form Adventure | ቁፅርታት ምዝርዛር</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #e0f7fa;
+            --sky-blue: #0ea5e9;
+            --sky-light: #38bdf8;
+            --grass-green: #22c55e;
+            --grass-dark: #16a34a;
+            --sunny-yellow: #facc15;
+            --berry-pink: #ec4899;
+            --royal-purple: #8b5cf6;
+            --candy-orange: #f97316;
+            --danger-red: #ef4444;
+            --card-white: #ffffff;
+            --shadow-soft: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Fredoka', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(180deg, #87ceeb 0%, #e0f7fa 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #334155;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+
+        /* Decorative Elements */
+        .decoration {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+        }
+        .cloud { top: 10%; animation: floatCloud 40s infinite linear; font-size: 5rem; }
+        .balloon { bottom: 10%; animation: floatUp 15s infinite ease-in-out; font-size: 4rem; }
+
+        @keyframes floatCloud { from { left: -150px; } to { left: 110vw; } }
+        @keyframes floatUp { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-30px) rotate(5deg); } }
+        @keyframes bounceIn { 0% { transform: scale(0.5); opacity: 0; } 80% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+        /* Utility */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .text-center { text-align: center; }
+        .relative { position: relative; }
+
+        /* Navigation */
+        nav {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            position: relative;
+        }
+
+        .nav-btn-group { display: flex; gap: 12px; }
+
+        .btn-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 18px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn-icon:active { transform: translateY(4px); box-shadow: none; }
+        .btn-back { background: var(--sky-blue); }
+        .btn-home { background: var(--berry-pink); }
+
+        /* Language Menu Fix */
+        .lang-wrapper { position: relative; }
+        .lang-trigger {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 3px solid white;
+            font-weight: 700;
+            color: var(--sky-blue);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow-soft);
+        }
+        .lang-dropdown {
+            position: absolute;
+            top: 120%;
+            left: 0;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            min-width: 180px;
+            overflow: hidden;
+            z-index: 2000;
+            display: none;
+            border: 4px solid #f1f5f9;
+        }
+        .lang-dropdown.show { display: block; animation: bounceIn 0.3s ease-out; }
+        .lang-item {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            background: none;
+            text-align: left;
+            font-weight: 700;
+            font-family: inherit;
+            color: #4b5563;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .lang-item:hover { background: #f0f9ff; color: var(--sky-blue); }
+        .lang-item.active { background: #e0f2fe; color: var(--sky-blue); }
+
+        /* Main Game Containers */
+        .container {
+            flex: 1;
+            width: 100%;
+            max-width: 1100px; /* Increased for desktop */
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 40px;
+            padding: 40px 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            border: 8px solid white;
+            text-align: center;
+            animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--royal-purple);
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: 1.4rem;
+            color: #64748b;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        /* Number Display */
+        .number-box {
+            font-size: 6rem;
+            font-weight: 800;
+            color: var(--sky-blue);
+            margin: 20px 0 40px;
+            letter-spacing: 5px;
+            text-shadow: 3px 3px 0 rgba(0,0,0,0.05);
+        }
+
+        /* Inputs Area */
+        .expanded-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .math-input {
+            width: 160px; /* Wider box */
+            height: 120px; /* Bigger box */
+            border-radius: 25px;
+            border: 5px solid #f1f5f9;
+            background: #f8fafc;
+            text-align: center;
+            font-size: 3rem; /* Bigger text */
+            font-weight: 800;
+            color: var(--royal-purple);
+            outline: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .math-input:focus { border-color: var(--sky-light); background: white; transform: scale(1.05); }
+        .math-input.correct { border-color: var(--grass-green); background: #f0fdf4; color: #166534; }
+        .math-input.wrong { border-color: var(--danger-red); background: #fef2f2; color: #991b1b; animation: shake 0.4s; }
+
+        .place-label {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 10px;
+        }
+
+        .plus-sign {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #cbd5e1;
+            margin-top: 35px; /* Aligned with larger boxes */
+        }
+
+        /* Controls */
+        .btn-main {
+            padding: 20px 60px;
+            border-radius: 50px;
+            background: var(--grass-green);
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 0 var(--grass-dark);
+            transition: all 0.1s;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .btn-main:active { transform: translateY(4px); box-shadow: 0 4px 0 var(--grass-dark); }
+        .btn-next { background: var(--sky-blue); box-shadow: 0 8px 0 #0369a1; }
+        .btn-next:active { box-shadow: 0 4px 0 #0369a1; }
+
+        /* Footer Stats */
+        .footer {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-end;
+            z-index: 100;
+        }
+
+        .streak-pill {
+            background: white;
+            padding: 10px 25px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow-soft);
+            border: 4px solid #fff7ed;
+        }
+        .streak-label { font-size: 0.9rem; font-weight: 800; color: var(--candy-orange); text-transform: uppercase; letter-spacing: 1px; }
+        .streak-val { font-size: 2.2rem; font-weight: 800; color: var(--candy-orange); }
+
+        .btn-sound {
+            width: 60px;
+            height: 60px;
+            border-radius: 22px;
+            background: var(--royal-purple);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #6d28d9;
+        }
+        .btn-sound:active { transform: translateY(4px); box-shadow: 0 2px 0 #6d28d9; }
+
+        /* Confetti */
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 3000;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.2rem; }
+            .number-box { font-size: 4rem; }
+            .math-input { width: 110px; height: 100px; font-size: 2.2rem; border-radius: 20px; }
+            .plus-sign { font-size: 2rem; margin-top: 25px; }
+            .btn-main { padding: 15px 40px; font-size: 1.4rem; }
+            .streak-val { font-size: 1.8rem; }
+            .place-label { font-size: 0.8rem; }
+        }
+
+        @media (max-width: 480px) {
+            nav { padding: 15px; }
+            .container { padding: 10px; }
+            .card { padding: 30px 15px; border-radius: 30px; border-width: 5px; }
+            .math-input { width: 85px; height: 80px; font-size: 1.8rem; border-width: 4px; }
+            .plus-sign { font-size: 1.5rem; margin-top: 25px; }
+            .expanded-row { gap: 10px; }
+            
+            /* Parallel Footer for Mobile */
+            .footer {
+                flex-direction: row; /* Parallel layout */
+                align-items: center;
+                bottom: 20px;
+                right: 20px;
+                left: 20px;
+                justify-content: flex-end;
+                gap: 12px;
+            }
+            .streak-pill { padding: 8px 15px; }
+            .btn-sound { width: 50px; height: 50px; font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Scenic Background -->
+    <div class="decoration cloud" style="left: 10%; animation-delay: 0s;">☁️</div>
+    <div class="decoration cloud" style="left: 60%; animation-delay: -20s;">☁️</div>
+    <div class="decoration balloon" style="right: 5%; animation-delay: 2s;">🎈</div>
+    <div class="decoration balloon" style="left: 5%; animation-delay: 8s;">✨</div>
+
+    <nav>
+        <div class="lang-wrapper">
+            <button id="lang-trigger" class="lang-trigger">
+                🌐 <span id="current-lang-name">ትግርኛ</span>
+            </button>
+            <div id="lang-dropdown" class="lang-dropdown">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+        <div class="nav-btn-group">
+            <button class="btn-icon btn-back" onclick="app.goHome()" title="Back">⬅</button>
+            <button class="btn-icon btn-home" onclick="app.goHome()" title="Home">🏠</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Start Screen -->
+        <div id="screen-start" class="card">
+            <h1 id="txt-welcome" class="text-rainbow">እንቋዕ ብደሓን መጻእኩም!</h1>
+            <p id="txt-subtitle" class="subtitle">ቁጽርታት ንምዝርዛር ድሉው ዲኻ?</p>
+            <button id="btn-start" onclick="app.startGame()" class="btn-main">ንጀምር! 🚀</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="screen-game" class="card hidden">
+            <p id="txt-instruction" style="color: var(--sky-blue); font-weight: 800; font-size: 1.5rem; margin-bottom: 10px;">ነቲ ቑጽሪ ዘርዚርካ ጸሓፍ!</p>
+            <div id="number-display" class="number-box">000</div>
+            
+            <div id="input-row" class="expanded-row">
+                <!-- Inputs injected by JS -->
+            </div>
+
+            <div class="flex flex-col items-center gap-20">
+                <button id="btn-check" onclick="app.checkAnswer()" class="btn-main">አረጋግፅ!</button>
+                
+                <div id="area-success" class="hidden flex flex-col items-center">
+                    <p id="txt-correct" style="color: var(--grass-green); font-size: 2.5rem; font-weight: 900; margin-bottom: 20px;">ልክዕ ኢኻ! 🎉</p>
+                    <button onclick="app.nextTask()" class="btn-main btn-next">ቀፃሊ ➜</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="streak-pill">
+            <span class="streak-label" id="txt-streak-lbl">STREAK</span>
+            <span id="streak-val" class="streak-val">0</span>
+            <span style="font-size: 1.8rem;">🔥</span>
+        </div>
+        <button id="btn-sound" onclick="app.toggleSound()" class="btn-sound">🔊</button>
+    </div>
+
+    <script>
+        const LANGUAGES = {
+            'ti': { name: 'ትግርኛ', welcome: 'እንቋዕ ብደሓን መጻእኩም!', sub: 'ቁጽርታት ንምዝርዛር ድሉው ዲኻ?', instr: 'ነቲ ቑጽሪ ዘርዚርካ ጸሓፍ!', start: 'ንጀምር! 🚀', check: 'አረጋግፅ!', correct: 'ልክዕ ኢኻ! 🎉', streak: 'ነጥቢ', next: 'ቀፃሊ ➜', h: 'ዓዲ ሚኢቲ', t: 'ዓዲ ዓሰርተ', o: 'ዓዲ ሓደ' },
+            'am': { name: 'አማርኛ', welcome: 'እንኳን ደህና መጡ!', sub: 'ቁጥሮችን ለመዘርዘር ዝግጁ ነዎት?', instr: 'ቁጥሩን ዘርዝረህ ጻፍ!', start: 'እንጀምር! 🚀', check: 'አረጋግጥ!', correct: 'ልክ ነህ! 🎉', streak: 'ነጥብ', next: 'ቀጣይ ➜', h: 'መቶዎች', t: 'አስሮች', o: 'አንዶች' },
+            'en': { name: 'English', welcome: 'Welcome!', sub: 'Ready to expand some numbers?', instr: 'Write the number in expanded form!', start: "Let's Play! 🚀", check: 'Check!', correct: 'You got it! 🎉', streak: 'Score', next: 'Next ➜', h: 'Hundreds', t: 'Tens', o: 'Ones' },
+            'om': { name: 'Oromoo', welcome: 'Baga nagaan dhufte!', sub: 'Lakkoofsa qixxeessuuf qophiidhaa?', instr: 'Lakkoofsa bal\'isi barreessi!', start: 'Haa eegallu! 🚀', check: 'Mirkaneessi!', correct: 'Sirriidha! 🎉', streak: 'Walitti', next: 'Itti fufi ➜', h: 'Dhibba', t: 'Kudhan', o: 'Tokko' },
+            'so': { name: 'Soomaali', welcome: 'Ku soo dhawaada!', sub: 'Ma u diyaar tahay tirada?', instr: 'U qor tirada si fidsan!', start: 'Aynu bilowno! 🚀', check: 'Hubi!', correct: 'Waa sax! 🎉', streak: 'Xiriir', next: 'Xiga ➜', h: 'Boqol', t: 'Toban', o: 'Kow' }
+        };
+
+        class NumberApp {
+            constructor() {
+                this.lang = 'ti';
+                this.streak = 0;
+                this.soundEnabled = true;
+                this.currentNum = 0;
+                this.currentParts = [];
+                this.particles = [];
+                this.audioCtx = null;
+
+                this.init();
+            }
+
+            init() {
+                this.renderLangMenu();
+                this.updateUI();
+                this.setupConfetti();
+
+                // Dropdown logic - fix jumping
+                const trigger = document.getElementById('lang-trigger');
+                const menu = document.getElementById('lang-dropdown');
+                trigger.onclick = (e) => {
+                    e.stopPropagation();
+                    menu.classList.toggle('show');
+                };
+                window.onclick = () => menu.classList.remove('show');
+            }
+
+            renderLangMenu() {
+                const menu = document.getElementById('lang-dropdown');
+                menu.innerHTML = '';
+                Object.keys(LANGUAGES).forEach(code => {
+                    const btn = document.createElement('button');
+                    btn.className = `lang-item ${this.lang === code ? 'active' : ''}`;
+                    btn.innerText = LANGUAGES[code].name;
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        this.lang = code;
+                        this.updateUI();
+                        // Update labels if already in game
+                        if (!document.getElementById('screen-game').classList.contains('hidden')) {
+                            this.updatePlaceLabels();
+                        }
+                        menu.classList.remove('show');
+                    };
+                    menu.appendChild(btn);
+                });
+            }
+
+            updateUI() {
+                const t = LANGUAGES[this.lang];
+                document.getElementById('current-lang-name').innerText = t.name;
+                document.getElementById('txt-welcome').innerText = t.welcome;
+                document.getElementById('txt-subtitle').innerText = t.sub;
+                document.getElementById('btn-start').innerText = t.start;
+                document.getElementById('txt-instruction').innerText = t.instr;
+                document.getElementById('btn-check').innerText = t.check;
+                document.getElementById('txt-correct').innerText = t.correct;
+                document.getElementById('txt-streak-lbl').innerText = t.streak;
+                document.querySelectorAll('.btn-next').forEach(b => b.innerText = t.next);
+                this.renderLangMenu();
+            }
+
+            updatePlaceLabels() {
+                const t = LANGUAGES[this.lang];
+                const labels = document.querySelectorAll('.place-label');
+                const placeKeys = ['h', 't', 'o'];
+                labels.forEach((lbl, i) => {
+                    if (placeKeys[i]) lbl.innerText = t[placeKeys[i]];
+                });
+            }
+
+            startGame() {
+                document.getElementById('screen-start').classList.add('hidden');
+                document.getElementById('screen-game').classList.remove('hidden');
+                this.generateTask();
+            }
+
+            goHome() {
+                document.getElementById('screen-start').classList.remove('hidden');
+                document.getElementById('screen-game').classList.add('hidden');
+            }
+
+            generateTask() {
+                const t = LANGUAGES[this.lang];
+                const placeKeys = ['h', 't', 'o'];
+                // Range for grade 3: 100 to 999
+                this.currentNum = Math.floor(Math.random() * 899) + 100;
+                const str = this.currentNum.toString();
+                this.currentParts = str.split('').map((digit, i) => parseInt(digit) * Math.pow(10, str.length - 1 - i));
+
+                document.getElementById('number-display').innerText = this.currentNum;
+                const row = document.getElementById('input-row');
+                row.innerHTML = '';
+
+                this.currentParts.forEach((_, i) => {
+                    const group = document.createElement('div');
+                    group.className = 'input-group';
+
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.placeholder = '?';
+                    input.className = 'math-input';
+                    input.inputMode = 'numeric';
+                    
+                    const label = document.createElement('span');
+                    label.className = 'place-label';
+                    label.innerText = t[placeKeys[i]];
+
+                    group.appendChild(input);
+                    group.appendChild(label);
+                    row.appendChild(group);
+
+                    if (i < this.currentParts.length - 1) {
+                        const plus = document.createElement('span');
+                        plus.className = 'plus-sign';
+                        plus.innerText = '+';
+                        row.appendChild(plus);
+                    }
+                });
+
+                document.getElementById('btn-check').classList.remove('hidden');
+                document.getElementById('area-success').classList.add('hidden');
+                window.scrollTo(0, 0);
+            }
+
+            checkAnswer() {
+                const inputs = document.querySelectorAll('.math-input');
+                let allCorrect = true;
+
+                inputs.forEach((inp, i) => {
+                    const val = parseInt(inp.value);
+                    if (val === this.currentParts[i]) {
+                        inp.classList.add('correct');
+                        inp.classList.remove('wrong');
+                    } else {
+                        inp.classList.add('wrong');
+                        inp.classList.remove('correct');
+                        allCorrect = false;
+                        setTimeout(() => inp.classList.remove('wrong'), 500);
+                    }
+                });
+
+                if (allCorrect) {
+                    this.streak++;
+                    this.playSound('win');
+                    this.fireConfetti();
+                    document.getElementById('btn-check').classList.add('hidden');
+                    document.getElementById('area-success').classList.remove('hidden');
+                    inputs.forEach(i => i.disabled = true);
+                } else {
+                    this.streak = 0;
+                    this.playSound('fail');
+                }
+                document.getElementById('streak-val').innerText = this.streak;
+            }
+
+            nextTask() {
+                this.generateTask();
+            }
+
+            toggleSound() {
+                this.soundEnabled = !this.soundEnabled;
+                document.getElementById('btn-sound').innerText = this.soundEnabled ? '🔊' : '🔇';
+            }
+
+            playSound(type) {
+                if (!this.soundEnabled) return;
+                if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+                
+                const now = this.audioCtx.currentTime;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+
+                if (type === 'win') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523, now);
+                    osc.frequency.exponentialRampToValueAtTime(1046, now + 0.3);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                    osc.start(); osc.stop(now + 0.5);
+                } else {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.start(); osc.stop(now + 0.3);
+                }
+            }
+
+            setupConfetti() {
+                const canvas = document.getElementById('confetti-canvas');
+                this.ctx = canvas.getContext('2d');
+                window.onresize = () => {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                };
+                window.onresize();
+            }
+
+            fireConfetti() {
+                const colors = ['#ec4899', '#8b5cf6', '#0ea5e9', '#22c55e', '#facc15'];
+                for (let i = 0; i < 150; i++) {
+                    this.particles.push({
+                        x: window.innerWidth / 2,
+                        y: window.innerHeight / 2,
+                        vx: (Math.random() - 0.5) * 30,
+                        vy: (Math.random() - 0.8) * 35,
+                        size: Math.random() * 12 + 5,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        life: 1.0,
+                        rot: Math.random() * 360,
+                        rv: (Math.random() - 0.5) * 20
+                    });
+                }
+                if (!this.looping) this.animate();
+            }
+
+            animate() {
+                this.looping = true;
+                this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                let alive = false;
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    if (p.life > 0) {
+                        alive = true;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.8;
+                        p.vx *= 0.98;
+                        p.life -= 0.01;
+                        p.rot += p.rv;
+                        this.ctx.save();
+                        this.ctx.translate(p.x, p.y);
+                        this.ctx.rotate(p.rot * Math.PI / 180);
+                        this.ctx.fillStyle = p.color;
+                        this.ctx.globalAlpha = p.life;
+                        this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                        this.ctx.restore();
+                    } else {
+                        this.particles.splice(i, 1);
+                    }
+                }
+                if (alive) requestAnimationFrame(() => this.animate());
+                else this.looping = false;
+            }
+        }
+
+        const app = new NumberApp();
+    </script>
+</body>
+</html>

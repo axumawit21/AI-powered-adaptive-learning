@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Word Builder Adventure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary: #FFD93D;
+            --secondary: #6BCB77;
+            --accent: #FF6B6B;
+            --white: #ffffff;
+            --glass: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--bg-gradient);
+            height: 100vh;
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            transition: background 0.2s;
+        }
+
+        body.error-flash {
+            background: #900d0d !important;
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Header Layout Updates */
+        header {
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+
+        .icon-btn {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.3); border-color: var(--primary); }
+
+        .icon-btn.muted {
+            border-color: var(--accent);
+            background: rgba(255, 107, 107, 0.18);
+        }
+
+        /* Centered Big Title Below Nav */
+        .title-container {
+            width: 100%;
+            text-align: center;
+            padding: 15px 10px;
+            z-index: 90;
+        }
+
+        #header-title {
+            font-weight: 700;
+            font-size: 2.2rem;
+            margin: 0;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        .lang-select {
+            background: var(--glass);
+            color: white;
+            border: 1px solid var(--glass-border);
+            padding: 6px 10px;
+            border-radius: 12px;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+        }
+        .lang-select option { background: #4a4a4a; color: white; }
+
+        .score-pill {
+            background: var(--primary);
+            color: #333;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(255, 217, 61, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Game Board - Enlarged Images */
+        #game-container {
+            flex: 1;
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            gap: 20px;
+        }
+
+        .image-card {
+            width: 320px;
+            height: 320px;
+            background: var(--white);
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 8px solid var(--primary);
+        }
+
+        @keyframes bounceIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .image-card img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 20px;
+        }
+
+        .word-display {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .letter-tile {
+            width: 60px;
+            height: 75px;
+            background: var(--glass);
+            border: 3px solid var(--glass-border);
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        input.letter-tile {
+            background: rgba(255, 255, 255, 0.05);
+            border-style: dashed;
+            color: var(--primary);
+            text-align: center;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input.letter-tile:focus {
+            background: rgba(255, 255, 255, 0.2);
+            border-style: solid;
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .letter-tile.hint {
+            background: var(--white);
+            color: #333;
+            border-style: solid;
+            box-shadow: 0 6px 0 #ddd;
+        }
+
+        .letter-tile.correct {
+            border-color: var(--secondary) !important;
+            color: var(--secondary) !important;
+            animation: pop 0.3s;
+        }
+        @keyframes pop { 50% { transform: scale(1.2); } }
+
+        .letter-tile.incorrect {
+            border-color: var(--accent) !important;
+            background: rgba(255, 107, 107, 0.2) !important;
+            animation: shake 0.4s;
+        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-12px); } 75% { transform: translateX(12px); } }
+
+        /* Action Button - Pushed Top */
+        .ans-btn-container {
+            margin-bottom: 60px;
+            margin-top: 20px;
+        }
+        #submit-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 15px 60px;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #4cae5b;
+            transition: all 0.1s;
+        }
+        #submit-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #4cae5b; }
+
+        @media (max-width: 600px) {
+            .image-card { width: 220px; height: 220px; border-width: 5px; }
+            .letter-tile { width: 45px; height: 60px; font-size: 1.6rem; }
+            #header-title { font-size: 1.6rem; }
+            .ans-btn-container { margin-bottom: 40px; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <header>
+        <div class="header-left">
+            <button class="icon-btn" onclick="window.location.href='index.html'">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v7h-7"></path></svg>
+            </button>
+        </div>
+        <div class="header-right">
+            <button class="icon-btn" id="muteBtn" type="button" aria-label="Sound"></button>
+            <select id="languageSelect" class="lang-select">
+                <option value="en">English</option>
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="om">Afan Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+            <div class="score-pill">
+                <span id="score-label">Score</span>: <span id="score">0</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="title-container">
+        <h1 id="header-title">Fill the Letters</h1>
+    </div>
+
+    <div id="game-container">
+        <div class="image-card">
+            <img id="hint-image" src="" alt="Word Hint" />
+        </div>
+
+        <div class="word-display" id="letter-container">
+            <!-- Tiles generated by JS -->
+        </div>
+    </div>
+
+    <div class="ans-btn-container">
+        <button id="submit-btn">Answer</button>
+    </div>
+
+    <script>
+        const words = ['aeroplane', 'ambulance', 'ant', 'apple', 'rickshaw', 'banana', 'bat', 'bear', 'beet', 'bike', 'brinjal'];
+        let currentWord = '';
+        let score = 0;
+        let isMuted = false;
+
+        const soundOnSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
+        const soundOffSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M23 9l-6 6"/><path d="M17 9l6 6"/></svg>`;
+        const muteBtn = document.getElementById('muteBtn');
+        
+        const translations = {
+            en: { header: 'Fill the Letters', score: 'Score', btn: 'Check' },
+            am: { header: 'ባዶውን ሙሉ', score: 'ነጥብ', btn: 'አረጋግጥ' },
+            ti: { header: 'ክፍቲ ቦታ ምልኡ', score: 'ነጥቢ', btn: 'ኣረጋግጽ' },
+            om: { header: 'Iddoo duwwaa guuti', score: "Bu'aa", btn: 'Hubadhu' },
+            so: { header: 'Buuxi xarfaha', score: 'Dhibco', btn: 'Hubi' }
+        };
+
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function applyLanguage(lang) {
+            const t = translations[lang] || translations.en;
+            document.getElementById('header-title').textContent = t.header;
+            document.getElementById('score-label').textContent = t.score;
+            document.getElementById('submit-btn').textContent = t.btn;
+        }
+
+        document.getElementById('languageSelect').addEventListener('change', (e) => applyLanguage(e.target.value));
+
+        function updateMuteUI() {
+            if (!muteBtn) return;
+            muteBtn.innerHTML = isMuted ? soundOffSvg : soundOnSvg;
+            muteBtn.classList.toggle('muted', isMuted);
+        }
+
+        if (muteBtn) {
+            muteBtn.addEventListener('click', () => {
+                isMuted = !isMuted;
+                updateMuteUI();
+            });
+            updateMuteUI();
+        }
+
+        function generateHintIndices(length) {
+            const hintCount = Math.max(1, Math.floor(length * 0.4));
+            const indices = [];
+            while(indices.length < hintCount) {
+                const rand = Math.floor(Math.random() * length);
+                if(!indices.includes(rand)) indices.push(rand);
+            }
+            return indices;
+        }
+
+        function createGame() {
+            const container = document.getElementById('letter-container');
+            container.innerHTML = '';
+            
+            currentWord = words[Math.floor(Math.random() * words.length)];
+            const wordArr = currentWord.split('');
+            const hintIndices = generateHintIndices(wordArr.length);
+            
+            document.getElementById('hint-image').src = `./assets/${currentWord}.png`;
+            
+            wordArr.forEach((char, i) => {
+                if (hintIndices.includes(i)) {
+                    const tile = document.createElement('div');
+                    tile.className = 'letter-tile hint';
+                    tile.textContent = char;
+                    container.appendChild(tile);
+                } else {
+                    const input = document.createElement('input');
+                    input.className = 'letter-tile';
+                    input.maxLength = 1;
+                    input.dataset.answer = char;
+                    input.dataset.index = i;
+                    
+                    input.addEventListener('input', (e) => {
+                        const val = e.target.value.toLowerCase();
+                        if (val === '') return;
+                        
+                        playSound('tap');
+
+                        if (val === char) {
+                            input.classList.add('correct');
+                            input.classList.remove('incorrect');
+                            const next = findNextInput(input);
+                            if (next) next.focus();
+                        } else {
+                            triggerErrorVisual(input);
+                        }
+                    });
+
+                    container.appendChild(input);
+                }
+            });
+
+            const firstInput = container.querySelector('input');
+            if(firstInput) firstInput.focus();
+        }
+
+        function findNextInput(current) {
+            let next = current.nextElementSibling;
+            while (next) {
+                if (next.tagName === 'INPUT') return next;
+                next = next.nextElementSibling;
+            }
+            return null;
+        }
+
+        function triggerErrorVisual(el) {
+            el.classList.add('incorrect');
+            document.body.classList.add('error-flash');
+            playSound('wrong');
+            // Wait for visual feedback, then clear the box automatically
+            setTimeout(() => {
+                el.classList.remove('incorrect');
+                document.body.classList.remove('error-flash');
+                el.value = ''; // Auto clear incorrect letter
+            }, 500);
+        }
+
+        function checkAns() {
+            const inputs = document.querySelectorAll('input.letter-tile');
+            let allCorrect = true;
+
+            inputs.forEach(input => {
+                if (input.value.toLowerCase() !== input.dataset.answer) {
+                    allCorrect = false;
+                    triggerErrorVisual(input);
+                }
+            });
+
+            if (allCorrect) {
+                updateScore(10);
+                fireConfetti(300);
+                setTimeout(() => fireConfetti(200), 200);
+                setTimeout(() => fireConfetti(200), 400);
+                
+                playSound('cheer');
+                setTimeout(createGame, 2000);
+            }
+        }
+
+        function updateScore(pts) {
+            score += pts;
+            const el = document.getElementById('score');
+            el.textContent = score;
+            el.parentElement.style.transform = 'scale(1.3)';
+            setTimeout(() => el.parentElement.style.transform = 'scale(1)', 200);
+        }
+
+        function playSound(type) {
+            if (isMuted) return;
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const now = audioCtx.currentTime;
+            
+            if (type === 'tap') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'cheer') {
+                for (let j = 0; j < 10; j++) {
+                    const clapTime = now + (j * 0.1) + (Math.random() * 0.05);
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400 + Math.random() * 600, clapTime);
+                    gain.gain.setValueAtTime(0.05, clapTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, clapTime + 0.1);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(clapTime);
+                    osc.stop(clapTime + 0.1);
+                }
+                const winOsc = audioCtx.createOscillator();
+                const winGain = audioCtx.createGain();
+                winOsc.type = 'sine';
+                winOsc.frequency.setValueAtTime(880, now);
+                winOsc.frequency.exponentialRampToValueAtTime(1760, now + 0.5);
+                winGain.gain.setValueAtTime(0.1, now);
+                winGain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+                winOsc.connect(winGain);
+                winGain.connect(audioCtx.destination);
+                winOsc.start(now); winOsc.stop(now + 1.0);
+            } else if (type === 'wrong') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(50, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.3);
+            }
+        }
+
+        function fireConfetti(count = 150) {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const colors = ['#FFD93D', '#6BCB77', '#FF6B6B', '#4D96FF', '#ffffff', '#FF5F7E'];
+            
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height + 20,
+                    vx: (Math.random() - 0.5) * 25,
+                    vy: (Math.random() - 0.8) * 35,
+                    size: Math.random() * 10 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1.0,
+                    rotation: Math.random() * 360,
+                    rVel: (Math.random() - 0.5) * 10
+                });
+            }
+
+            if(!window.confettiRunning) {
+                window.confettiRunning = true;
+                animateConfetti();
+            }
+        }
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let alive = false;
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                if (p.life > 0) {
+                    alive = true;
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.6; // gravity
+                    p.vx *= 0.99;
+                    p.life -= 0.01;
+                    p.rotation += p.rVel;
+                    
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.life;
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                } else {
+                    particles.splice(i, 1);
+                }
+            }
+            if(alive) requestAnimationFrame(animateConfetti);
+            else {
+                window.confettiRunning = false;
+                particles = [];
+            }
+        }
+
+        document.getElementById('submit-btn').onclick = checkAns;
+        window.onload = () => {
+            applyLanguage('en');
+            createGame();
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') checkAns();
+        });
+    </script>
+</body>
+</html>

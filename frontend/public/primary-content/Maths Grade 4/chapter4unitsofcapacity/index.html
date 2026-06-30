@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Capacity Master | መዐቀንታት ትሕዝቶ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --lab-purple: #6366f1;
+            --liquid-blue: #0ea5e9;
+            --liquid-pink: #f43f5e;
+            --glass: rgba(255, 255, 255, 0.2);
+            --white: #ffffff;
+            --text: #1e293b;
+            --success: #22c55e;
+            --error: #ef4444;
+            --shadow: rgba(0, 0, 0, 0.15);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #fae8ff 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            color: var(--text);
+            padding-bottom: env(safe-area-inset-bottom);
+            transition: background 0.3s;
+        }
+
+        body.flash-error { background: #fee2e2; }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6000; }
+
+        header {
+            width: 100%; max-width: 1100px; padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            gap: 15px; flex-wrap: wrap;
+        }
+
+        .stat-group { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        .pill {
+            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px);
+            padding: 8px 15px; border-radius: 20px; border: 2.5px solid var(--white);
+            display: flex; align-items: center; gap: 6px; font-weight: 800;
+            box-shadow: 0 4px 10px var(--shadow); font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+        }
+        .stat-val { color: var(--lab-purple); font-size: 1.1em; }
+
+        .header-controls { display: flex; gap: 8px; align-items: center; }
+        .icon-btn {
+            background: white; border: none; width: 42px; height: 42px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; box-shadow: 0 4px 10px var(--shadow); transition: transform 0.2s;
+        }
+        .icon-btn:active { transform: scale(0.9); }
+
+        .lang-select {
+            padding: 8px 12px; border-radius: 15px; border: 2.5px solid var(--white);
+            background: white; font-weight: bold; cursor: pointer; font-size: 0.85rem;
+            box-shadow: 0 4px 10px var(--shadow);
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 1000px; display: flex; flex-direction: column;
+            padding: 10px; gap: clamp(20px, 5vh, 40px); justify-content: center; align-items: center; z-index: 10;
+        }
+
+        .lab-card {
+            background: var(--white); border-radius: 40px; padding: clamp(20px, 5vw, 40px);
+            width: 100%; max-width: 550px; text-align: center; display: flex; flex-direction: column; gap: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08); border: 8px solid var(--white);
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .shake { animation: shakeAnim 0.4s ease-in-out; }
+        @keyframes shakeAnim {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .beaker-container {
+            width: 140px; height: clamp(160px, 20vh, 200px); margin: 0 auto; position: relative;
+            border: 6px solid #94a3b8; border-top: none; border-radius: 0 0 20px 20px;
+            overflow: hidden; background: rgba(241, 245, 249, 0.5);
+        }
+        .liquid {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 0%;
+            background: var(--liquid-blue); transition: height 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .liquid::after {
+            content: ''; position: absolute; top: -10px; left: 0; width: 100%; height: 20px;
+            background: rgba(255,255,255,0.3); border-radius: 50%;
+        }
+
+        .rule-hint {
+            background: #e0f2fe; color: #0369a1; padding: 8px 16px; border-radius: 50px;
+            font-weight: 800; font-size: 0.9rem; align-self: center; border: 2px solid #bae6fd;
+            display: inline-flex; gap: 8px; align-items: center;
+        }
+
+        .question-box {
+            background: #f8fafc; padding: 20px; border-radius: 25px;
+            border: 3px dashed var(--lab-purple);
+        }
+        .question-text { font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 900; color: #334155; }
+
+        .interactive-area {
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+            font-size: 2.5rem; font-weight: 900;
+        }
+        .ans-box {
+            min-width: 130px; height: 80px; background: #fff; border-radius: 22px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--lab-purple); font-size: clamp(2.5rem, 8vw, 3.5rem); cursor: pointer;
+            border: 5px solid var(--lab-purple); box-shadow: 0 6px 0 var(--lab-purple);
+            font-family: monospace; transition: 0.1s;
+        }
+        .ans-box.active { transform: scale(1.05); border-color: var(--success); box-shadow: 0 6px 0 var(--success); color: var(--success); }
+        .ans-box.error { border-color: var(--error); box-shadow: 0 6px 0 var(--error); color: var(--error); }
+        .unit-label { font-size: 1.5rem; color: #64748b; font-weight: 800; }
+
+        /* Keypad Wrapper */
+        .controls-wrapper {
+            width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 15px;
+        }
+
+        /* Keypad */
+        .keypad-section { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .key {
+            height: clamp(60px, 9vh, 75px); background: #f1f5f9; border: none; border-radius: 18px;
+            font-size: 1.8rem; font-weight: 800; color: #475569; cursor: pointer;
+            box-shadow: 0 4px 0 #cbd5e1; transition: 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 1px 0 #cbd5e1; }
+        .key.del { color: var(--error); }
+        .key.check {
+            width: 100%; background: var(--success); color: white;
+            font-size: clamp(1.8rem, 5vw, 2.2rem); height: 85px; border-radius: 25px;
+            box-shadow: 0 7px 0 #16a34a; font-weight: 900; border: none; cursor: pointer;
+        }
+        .key.check:active { transform: translateY(4px); box-shadow: 0 3px 0 #16a34a; }
+
+        .overlay {
+            position: fixed; inset: 0; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 5000;
+            background: rgba(255, 255, 255, 0.98); text-align: center; padding: 20px;
+        }
+        .overlay.error { background: var(--error); color: white; }
+        .big-icon { font-size: clamp(6rem, 15vw, 8rem); margin-bottom: 20px; animation: bounce 1s infinite alternate; }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.15); } }
+
+        /* Desktop Layout: Parallel controls */
+        @media (min-width: 1024px) {
+            .container {
+                flex-direction: row;
+                max-width: 1200px;
+                gap: 60px;
+                align-items: center;
+            }
+            .lab-card {
+                flex: 1.2;
+                margin-bottom: 0;
+            }
+            .controls-wrapper {
+                flex: 0.8;
+                max-width: 450px;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header { flex-direction: column; gap: 12px; }
+            .stat-group { width: 100%; }
+            .lab-card { padding: 20px; }
+            .beaker-container { height: 160px; width: 110px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+
+    <header>
+        <div class="stat-group">
+            <div class="pill">⭐ <span id="lblScore">Score</span>: <span id="valScore" class="stat-val">0</span></div>
+            <div class="pill">👑 <span id="lblHigh">High</span>: <span id="valHigh" class="stat-val">0</span></div>
+            <div class="pill">🆙 <span id="lblLvl">Level</span>: <span id="valLvl" class="stat-val">1</span></div>
+        </div>
+        <div class="header-controls">
+            <button class="icon-btn" id="muteBtn" onclick="toggleMute()">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="setLanguage(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="lab-card" id="labCard">
+            <h1 id="pageTitle" style="font-weight: 900; color: var(--lab-purple); margin-bottom: 5px;">መዐቀንታት ትሕዝቶ</h1>
+            <div class="rule-hint" id="ruleHint">💡 1 ሊትር = 1000 ሚ.ሊ</div>
+            <div class="beaker-container">
+                <div class="liquid" id="liquid"></div>
+            </div>
+            <div class="question-box">
+                <p id="questionText" class="question-text">---</p>
+            </div>
+            <div class="interactive-area">
+                <div class="ans-box active" id="ansBox">?</div>
+                <div class="unit-label" id="targetUnit">ml</div>
+            </div>
+        </div>
+
+        <div class="controls-wrapper">
+            <div class="keypad-section" id="keypad">
+                <!-- Injected via JS -->
+            </div>
+            <button class="key check" id="btnCheck" onclick="checkAnswer()">ኣረጋግፅ</button>
+        </div>
+    </div>
+
+    <div id="success-overlay" class="overlay">
+        <div class="big-icon">🧪</div>
+        <h2 id="txtWin">ንፉዕ!</h2>
+        <p id="txtWinSub" style="font-size: 1.5rem; color: #64748b;">ብትክክል ተመሊሱ!</p>
+    </div>
+
+    <div id="error-overlay" class="overlay error">
+        <div class="big-icon">💥</div>
+        <h2 id="txtFail">ጌጋ!</h2>
+        <p id="txtFailSub" style="font-size: 1.5rem; opacity: 0.9;">እንደገና ፈትን</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { title: "መዐቀንታት ትሕዝቶ", rule: "💡 1 ሊትር = 1000 ሚ.ሊ", check: "ኣረጋግፅ", win: "ንፉዕ!", winsub: "ብትክክል ተመሊሱ!", fail: "ጌጋ!", failsub: "እንደገና ፈትን", score: "ውፅኢት", high: "ዝለዓለ", level: "ደረጃ", convert: "ቀይሩ:", and: "ን", isIt: "እዩ?", units: { l: "ሊ", ml: "ሚ.ሊ" } },
+            am: { title: "የይዘት መለኪያዎች", rule: "💡 1 ሊትር = 1000 ሚ.ሊ", check: "አረጋግጥ", win: "ድንቅ ስራ!", winsub: "ትክክል!", fail: "ስህተት!", failsub: "እንደገና ይሞክሩ", score: "ውጤት", high: "ከፍተኛ", level: "ደረጃ", convert: "ቀይሩ:", and: "እና", isIt: "ነው?", units: { l: "ሊ", ml: "ሚ.ሊ" } },
+            en: { title: "Capacity Mastery", rule: "💡 1 Liter = 1000 ml", check: "Confirm", win: "Great!", winsub: "Correct Answer!", fail: "Wrong!", failsub: "Try Again", score: "Score", high: "High", level: "Level", convert: "Convert:", and: "and", isIt: "is it?", units: { l: "L", ml: "ml" } },
+            om: { title: "Qabiyyee Safaruu", rule: "💡 1 L = 1000 ml", check: "Mirkaneessi", win: "Hojii Gaarii!", winsub: "Sirriidha!", fail: "Dogoggora!", failsub: "Irra deebi'i yaali", score: "Qabxii", high: "Olaanaa", level: "Sadarkaa", convert: "Gedaali:", and: "fi", isIt: "ta'a?", units: { l: "L", ml: "ml" } },
+            so: { title: "Cabirka Qabashada", rule: "💡 1 L = 1000 ml", check: "Hubi", win: "Shaqo Fiican!", winsub: "Waa sax!", fail: "Khalad!", failsub: "Markale isku day", score: "Dhibco", high: "Sare", level: "Heerka", convert: "Beddel:", and: "iyo", isIt: "waaye?", units: { l: "L", ml: "ml" } }
+        };
+
+        let score = 0, lang = 'ti', currentTask = null, busy = false, userVal = "", muted = false;
+        let highScore = parseInt(localStorage.getItem('capacity_high')) || 0;
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if (type === 'tap') { o.type = 'sine'; o.frequency.setValueAtTime(600, n); g.gain.setValueAtTime(0.05, n); o.start(); o.stop(n + 0.1); }
+            else if (type === 'win') { o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1)); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.5); }
+            else if (type === 'err') { o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.exponentialRampToValueAtTime(40, n + 0.3); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.3); }
+        }
+
+        function toggleMute() { muted = !muted; document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊'; }
+
+        function setLanguage(l) {
+            lang = l;
+            localStorage.setItem('capacity_lang', lang);
+            updateUI();
+        }
+
+        function updateUI() {
+            const t = i18n[lang];
+            document.getElementById('pageTitle').innerText = t.title;
+            document.getElementById('ruleHint').innerText = t.rule;
+            document.getElementById('lblScore').innerText = t.score;
+            document.getElementById('lblHigh').innerText = t.high;
+            document.getElementById('lblLvl').innerText = t.level;
+            document.getElementById('btnCheck').innerText = t.check;
+            document.getElementById('txtWin').innerText = t.win;
+            document.getElementById('txtWinSub').innerText = t.winsub;
+            document.getElementById('txtFail').innerText = t.fail;
+            document.getElementById('txtFailSub').innerText = t.failsub;
+            document.getElementById('valScore').innerText = score;
+            document.getElementById('valHigh').innerText = highScore;
+            document.getElementById('valLvl').innerText = Math.floor(score / 100) + 1;
+            if (currentTask) renderTask();
+        }
+
+        function generateTask() {
+            busy = false; userVal = "";
+            document.getElementById('liquid').style.height = '0%';
+            const level = Math.floor(score / 100) + 1;
+            
+            const t = i18n[lang];
+            let v, u, target, ans, qStr;
+
+            // Complexity scales with score level
+            if (level === 1) {
+                // Multiples of 1L to 1000ml (1, 2, 5, 10)
+                const options = [1, 2, 3, 5, 10];
+                v = options[Math.floor(Math.random() * options.length)];
+                u = 'l'; target = 'ml'; ans = v * 1000;
+                qStr = `${v} ${t.units.l} ${t.isIt}`;
+            } else if (level === 2) {
+                // Reverse conversion (ml to L)
+                const options = [1000, 2000, 4000, 5000, 8000];
+                v = options[Math.floor(Math.random() * options.length)];
+                u = 'ml'; target = 'l'; ans = v / 1000;
+                qStr = `${v} ${t.units.ml} ${t.isIt}`;
+            } else if (level === 3) {
+                // Mixed: Whole L and exact 500ml increments (e.g. 1L and 500ml)
+                let l_val = Math.floor(Math.random() * 8) + 1;
+                let ml_val = 500;
+                ans = (l_val * 1000) + ml_val;
+                target = 'ml';
+                qStr = `${l_val} ${t.units.l} ${t.and} ${ml_val} ${t.units.ml} ${t.isIt}`;
+            } else if (level === 4) {
+                // Mixed: Whole L and random 100ml increments
+                let l_val = Math.floor(Math.random() * 5) + 1;
+                let ml_val = (Math.floor(Math.random() * 9) + 1) * 100;
+                ans = (l_val * 1000) + ml_val;
+                target = 'ml';
+                qStr = `${l_val} ${t.units.l} ${t.and} ${ml_val} ${t.units.ml} ${t.isIt}`;
+            } else {
+                // Hardest: Higher values or unusual combinations
+                let type = Math.random() > 0.5 ? 'large_ml' : 'complex_mixed';
+                if (type === 'large_ml') {
+                    v = (Math.floor(Math.random() * 20) + 10) * 1000;
+                    u = 'ml'; target = 'l'; ans = v / 1000;
+                    qStr = `${v} ${t.units.ml} ${t.isIt}`;
+                } else {
+                    let l_val = Math.floor(Math.random() * 15) + 5;
+                    let ml_val = (Math.floor(Math.random() * 19) + 1) * 50;
+                    ans = (l_val * 1000) + ml_val;
+                    target = 'ml';
+                    qStr = `${l_val} ${t.units.l} ${t.and} ${ml_val} ${t.units.ml} ${t.isIt}`;
+                }
+            }
+
+            currentTask = { qStr, target, ans };
+            renderTask();
+        }
+
+        function renderTask() {
+            const t = i18n[lang];
+            document.getElementById('questionText').innerText = currentTask.qStr;
+            document.getElementById('targetUnit').innerText = currentTask.target === 'ml' ? t.units.ml : t.units.l;
+            const ansDisplay = document.getElementById('ansBox');
+            ansDisplay.innerText = userVal || "?";
+            ansDisplay.classList.remove('error');
+        }
+
+        function press(k) {
+            if (busy) return;
+            sfx('tap');
+            if (k === 'bk') userVal = userVal.slice(0, -1);
+            else if (userVal.length < 7) userVal += k;
+            const ansDisplay = document.getElementById('ansBox');
+            ansDisplay.innerText = userVal || "?";
+            ansDisplay.classList.remove('error');
+        }
+
+        function checkAnswer() {
+            if (busy || userVal === "") return;
+            busy = true;
+            if (parseInt(userVal) === currentTask.ans) {
+                score += 25;
+                if (score > highScore) { highScore = score; localStorage.setItem('capacity_high', highScore); }
+                document.getElementById('liquid').style.height = '100%';
+                // Confetti starts slightly before overlay for better effect
+                burst(200); 
+                setTimeout(handleWin, 1000);
+            } else {
+                handleErr();
+            }
+        }
+
+        function handleWin() {
+            sfx('win');
+            const overlay = document.getElementById('success-overlay');
+            overlay.style.display = 'flex';
+            // Continuous bursts during win page
+            const interval = setInterval(() => {
+                if (overlay.style.display === 'flex') burst(50);
+                else clearInterval(interval);
+            }, 500);
+
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                updateUI();
+                generateTask();
+            }, 2500);
+        }
+
+        function handleErr() {
+            sfx('err');
+            const card = document.getElementById('labCard');
+            const ansBox = document.getElementById('ansBox');
+            const body = document.body;
+
+            card.classList.add('shake');
+            ansBox.classList.add('error');
+            body.classList.add('flash-error');
+
+            const overlay = document.getElementById('error-overlay');
+            overlay.style.display = 'flex';
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                card.classList.remove('shake');
+                body.classList.remove('flash-error');
+                userVal = ""; busy = false; renderTask();
+            }, 1500);
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const p = [];
+            for(let i=0; i<count; i++) p.push({
+                x: Math.random()*c.width, y: c.height+20, vx: (Math.random()-0.5)*40, vy: (Math.random()-1.2)*65,
+                s: Math.random()*12+6, c: ['#6366f1', '#0ea5e9', '#f43f5e', '#22c55e'][Math.floor(Math.random()*4)], 
+                l: 2.5, r: Math.random()*360, rv: (Math.random()-0.5)*20
+            });
+            (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=p.length-1; i>=0; i--){
+                    const pt=p[i]; if(pt.l>0){
+                        al=true; pt.x+=pt.vx; pt.y+=pt.vy; pt.vy+=0.85; pt.l-=0.01; pt.r+=pt.rv;
+                        x.save(); x.translate(pt.x,pt.y); x.rotate(pt.r*Math.PI/180);
+                        x.fillStyle=pt.c; x.fillRect(-pt.s/2,-pt.s/2,pt.s,pt.s); x.restore();
+                    } else p.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f);
+            })();
+        }
+
+        window.onload = () => {
+            const kp = document.getElementById('keypad');
+            [1,2,3,4,5,6,7,8,9,0,'00','bk'].forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key'; 
+                if(k === 'bk') { b.innerText = '⌫'; b.classList.add('del'); }
+                else b.innerText = k;
+                b.onclick = () => press(k); 
+                kp.appendChild(b);
+            });
+            const savedLang = localStorage.getItem('capacity_lang') || 'ti';
+            document.getElementById('langSelect').value = savedLang;
+            setLanguage(savedLang);
+            generateTask();
+        };
+    </script>
+</body>
+</html>

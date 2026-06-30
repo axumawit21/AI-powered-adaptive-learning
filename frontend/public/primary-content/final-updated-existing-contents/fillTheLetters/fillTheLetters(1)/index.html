@@ -1,0 +1,545 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./styleFill.css" />
+    <title>Fill in the blank</title>
+    <style>
+    </style>
+  </head>
+  <body>
+    <div class="game-header">
+  <button id="backButton" class="icon-button" title="Back">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+  </button>
+  <div id="header">Fill in the blank</div>
+  <select id="languageSelect" class="language-select" title="Language">
+    <option value="en">English</option>
+    <option value="am">አማርኛ</option>
+    <option value="ti">ትግርኛ</option>
+    <option value="om">Afan Oromoo</option>
+    <option value="so">Soomaali</option>
+  </select>
+  <div class="score-container"><span id="score-label">Score</span>: <span id="score">0</span></div>
+  <button id="muteButton" class="icon-button" title="Mute/Unmute">
+    <svg id="soundOnIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+    </svg>
+    <svg id="soundOffIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+      <line x1="23" y1="9" x2="17" y2="15"></line>
+      <line x1="17" y1="9" x2="23" y2="15"></line>
+    </svg>
+  </button>
+</div>
+    <div class="imageHolder">
+            <img onclick="_playAudio()" width="300" height="300" src="" id="image" alt="">
+        </div>
+    <div class="container" style="margin-top: 16px;">
+    </div>
+    <div class="ans_btn">
+      <button id="btn">Answer</button>
+    </div>
+  </body>
+  <script>
+  function id(id){
+  return document.getElementById(id);
+}
+function clas(clas){
+  return document.getElementsByClassName(clas);
+}
+
+let isMuted = false;
+const correctAudio = new Audio('assets/correct.mp3');
+const incorrectAudio = new Audio('assets/incorrect.mp3');
+
+function playSound(audio) {
+  if (!isMuted && audio) {
+    audio.currentTime = 0;
+    audio.play();
+  }
+}
+
+const muteButton = document.getElementById('muteButton');
+const soundOnIcon = document.getElementById('soundOnIcon');
+const soundOffIcon = document.getElementById('soundOffIcon');
+
+if (muteButton && soundOnIcon && soundOffIcon) {
+  muteButton.addEventListener('click', function () {
+    isMuted = !isMuted;
+    if (isMuted) {
+      soundOnIcon.style.display = 'none';
+      soundOffIcon.style.display = 'block';
+    } else {
+      soundOnIcon.style.display = 'block';
+      soundOffIcon.style.display = 'none';
+    }
+  });
+}
+
+let pageTitle = ["Fill in the blank"];//end-var
+    function setPageTitle(selector) {
+      let titleElt = document.querySelector(selector);
+      let title = document.querySelector("title");
+      title.innerText = pageTitle[0];
+      if (titleElt) {
+        titleElt.innerText = pageTitle[0];
+      }
+    }
+    setPageTitle('#header')
+
+// ---- Language selection logic (only header, score, Answer) ----
+const translations = {
+  en: {
+    header: 'Fill in the blank',
+    score: 'Score',
+    answer: 'Answer'
+  },
+  am: {
+    header: 'ባዶውን ሙሉ',
+    score: 'ነጥብ',
+    answer: 'መልስ'
+  },
+  ti: {
+    header: 'ባዶ ቦታ ሙሉ',
+    score: 'ነጥቢ',
+    answer: 'መልሲ'
+  },
+  om: {
+    header: 'Iddoo duwwaa guuti',
+    score: "Bu'aa",
+    answer: 'Deebii'
+  },
+  so: {
+    header: 'Buuxi meel madhan',
+    score: 'Dhibco',
+    answer: 'Jawaab'
+  }
+};
+
+function applyLanguage(lang) {
+  const t = translations[lang] || translations.en;
+
+  // header + page title
+  pageTitle[0] = t.header;
+  setPageTitle('#header');
+
+  const headerEl = document.getElementById('header');
+  if (headerEl) headerEl.textContent = t.header;
+
+  const scoreLabel = document.getElementById('score-label');
+  if (scoreLabel) scoreLabel.textContent = t.score;
+
+  const answerBtn = document.getElementById('btn');
+  if (answerBtn) answerBtn.textContent = t.answer;
+}
+
+const languageSelect = document.getElementById('languageSelect');
+if (languageSelect) {
+  languageSelect.addEventListener('change', function () {
+    applyLanguage(this.value);
+  });
+}
+
+// initialize UI language
+applyLanguage('en');
+
+// MODIFIED: Updated arrOfStr based on requirements
+var arrOfStr = ['Tiger', 'Wolf', 'Eagle', 'Giraffe', 'Zebra', 'Kangaroo', 'Penguin', 'Dolphin'];//end-var
+
+let mainDiv = document.querySelector(".container");
+
+function getRandHint(str) {
+  var str = str;
+  let len = parseInt(str.length * 0.7);
+  let hint = [];
+  for (let i = 0; i < len; i++) {
+    let rand = parseInt(Math.random() * str.length);
+    hint.push(str.splice(rand, 1)[0]);
+  }
+  return hint;
+}
+
+function createGame() {
+  let questionDiv = document.querySelector(".questionDiv");
+  if (questionDiv) {
+    mainDiv.removeChild(questionDiv);
+  }
+  let qdiv = document.createElement("div");
+  qdiv.className = "questionDiv";
+
+  let randWordIndex = parseInt(Math.random() * arrOfStr.length); // Get random index
+  let selectedWord = arrOfStr[randWordIndex]; // Get the word string, e.g., "Tiger"
+
+  // MODIFIED: Set image source using the selectedWord (lowercase) and .jpg extension
+  id("image").src = `./assets/${selectedWord.toLowerCase()}.jpg`;
+
+  let randWord = selectedWord.split(""); // Split the word into characters for the game logic
+  let copy = randWord.slice(0, randWord.length);  
+
+  let hint = getRandHint(copy);
+  // console.log(copy); // (Optional: keep or remove, `copy` is modified by getRandHint)
+
+
+  for (let i = 0; i < randWord.length; i++) {
+    if (hint.indexOf(randWord[i]) == -1) {
+      let inp = document.createElement("input");
+      inp.className = "blanks";
+      inp.maxLength = "1"
+      // MODIFIED: Store lowercase character in ID for consistent comparison
+      inp.id = randWord[i].toLowerCase(); 
+      qdiv.appendChild(inp);
+    } else {
+      let span = document.createElement("span");
+      span.className = "hints";
+      span.innerText = randWord[i];
+      qdiv.appendChild(span);
+    }
+  }
+  mainDiv.appendChild(qdiv);
+
+  var leng = document.getElementsByTagName("input").length;
+  clas("blanks")[0].focus();
+  for (let i = 0; i < leng; i++) {
+    clas("blanks")[i].oninput = function () {
+      let ins = document.querySelectorAll(".blanks");
+      if (ins[i].value.toLowerCase() === ins[i].id) { // This comparison now works as id is lowercase
+        ins[i].style.border = "rgb(157, 255, 0) solid 7px";
+        if(i<leng-1){
+          clas("blanks")[i + 1].focus();
+        }
+      } else {
+        ins[i].style.border = "7px solid red";
+      }
+    };
+  }
+  document.getElementsByTagName("input")[leng-1].onkeypress = function (e) {
+    if (e.keyCode == 13) {
+      checkAns();
+    }
+  };
+  id("btn").onclick = function (e) {
+    checkAns();
+  };
+}
+
+function checkAns(e) {
+  let ins = document.querySelectorAll(".blanks");
+  let correct = true;
+  for (let i = 0; i < ins.length; i++) {
+    if (ins[i].value.toLowerCase() === ins[i].id) { // This comparison now works as id is lowercase
+      ins[i].style.border = "rgb(157, 255, 0) solid 7px";
+      correct = correct && true;
+    } else {
+      ins[i].style.border = "7px solid red";
+      correct = false;
+    }
+  }
+  if (correct) {
+    playSound(correctAudio);
+    updateScore(10); // Add 10 points for correct answer
+    setTimeout(createGame, 500); // Short delay before next question
+  } else {
+    playSound(incorrectAudio);
+  }
+}
+
+createGame();
+
+  </script>
+  <script>
+    // Initialize score
+    let score = 0;
+    const scoreElement = document.getElementById('score');
+    
+    // Function to update score
+    function updateScore(points) {
+      score += points;
+      scoreElement.textContent = score;
+      
+      // Add animation when score updates
+      scoreElement.style.transform = 'scale(1.5)';
+      setTimeout(() => {
+        scoreElement.style.transform = 'scale(1)';
+      }, 300);
+    }
+    
+    // Function to reset score
+    function resetScore() {
+      score = 0;
+      scoreElement.textContent = score;
+    }
+  </script>
+  <style>
+    /* Game header styles */
+    .game-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 20px;
+      position: relative;
+      min-height: 80px; /* Ensure header has enough height */
+    }
+
+    .icon-button {
+      background: none;
+      border: 2px solid white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: white;
+      padding: 0;
+      transition: all 0.2s ease;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .icon-button:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+    }
+
+    .icon-button:active {
+      transform: scale(0.95);
+    }
+
+    .language-select {
+      margin-left: 8px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.7);
+      background-color: rgba(0, 0, 0, 0.15);
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+      appearance: none;
+      -moz-appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .language-select:focus {
+      border-color: #ffeb3b;
+      box-shadow: 0 0 0 2px rgba(255, 235, 59, 0.4);
+      font-weight: bold;
+    }
+
+    #header {
+      margin: 0;
+      flex-grow: 1;
+      text-align: center;
+    }
+    
+    .score-container {
+      /* Let score sit after language dropdown in the flex row */
+      position: static;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 1px 1px 2px rgba(114, 95, 95, 0.5);
+      background-color: rgba(172, 192, 57, 0.3);
+      padding: 5px 15px;
+      border-radius: 20px;
+      margin-left: 8px;
+    }
+    
+    #score {
+      color: #ffeb3b;
+      font-size: 1.3rem;
+      right: 0;
+    }
+
+    @media (max-width: 600px) {
+      .game-header {
+        padding: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      /* Keep button/icon sizes smaller on mobile */
+      .icon-button {
+        width: 36px;
+        height: 36px;
+      }
+      
+      .icon-button svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      /* Re-order elements so score appears under volume button */
+      #backButton {
+        order: 1;
+      }
+
+      #header {
+        order: 2;
+        flex-basis: 100%;
+        text-align: center;
+        margin-top: 4px;
+      }
+
+      #muteButton {
+        order: 3;
+      }
+
+      .score-container {
+        order: 4;
+        position: static;
+        top: auto;
+        right: auto;
+        margin-top: 4px;
+        width: 100%;
+        text-align: center;
+      }
+    }
+
+    @font-face {
+    font-family: Supercell;
+    src: url("./assets/Supercell-Magic_5.ttf");
+  }
+  
+* {
+  padding: 0;
+  margin: 0;
+  /* Adjust cursor size or use a standard one for better mobile compatibility */
+  cursor: url("../image/SC_main_cursor.cur"),auto; 
+}
+/* General/Desktop Styles (using relative units) */
+
+body {
+  background: radial-gradient(#84d8ff, #1363db);
+  font-family: sans-serif;
+}
+#header {
+  font-size: 3.5vw; /* Maintain relative size */
+  font-family: supercell;
+  margin-top: 1vw;
+  text-align: center;
+  color: white;
+}
+.imageHolder {
+    /* Adjusted for better centering and size on desktop/large screens */
+    width: 25vw;
+    height: 25vw;
+    max-width: 300px; /* Limit max size */
+    max-height: 300px;
+    margin: 0vw auto 0; /* Center horizontally with auto margins */
+    text-align: center; /* Center the image inside the holder */
+}
+.imageHolder img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Ensure the image scales well */
+}
+
+.questionDiv {
+  /* Center the div horizontally on desktop */
+  margin: 0vw auto 0; 
+  background: rgb(255, 255, 255);
+  width: 80%; /* Increased width for better use of space */
+  max-width: 600px; /* Set a reasonable maximum width */
+  border: rgb(187, 255, 0) solid 0.5vw;
+  text-align: center;
+  border-radius: 20vw;
+  padding: 0vw; /* Add padding inside */
+}
+
+.blanks {
+  font-size: 5vw; /* Smaller font size */
+  width: 5vw; /* Smaller width */
+  height: 5vw; /* Smaller height */
+  min-width: 35px; /* Minimum size for touch interaction */
+  min-height: 35px;
+  background: inherit;
+  border: rgb(0, 238, 255) solid 0.5vw;
+  color: rgb(255, 136, 0);
+  outline: none;
+  margin: 0.5vw; /* Better margin between inputs */
+  border-radius: 1vw;
+  text-align: center;
+}
+.hints {
+  font-size: 5vw; /* Smaller font size */
+  align: center;
+ 
+  color: rgb(255, 136, 0);
+}
+
+#btn {
+  width: 150px; /* Use absolute size for button */
+  height: 50px;
+  background: #bbff00;
+  border: none;
+  border-radius: 0.5vw;
+  color: rgb(255, 255, 255);
+  margin: 3vw auto; /* Center button horizontally with auto margins */
+  display: block; /* Make it a block element to respect auto margins */
+  font-size: 1.5rem; /* Use a standard font size */
+  cursor: pointer;
+}
+
+/* --- Media Query for Mobile Screens (Max-width 600px) --- */
+@media (max-width: 600px) {
+    #header {
+        font-size: 8vw; /* Larger font for header on mobile */
+        margin-top: 5vw;
+    }
+
+    .imageHolder {
+        width: 60vw; /* Larger image area on mobile */
+        height: 60vw;
+        margin: 5vw auto;
+    }
+
+    /* Reset the explicit top/left positioning for mobile */
+    .questionDiv {
+        margin: 10vw auto; /* Center with margin top/bottom */
+        width: 90%; /* Wider use of screen space */
+        padding: 4vw 1vw;
+        border-width: 1vw; /* Thicker border for mobile */
+        border-radius: 4vw;
+        /* Ensure input fields can wrap */
+        display: flex; 
+        flex-wrap: wrap; 
+        justify-content: center;
+        align-items: center;
+    }
+
+    .blanks {
+        font-size: 10vw; /* Much larger font/box for touch targets */
+        width: 10vw;
+        height: 10vw;
+        min-width: 45px;
+        min-height: 45px;
+        border-width: 1vw;
+        border-radius: 2vw;
+        margin: 1vw; /* More spacing on mobile */
+    }
+
+    .hints {
+        font-size: 10vw; /* Match the size of the input boxes */
+        margin: 1vw;
+    }
+
+    #btn {
+        width: 60vw; /* Make the button wider */
+        height: 12vw;
+        font-size: 6vw;
+        border-radius: 2vw;
+        margin: 8vw auto;
+    }
+}
+/* Removed #backGameFill styles as the element is not in your HTML and is not relevant to this task. */
+  </style>
+  </html>

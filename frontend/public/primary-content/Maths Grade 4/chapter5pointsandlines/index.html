@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Geometry Quest | ነጥብታትን መስመራትን</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --secondary: #ec4899;
+            --success: #10b981;
+            --error: #f43f5e;
+            --space-bg: #1e1b4b;
+            --star-color: #fef08a;
+            --white: #ffffff;
+            --ink: #1e293b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--space-bg);
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+            color: var(--white); overflow-x: hidden; transition: background 0.3s;
+            position: relative;
+        }
+
+        /* Unique Space Cartoon Background */
+        .stars {
+            position: fixed; inset: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, var(--star-color), rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 50px 160px, var(--star-color), rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 130px 80px, var(--white), rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            opacity: 0.4; z-index: 0;
+        }
+
+        .planet {
+            position: fixed; border-radius: 50%; z-index: 0; opacity: 0.7;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.2));
+        }
+        .planet-1 { width: 120px; height: 120px; background: radial-gradient(circle at 30% 30%, #f43f5e, #881337); top: 15%; left: 8%; animation: float 6s ease-in-out infinite alternate; }
+        .planet-2 { width: 220px; height: 220px; background: radial-gradient(circle at 30% 30%, #3b82f6, #1e3a8a); bottom: -40px; right: -40px; animation: float 8s ease-in-out infinite alternate-reverse; }
+        
+        @keyframes float { from { transform: translateY(0); } to { transform: translateY(20px); } }
+
+        .ufo {
+            position: fixed; top: 40%; right: -100px; font-size: 3rem; z-index: 0;
+            animation: ufoPass 15s linear infinite;
+        }
+        @keyframes ufoPass { 0% { right: -100px; top: 40%; } 50% { top: 30%; } 100% { right: 110vw; top: 40%; } }
+
+        body.wrong-bg { background: var(--error) !important; }
+        body.wrong-bg .stars, body.wrong-bg .planet, body.wrong-bg .ufo { display: none; }
+
+        header {
+            width: 100%; max-width: 1000px; padding: 20px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+        }
+
+        .stat-pill {
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+            padding: 8px 16px; border-radius: 20px; border: 2px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; gap: 8px; font-weight: 800;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .stat-val { color: #facc15; }
+
+        .container {
+            flex: 1; width: 100%; max-width: 800px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; padding: 20px; z-index: 10; gap: 12px;
+        }
+
+        .question-box {
+            position: relative; z-index: 10; text-align: center; width: 100%;
+            background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 25px;
+            border: 4px solid var(--primary); color: var(--ink);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .canvas-card {
+            background: #f8fafc; width: 100%; height: clamp(280px, 45vh, 450px);
+            border-radius: 35px; border: 6px solid var(--ink);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4); position: relative;
+            overflow: hidden; padding: 20px;
+        }
+
+        .canvas-grid {
+            position: absolute; inset: 0;
+            background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
+            background-size: 30px 30px; opacity: 0.4;
+        }
+
+        #geometry-svg { width: 100%; height: 100%; position: relative; z-index: 2; }
+
+        .options-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%;
+        }
+
+        .btn-opt {
+            background: white; border: 4px solid var(--ink); border-radius: 20px;
+            padding: 18px; font-size: clamp(0.9rem, 2.5vw, 1.2rem); font-weight: 900;
+            cursor: pointer; transition: 0.1s; box-shadow: 0 6px 0 var(--ink);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            color: var(--ink); line-height: 1.2;
+        }
+        .btn-opt:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ink); }
+        .btn-opt:hover { background: var(--primary); color: white; border-color: white; }
+
+        .overlay {
+            position: fixed; inset: 0; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 5000;
+            background: rgba(255, 255, 255, 0.98); text-align: center; color: var(--ink);
+        }
+        .error-overlay { background: var(--error); color: white; }
+        .big-icon { font-size: 8rem; margin-bottom: 20px; animation: bounce 0.6s infinite alternate; }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
+        .big-x { font-size: 15rem; font-weight: 900; animation: shake 0.4s infinite; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-15px); } 75% { transform: translateX(15px); } }
+
+        .icon-btn {
+            background: white; border: 3px solid var(--ink); width: 45px; height: 45px;
+            border-radius: 50%; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 0 var(--ink);
+            color: var(--ink);
+        }
+
+        .lang-select {
+            padding: 10px; border-radius: 12px; font-weight: bold; background: white;
+            border: 3px solid var(--ink); color: var(--ink); outline: none; cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            .options-grid { grid-template-columns: 1fr; }
+            .canvas-card { height: 260px; }
+            header { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="planet planet-1"></div>
+    <div class="planet planet-2"></div>
+    <div class="ufo">🛸</div>
+    
+    <canvas id="confetti-canvas" style="position:fixed; inset:0; pointer-events:none; z-index:6000;"></canvas>
+
+    <header>
+        <div style="display: flex; gap: 8px;">
+            <div class="stat-pill">✨ <span id="lblScore">Score</span>: <span id="valScore" class="stat-val">0</span></div>
+            <div class="stat-pill">🏆 <span id="lblHigh">High</span>: <span id="valHigh" class="stat-val">0</span></div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="icon-btn" id="muteBtn" onclick="toggleMute()">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="setLanguage(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="question-box">
+            <p id="subTitle" style="font-weight: 800; font-size: 1.15rem;">እዚ እንታይ ቅርፂ እዩ?</p>
+        </div>
+
+        <div class="canvas-card" id="mainCard">
+            <div class="canvas-grid"></div>
+            <svg id="geometry-svg" viewBox="0 0 300 300">
+                <!-- Geometry injected here -->
+            </svg>
+        </div>
+
+        <div class="options-grid" id="options">
+            <!-- Buttons injected here -->
+        </div>
+    </div>
+
+    <!-- Success Feedback -->
+    <div id="success-overlay" class="overlay">
+        <div class="big-icon">🪐</div>
+        <h2 id="txtWin" style="font-size: 3rem;">ንፉዕ!</h2>
+        <p style="font-size: 1.5rem; opacity: 0.7;" id="txtWinSub">ልክዕ መልሲ!</p>
+    </div>
+
+    <!-- Error Feedback -->
+    <div id="error-overlay" class="overlay error-overlay">
+        <div class="big-x">✕</div>
+        <h2 id="txtFail" style="font-size: 3rem;">ጌጋ!</h2>
+        <p style="font-size: 1.5rem;" id="txtFailSub">እንደገና ፈትን</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { 
+                title: "ነጥብታትን መስመራትን", sub: "እዚ እንታይ ቅርፂ እዩ?", win: "ንፉዕ!", winsub: "ልክዕ መልሲ!", fail: "ጌጋ!", failsub: "እንደገና ፈትን", score: "ውፅኢት", high: "ዝለዓለ", 
+                types: { 
+                    point: "ነጥቢ", line: "ቅኑዕ መስመር", ray: "ጨረር", segment: "ክፍሊ መስመር", plane: "ፀፍሒ",
+                    intersect: "ተራኸብቲ ፀፍሕታት", parallel: "ተመዓዳደውቲ ፀፍሕታት", vertex: "ነጥቢ (ኩርናዕ)"
+                },
+                qChairIntersect: "ካብዚ ምስሊ ወንበር ተራኸብቲ ፀፍሕታት ኣየኖት እዮም?",
+                qShelfParallel: "ካብዚ ምስሊ መቐመጢ መፃሕፍቲ ተመዓዳደውቲ ፀፍሕታት ፍለዩ:",
+                qShelfABCD: "ኣብዚ ምስሊ ንገፅ ሀለበተ ዘቋርፁ ተራኸብቲ ፀፍሕታት ኣየኖት እዮም?",
+                faces: {
+                    seatBack: "መቐመጥን መደገፍን",
+                    legs: "እግሪ ወንበር",
+                    topBottom: "ላዕለዋይን ታሕተዋይን ገፅ",
+                    leftRight: "ፀጋማይን የማናይን ገፅ",
+                    frontBack: "ቅድሚትን ድሕሪትን ገፅ"
+                },
+                labels: ['ሀ', 'ለ', 'ሐ', 'መ']
+            },
+            am: { 
+                title: "ነጥቦች እና መስመሮች", sub: "ይህ የትኛው ቅርፅ ነው?", win: "ድንቅ ስራ!", winsub: "ትክክል!", fail: "ስህተት!", failsub: "እንደገና ይሞክሩ", score: "ውጤት", high: "ከፍተኛ", 
+                types: { 
+                    point: "ነጥብ", line: "ቀጥተኛ መስመር", ray: "ጨረር", segment: "የመስመር ቁራጭ", plane: "ጠፍጣፋ",
+                    intersect: "ተገናኝ ጠፍጣፋዎች", parallel: "ትይዩ ጠፍጣፋዎች", vertex: "ነጥብ (ማዕዘን)"
+                },
+                qChairIntersect: "ከዚህ የወንበር ምስል ተገናኝ (intersecting) የሆኑ ጠፍጣፋዎችን ለዩ፡",
+                qShelfParallel: "ከዚህ የመፅሐፍ መደርደሪያ ምስል ትይዩ (parallel) ጠፍጣፋዎችን ለዩ፡",
+                qShelfABCD: "በዚህ ምስል ሀለበተ ገፅን የሚያቋርጡ (intersecting) ገጾችን ለዩ፡",
+                faces: {
+                    seatBack: "መቀመጫ እና መደገፊያ",
+                    legs: "የወንበር እግሮች",
+                    topBottom: "ላይኛው እና ታችኛው ገጽ",
+                    leftRight: "የግራ እና የቀኝ ገጽ",
+                    frontBack: "የፊት እና የኋላ ገጽ"
+                },
+                labels: ['ሀ', 'ለ', 'ሐ', 'መ']
+            },
+            en: { 
+                title: "Points & Lines", sub: "What is this shape?", win: "Great!", winsub: "Correct!", fail: "Wrong!", failsub: "Try Again", score: "Score", high: "High", 
+                types: { 
+                    point: "Point", line: "Line", ray: "Ray", segment: "Line Segment", plane: "Plane",
+                    intersect: "Intersecting Planes", parallel: "Parallel Planes", vertex: "Vertex"
+                },
+                qChairIntersect: "In this chair, which planes are intersecting?",
+                qShelfParallel: "In this bookshelf, find the parallel planes:",
+                qShelfABCD: "Which faces intersect face ABCD?",
+                faces: {
+                    seatBack: "Seat and Backrest",
+                    legs: "Chair Legs",
+                    topBottom: "Top and Bottom shelf",
+                    leftRight: "Left and Right side",
+                    frontBack: "Front and Back"
+                },
+                labels: ['A', 'B', 'C', 'D']
+            },
+            om: { 
+                title: "Qabxii fi Sarara", sub: "Kun bifa isa kami?", win: "Baay'ee Gaarii!", winsub: "Sirriidha!", fail: "Dogoggora!", failsub: "Irra deebi'i yaali", score: "Qabxii", high: "Olaanaa", 
+                types: { 
+                    point: "Qabxii", line: "Sarara", ray: "Ray", segment: "Cittoo Sararaa", plane: "Plane",
+                    intersect: "Wal-qaxxaamuraa", parallel: "Parallel", vertex: "Vertex"
+                },
+                qChairIntersect: "Teessoo kana keessatti kanneen wal-qaxxaamuraan kamfa'i?",
+                qShelfParallel: "Kuntaala kana keessatti kanneen parallel ta'an fidi:",
+                qShelfABCD: "Fuulli kam ABCD wal-qaxxaamura?",
+                faces: {
+                    seatBack: "Seat fi Backrest",
+                    legs: "Miila Teessoo",
+                    topBottom: "Top fi Bottom",
+                    leftRight: "Bitaa fi Mirga",
+                    frontBack: "Front fi Back"
+                },
+                labels: ['A', 'B', 'C', 'D']
+            },
+            so: { 
+                title: "Dhibcaha & Khadadka", sub: "Waa maxay qaabkani?", win: "Shaqo Fiican!", winsub: "Waa sax!", fail: "Khalad!", failsub: "Markale isku day", score: "Dhibco", high: "Sare", 
+                types: { 
+                    point: "Dhibic", line: "Xariiq", ray: "Ray", segment: "Qayb Xariiq", plane: "Buste",
+                    intersect: "Isku-tallaabta", parallel: "Is-barbar", vertex: "Xagal"
+                },
+                qChairIntersect: "Kursigaan, bustayaasha kee baa isku-tallaaba?",
+                qShelfParallel: "Rakaabka buugaagta, ka raadi bustayaasha is-barbar socda:",
+                qShelfABCD: "Wajiyadee baa isku-tallaaba wajiga ABCD?",
+                faces: {
+                    seatBack: "Kursiga & Barkinta",
+                    legs: "Lugaha Kursiga",
+                    topBottom: "Sare & Hoose",
+                    leftRight: "Bidix & Midig",
+                    frontBack: "Hore & Dambe"
+                },
+                labels: ['A', 'B', 'C', 'D']
+            }
+        };
+
+        let score = 0, lang = 'ti', muted = false, busy = false, currentTask = null;
+        let highScore = parseInt(localStorage.getItem('geom_high')) || 0;
+        let particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function toggleMute() {
+            muted = !muted;
+            document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊';
+        }
+
+        function sfx(type) {
+            if (muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if (type === 'win') { o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1)); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.5); }
+            else if (type === 'err') { o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.exponentialRampToValueAtTime(40, n + 0.3); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.3); }
+        }
+
+        function setLanguage(l) {
+            lang = l;
+            localStorage.setItem('geom_lang', lang);
+            document.getElementById('lblScore').innerText = i18n[lang].score;
+            document.getElementById('lblHigh').innerText = i18n[lang].high;
+            document.getElementById('txtWin').innerText = i18n[lang].win;
+            document.getElementById('txtWinSub').innerText = i18n[lang].winsub;
+            document.getElementById('txtFail').innerText = i18n[lang].fail;
+            document.getElementById('txtFailSub').innerText = i18n[lang].failsub;
+            if (currentTask) renderTask();
+        }
+
+        function generateTask() {
+            busy = false;
+            const roll = Math.random();
+            if (roll < 0.4) {
+                const primitives = ['point', 'line', 'ray', 'segment', 'plane'];
+                currentTask = { mode: 'primitive', type: primitives[Math.floor(Math.random() * primitives.length)] };
+            } else if (roll < 0.7) {
+                currentTask = { mode: 'chair', type: 'intersect' };
+            } else {
+                currentTask = { mode: 'shelf', type: Math.random() > 0.5 ? 'parallel' : 'abcd' };
+            }
+            renderTask();
+        }
+
+        function renderTask() {
+            const svg = document.getElementById('geometry-svg');
+            const sub = document.getElementById('subTitle');
+            const optGrid = document.getElementById('options');
+            svg.innerHTML = '';
+            optGrid.innerHTML = '';
+
+            const t = i18n[lang];
+            const stroke = '#1e293b';
+
+            if (currentTask.mode === 'primitive') {
+                sub.innerText = t.sub;
+                renderPrimitive(svg, currentTask.type, stroke, t.labels);
+                const types = ['point', 'line', 'ray', 'segment', 'plane'];
+                types.forEach(type => {
+                    addOption(optGrid, t.types[type], type === currentTask.type);
+                });
+            } else if (currentTask.mode === 'chair') {
+                sub.innerText = t.qChairIntersect;
+                renderChair(svg, stroke, t.labels);
+                addOption(optGrid, t.faces.seatBack, true);
+                addOption(optGrid, t.faces.legs, false);
+                addOption(optGrid, t.types.parallel, false);
+            } else if (currentTask.mode === 'shelf') {
+                if (currentTask.type === 'parallel') {
+                    sub.innerText = t.qShelfParallel;
+                    renderShelf(svg, stroke, false, t.labels);
+                    addOption(optGrid, t.faces.topBottom, true);
+                    addOption(optGrid, t.faces.seatBack, false);
+                    addOption(optGrid, t.faces.leftRight, true);
+                } else {
+                    sub.innerText = t.qShelfABCD;
+                    renderShelf(svg, stroke, true, t.labels);
+                    addOption(optGrid, t.faces.leftRight, true);
+                    addOption(optGrid, t.faces.topBottom, false);
+                }
+            }
+
+            document.getElementById('valScore').innerText = score;
+            document.getElementById('valHigh').innerText = highScore;
+        }
+
+        function renderPrimitive(svg, type, stroke, labels) {
+            if (type === 'point') {
+                svg.innerHTML = `<circle cx="150" cy="150" r="10" fill="${stroke}" /> <text x="165" y="140" font-weight="bold" font-size="28">${labels[0]}</text>`;
+            } else if (type === 'segment') {
+                svg.innerHTML = `<line x1="50" y1="150" x2="250" y2="150" stroke="${stroke}" stroke-width="8" /><circle cx="50" cy="150" r="8" fill="${stroke}" /><circle cx="250" cy="150" r="8" fill="${stroke}" /><text x="45" y="195" font-weight="bold" font-size="24">${labels[0]}</text><text x="245" y="195" font-weight="bold" font-size="24">${labels[1]}</text>`;
+            } else if (type === 'ray') {
+                svg.innerHTML = `<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orientation="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="${stroke}" /></marker></defs><line x1="50" y1="150" x2="240" y2="150" stroke="${stroke}" stroke-width="8" marker-end="url(#arrow)" /><circle cx="50" cy="150" r="8" fill="${stroke}" /><text x="45" y="195" font-weight="bold" font-size="24">${labels[0]}</text>`;
+            } else if (type === 'line') {
+                svg.innerHTML = `<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="3" orientation="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="${stroke}" /></marker></defs><line x1="60" y1="150" x2="240" y2="150" stroke="${stroke}" stroke-width="8" marker-start="url(#arr)" marker-end="url(#arr)" /><circle cx="100" cy="150" r="5" fill="${stroke}" /><circle cx="200" cy="150" r="5" fill="${stroke}" />`;
+            } else if (type === 'plane') {
+                svg.innerHTML = `<path d="M60,220 L120,80 L260,80 L200,220 Z" fill="rgba(139, 92, 246, 0.15)" stroke="${stroke}" stroke-width="6" stroke-dasharray="10,5" /><text x="40" y="70" font-weight="bold" font-size="36" fill="${stroke}">P</text>`;
+            }
+        }
+
+        function renderChair(svg, stroke, labels) {
+            svg.innerHTML = `
+                <path d="M100,200 L200,200 L230,170 L130,170 Z" fill="#e2e8f0" stroke="${stroke}" stroke-width="4" /> <!-- Seat -->
+                <path d="M130,170 L130,100 L230,100 L230,170" fill="none" stroke="${stroke}" stroke-width="4" /> <!-- Backrest -->
+                <line x1="100" y1="200" x2="100" y2="260" stroke="${stroke}" stroke-width="4" />
+                <line x1="200" y1="200" x2="200" y2="260" stroke="${stroke}" stroke-width="4" />
+                <line x1="130" y1="170" x2="130" y2="230" stroke="${stroke}" stroke-width="2" opacity="0.5" />
+                <line x1="230" y1="170" x2="230" y2="230" stroke="${stroke}" stroke-width="4" />
+                <text x="140" y="140" font-size="20" font-weight="bold">${labels[0]}</text>
+                <text x="140" y="195" font-size="20" font-weight="bold">${labels[1]}</text>
+            `;
+        }
+
+        function renderShelf(svg, stroke, highlightABCD, labels) {
+            svg.innerHTML = `
+                <path d="M80,100 L220,100 L250,70 L110,70 Z" fill="#f1f5f9" stroke="${stroke}" stroke-width="4" /> <!-- Top -->
+                <path d="M80,220 L220,220 L250,190 L110,190 Z" fill="#f1f5f9" stroke="${stroke}" stroke-width="4" /> <!-- Bottom -->
+                <line x1="80" y1="100" x2="80" y2="220" stroke="${stroke}" stroke-width="4" /> <!-- Left Post -->
+                <line x1="220" y1="100" x2="220" y2="220" stroke="${stroke}" stroke-width="4" /> <!-- Right Post -->
+                <line x1="250" y1="70" x2="250" y2="190" stroke="${stroke}" stroke-width="4" /> <!-- Back Post -->
+                
+                <text x="130" y="90" font-size="20" font-weight="bold">${labels[0]}</text>
+                <text x="140" y="215" font-size="20" font-weight="bold">${labels[1]}</text>
+                <text x="260" y="130" font-size="20" font-weight="bold">${labels[2]}</text>
+                
+                ${highlightABCD ? `<rect x="80" y="100" width="140" height="120" fill="rgba(236, 72, 153, 0.2)" stroke="${stroke}" stroke-width="2" />` : ''}
+            `;
+        }
+
+        function addOption(grid, label, isCorrect) {
+            const btn = document.createElement('button');
+            btn.className = 'btn-opt';
+            btn.innerText = label;
+            btn.onclick = () => {
+                if (busy) return;
+                busy = true;
+                if (isCorrect) {
+                    score += 25;
+                    if (score > highScore) { highScore = score; localStorage.setItem('geom_high', highScore); }
+                    handleWin();
+                } else {
+                    handleError();
+                }
+            };
+            grid.appendChild(btn);
+        }
+
+        function handleWin() {
+            sfx('win'); burst(300);
+            const overlay = document.getElementById('success-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                generateTask();
+            }, 1800);
+        }
+
+        function handleError() {
+            sfx('err');
+            document.body.classList.add('wrong-bg');
+            document.getElementById('mainCard').style.animation = 'shake 0.4s';
+            const overlay = document.getElementById('error-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.body.classList.remove('wrong-bg');
+                document.getElementById('mainCard').style.animation = '';
+                busy = false; 
+            }, 1800);
+        }
+
+        function burst(count) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#8b5cf6', '#ec4899', '#facc15', '#ffffff'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random()*c.width, y: c.height+20, vx: (Math.random()-0.5)*40, vy: (Math.random()-1.2)*65,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 2.5, r: Math.random()*360, rv: (Math.random()-0.5)*20
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else p.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => {
+            const savedLang = localStorage.getItem('geom_lang') || 'ti';
+            document.getElementById('langSelect').value = savedLang;
+            setLanguage(savedLang);
+            generateTask();
+        };
+    </script>
+</body>
+</html>

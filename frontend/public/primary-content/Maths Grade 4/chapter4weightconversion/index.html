@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Weight Master Pro | መዐቀንታት ክብደት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --weight-blue: #2c3e50;
+            --cargo-gold: #f39c12;
+            --steel: #7f8c8d;
+            --mint: #1abc9c;
+            --berry: #e74c3c;
+            --bg: #f5f6fa;
+            --white: #ffffff;
+            --accent: #3498db;
+            --shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--weight-blue);
+            overflow-x: hidden;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6000; }
+
+        header {
+            width: 100%; max-width: 1100px; padding: 15px 25px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            gap: 10px; flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(5px);
+            padding: 8px 15px; border-radius: 20px; border: 2.5px solid var(--weight-blue);
+            display: flex; align-items: center; gap: 8px; font-weight: 700;
+            box-shadow: 0 4px 0 var(--weight-blue);
+            font-size: clamp(0.8rem, 2.5vw, 1rem);
+        }
+        .stat-val { color: var(--cargo-gold); }
+
+        .header-controls { display: flex; gap: 10px; align-items: center; }
+
+        .container {
+            flex: 1; width: 100%; max-width: 1200px; display: flex; flex-direction: column;
+            padding: 10px; gap: 20px; justify-content: center; align-items: center;
+        }
+
+        .game-card {
+            background: var(--white); border-radius: 40px; padding: clamp(20px, 6vw, 40px);
+            width: 100%; max-width: 800px; text-align: center; display: flex; flex-direction: column; gap: 25px;
+            box-shadow: var(--shadow); border: 8px solid var(--white);
+            position: relative; transition: all 0.3s ease;
+        }
+
+        /* Tutorial Styling */
+        .tut-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 35px; border-radius: 35px; color: white; margin-bottom: 10px;
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+            position: relative; overflow: hidden;
+        }
+        .tut-hero::after {
+            content: '⚖️'; position: absolute; right: -20px; bottom: -20px; font-size: 8rem; opacity: 0.1; transform: rotate(-15deg);
+        }
+        .tut-hero h1 { font-size: clamp(1.8rem, 6vw, 2.8rem); margin-bottom: 5px; position: relative; z-index: 2; }
+        .tut-hero p { position: relative; z-index: 2; opacity: 0.9; font-weight: 500; }
+
+        .tutorial-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;
+            padding: 5px; text-align: left;
+        }
+        .formula-card {
+            padding: 18px; border-radius: 22px; border: none;
+            font-size: clamp(0.95rem, 2.5vw, 1.15rem); font-weight: 800; color: white;
+            display: flex; flex-direction: column; gap: 6px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        .formula-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 15px 25px rgba(0,0,0,0.15); }
+        .formula-sub { font-size: 0.75rem; color: rgba(255,255,255,0.8); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Specific Formula Card Colors */
+        .f-mint { background: linear-gradient(135deg, #1abc9c, #16a085); }
+        .f-gold { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .f-blue { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .f-rose { background: linear-gradient(135deg, #ff758c, #ff7eb3); }
+        .f-purple { background: linear-gradient(135deg, #a18cd1, #fbc2eb); }
+
+        /* Quiz Styling */
+        .question-box {
+            padding: 30px; background: #ebf2f7; border-radius: 30px;
+            border: 4px dashed var(--accent); position: relative;
+        }
+        .question-text { font-size: clamp(1.4rem, 4.5vw, 2.4rem); font-weight: 800; color: #1e293b; }
+
+        .interactive-area {
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+            font-size: 2.5rem; font-weight: 900; flex-wrap: wrap; margin: 10px 0;
+        }
+
+        .ans-box {
+            min-width: clamp(120px, 25vw, 160px); height: clamp(80px, 15vh, 110px); background: #fff; border-radius: 25px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent); font-size: clamp(2.5rem, 8vw, 4rem); cursor: pointer;
+            border: 6px solid var(--accent); box-shadow: 0 8px 0 var(--accent);
+            font-family: 'Fredoka', sans-serif; font-weight: 900; transition: 0.1s;
+        }
+        .ans-box.active { transform: scale(1.05); border-color: var(--mint); box-shadow: 0 8px 0 var(--mint); color: var(--mint); }
+        .unit-label { font-size: 1.5rem; font-weight: 900; color: var(--steel); }
+
+        /* Keypad */
+        .keypad-section { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 12px; }
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .key {
+            height: clamp(60px, 10vh, 80px); background: #fff; border: 3px solid var(--weight-blue); border-radius: 20px;
+            font-size: clamp(1.8rem, 5vw, 2.4rem); font-weight: 800; color: var(--weight-blue); cursor: pointer;
+            box-shadow: 0 6px 0 var(--weight-blue); transition: 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--weight-blue); }
+        .key.del { color: var(--berry); }
+        .key.check {
+            grid-column: 1 / -1; background: var(--mint); color: white;
+            font-size: clamp(1.5rem, 4vw, 2rem); height: clamp(70px, 12vh, 90px); margin-top: 10px; border-radius: 25px;
+            box-shadow: 0 8px 0 #149178; font-weight: 900; text-transform: uppercase; border: none;
+        }
+
+        .btn-start-quiz {
+            background: var(--cargo-gold); color: white; padding: 22px 60px; border-radius: 50px;
+            font-size: clamp(1.3rem, 4.5vw, 1.9rem); font-weight: 900; border: none; cursor: pointer;
+            box-shadow: 0 10px 0 #d35400; transition: 0.1s; margin-top: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        .btn-start-quiz:active { transform: translateY(6px); box-shadow: 0 4px 0 #d35400; animation: none; }
+
+        .icon-btn {
+            background: white; border: 2.5px solid var(--weight-blue); width: 45px; height: 45px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; box-shadow: 0 4px 0 var(--weight-blue); transition: 0.1s;
+        }
+        .icon-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--weight-blue); }
+
+        .overlay {
+            position: fixed; inset: 0; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 5000; padding: 20px;
+            background: rgba(255, 255, 255, 0.98); text-align: center;
+        }
+        .overlay.error { background: var(--berry); color: white; }
+        .big-icon { font-size: 8rem; margin-bottom: 20px; animation: bounce 1s infinite alternate; }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        .lang-select {
+            padding: 10px 15px; border-radius: 15px; border: 2.5px solid var(--weight-blue);
+            background: white; font-weight: bold; cursor: pointer; font-size: 0.9rem;
+        }
+
+        @media (min-width: 1024px) {
+            .container { flex-direction: row; align-items: stretch; max-width: 1300px; gap: 40px; }
+            .game-card { flex: 1.2; justify-content: center; }
+            .keypad-section { flex: 0.8; max-width: 450px; justify-content: center; }
+        }
+
+        @media (max-width: 480px) {
+            header { flex-direction: column; align-items: center; }
+            .header-controls { width: 100%; justify-content: center; }
+            .container { gap: 15px; }
+            .formula-card { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+
+    <header id="gameHeader" style="visibility: hidden;">
+        <div class="header-controls">
+            <button class="icon-btn" onclick="goHome()" title="Home">🏠</button>
+            <div class="stat-pill">🆙 <span class="lblLvl">ደረጃ</span>: <span id="valLvl" class="stat-val">1</span></div>
+            <div class="stat-pill">⭐ <span class="lblScore">ውፅኢት</span>: <span id="valScore" class="stat-val">0</span></div>
+            <select class="lang-select lang-switcher"></select>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Attractive Tutorial Card -->
+        <div class="game-card" id="tutorialCard">
+            <div class="tut-hero">
+                <h1 class="tut-title">መዐቀንታት ክብደት</h1>
+                <p class="tut-sub">ቅድሚ ምጅማርና እዞም መዐቀንታት ንርአ:</p>
+            </div>
+            
+            <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;">
+                <select class="lang-select lang-switcher"></select>
+            </div>
+
+            <div class="tutorial-grid" id="tutorialGrid">
+                <!-- Injected via JS -->
+            </div>
+
+            <button class="btn-start-quiz" onclick="startQuiz()">
+                <span>🚀</span> <span class="btn-start-text">ፀወታ ጀምር</span>
+            </button>
+        </div>
+
+        <!-- Quiz Card -->
+        <div class="game-card" id="quizCard" style="display: none;">
+            <h1 class="title quiz-title">ምቅይያር ኣሃድታት ክብደት</h1>
+            <div class="question-box">
+                <p id="questionText" class="question-text">---</p>
+            </div>
+            <div class="interactive-area">
+                <div class="ans-box active" id="ansBox">?</div>
+                <div class="unit-label" id="targetUnit">ግ</div>
+            </div>
+        </div>
+
+        <div class="keypad-section" id="keypadSection" style="display: none;">
+            <div class="keypad" id="keypad"></div>
+            <button class="key check btn-check" onclick="checkAnswer()">ኣረጋግፅ</button>
+        </div>
+    </div>
+
+    <div id="success-overlay" class="overlay">
+        <div class="big-icon">🏆</div>
+        <h2 class="txtWin" style="font-size: 3.5rem; color: var(--mint);">ንፉዕ!</h2>
+        <p style="font-size: 1.8rem; color: var(--steel);" class="txtWinSub">ምቅይያር ልክዕ እዩ!</p>
+    </div>
+
+    <div id="error-overlay" class="overlay error">
+        <div class="big-icon">💥</div>
+        <h2 class="txtFail" style="font-size: 3.5rem;">ጌጋ!</h2>
+        <p style="font-size: 1.8rem;" class="txtFailSub">እንደገና ፈትን</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { 
+                tutTitle: "መዐቀንታት ክብደት",
+                tutSub: "ቅድሚ ምጅማርና እዞም መዐቀንታት ንርአ:",
+                startBtn: "ፀወታ ጀምር",
+                title: "ምቅይያር ኣሃድታት ክብደት", 
+                check: "ኣረጋግፅ", 
+                win: "ንፉዕ!", 
+                winsub: "ምቅይያር ልክዕ እዩ!", 
+                fail: "ጌጋ!", 
+                failsub: "እንደገና ፈትን", 
+                score: "ውፅኢት", 
+                level: "ደረጃ", 
+                howMany: "ክንደይ",
+                isIt: "እዩ?",
+                and: "ን",
+                units: { g: "ግ", kg: "ኪ.ግ", q: "ኩንታል", t: "ቶን" },
+                formulas: [
+                    "1 ኪ.ግ = 1000 ግ",
+                    "1 ኩንታል = 100 ኪ.ግ",
+                    "1 ኩንታል = 100,000 ግ",
+                    "1 ቶን = 10 ኩንታል",
+                    "1 ቶን = 1000 ኪ.ግ"
+                ]
+            },
+            am: { 
+                tutTitle: "የክብደት መለኪያዎች",
+                tutSub: "ከመጀመራችን በፊት እነዚህን መለኪያዎች እንይ፡",
+                startBtn: "ጨዋታ ጀምር",
+                title: "የክብደት መለኪያዎች መቀየር", 
+                check: "አረጋግጥ", 
+                win: "ድንቅ ስራ!", 
+                winsub: "በትክክል ተቀይሯል!", 
+                fail: "ስህተት!", 
+                failsub: "እንደገና ይሞክሩ", 
+                score: "ውጤት", 
+                level: "ደረጃ", 
+                howMany: "ስንት",
+                isIt: "ነው?",
+                and: "እና",
+                units: { g: "ግ", kg: "ኪ.ግ", q: "ኩንታል", t: "ቶን" },
+                formulas: [
+                    "1 ኪ.ግ = 1000 ግ",
+                    "1 ኩንታል = 100 ኪ.ግ",
+                    "1 ኩንታል = 100,000 ግ",
+                    "1 ቶን = 10 ኩንታል",
+                    "1 ቶን = 1000 ኪ.ግ"
+                ]
+            },
+            en: { 
+                tutTitle: "Weight Mastery Pro",
+                tutSub: "Review these key conversions before starting:",
+                startBtn: "Start Game",
+                title: "Weight Converter Pro", 
+                check: "Confirm", 
+                win: "Excellent!", 
+                winsub: "Correct Conversion!", 
+                fail: "Wrong!", 
+                failsub: "Try Again", 
+                score: "Score", 
+                level: "Level", 
+                howMany: "how many",
+                isIt: "is it?",
+                and: "and",
+                units: { g: "g", kg: "kg", q: "quintal", t: "ton" },
+                formulas: [
+                    "1 kg = 1000 g",
+                    "1 Quintal = 100 kg",
+                    "1 Quintal = 100,000 g",
+                    "1 Ton = 10 Quintals",
+                    "1 Ton = 1000 kg"
+                ]
+            },
+            om: {
+                tutTitle: "Ulfaatina Barachuu",
+                tutSub: "Osoo hin jalqabin dura kanneen haa ilaallu:",
+                startBtn: "Tapha Jalqabi",
+                title: "Weight Converter Pro",
+                check: "Mirkaneessi",
+                win: "Hojii Gaarii!",
+                winsub: "Deebiin kee sirriidha!",
+                fail: "Dogoggora!",
+                failsub: "Irra deebi'i yaali",
+                score: "Qabxii",
+                level: "Sadarkaa",
+                howMany: "meeqa",
+                isIt: "ta'a?",
+                and: "fi",
+                units: { g: "g", kg: "kg", q: "kuntaala", t: "tonii" },
+                formulas: [
+                    "1 kg = 1000 g",
+                    "1 Kuntaala = 100 kg",
+                    "1 Kuntaala = 100,000 g",
+                    "1 Tonii = 10 Kuntaala",
+                    "1 Tonii = 1000 kg"
+                ]
+            },
+            so: {
+                tutTitle: "Barashada Miisaanka",
+                tutSub: "Kahor intaadan bilaabin, dib u eeg kuwan:",
+                startBtn: "Bilow Ciyaarta",
+                title: "Weight Converter Pro",
+                check: "Hubi",
+                win: "Shaqo Fiican!",
+                winsub: "Beddelkaagu waa sax!",
+                fail: "Khalad!",
+                failsub: "Markale isku day",
+                score: "Dhibco",
+                level: "Heerka",
+                howMany: "intee",
+                isIt: "waaye?",
+                and: "iyo",
+                units: { g: "g", kg: "kg", q: "kuntaal", t: "ton" },
+                formulas: [
+                    "1 kg = 1000 g",
+                    "1 Kuntaal = 100 kg",
+                    "1 Kuntaal = 100,000 g",
+                    "1 Ton = 10 Kuntaal",
+                    "1 Ton = 1000 kg"
+                ]
+            }
+        };
+
+        let score = 0, lang = 'ti', currentTask = null, busy = false, userVal = "";
+        let particles = [];
+        const cardColors = ['f-mint', 'f-gold', 'f-blue', 'f-rose', 'f-purple'];
+
+        function setLanguage(newLang) {
+            lang = newLang;
+            localStorage.setItem('weight_lang', lang);
+            document.querySelectorAll('.lang-switcher').forEach(s => s.value = lang);
+            updateUITranslations();
+            if (currentTask) renderUI();
+        }
+
+        function updateUITranslations() {
+            const t = i18n[lang];
+            document.querySelectorAll('.tut-title').forEach(el => el.innerText = t.tutTitle);
+            document.querySelectorAll('.tut-sub').forEach(el => el.innerText = t.tutSub);
+            document.querySelectorAll('.btn-start-text').forEach(el => el.innerText = t.startBtn);
+            document.querySelectorAll('.quiz-title').forEach(el => el.innerText = t.title);
+            document.querySelectorAll('.lblLvl').forEach(el => el.innerText = t.level);
+            document.querySelectorAll('.lblScore').forEach(el => el.innerText = t.score);
+            document.querySelectorAll('.btn-check').forEach(el => el.innerText = t.check);
+            document.querySelectorAll('.txtWin').forEach(el => el.innerText = t.win);
+            document.querySelectorAll('.txtWinSub').forEach(el => el.innerText = t.winsub);
+            document.querySelectorAll('.txtFail').forEach(el => el.innerText = t.fail);
+            document.querySelectorAll('.txtFailSub').forEach(el => el.innerText = t.failsub);
+
+            const grid = document.getElementById('tutorialGrid');
+            grid.innerHTML = "";
+            t.formulas.forEach((f, idx) => {
+                const card = document.createElement('div');
+                card.className = `formula-card ${cardColors[idx % cardColors.length]}`;
+                card.innerHTML = `<span>⚖️ ${f}</span><span class="formula-sub">Weight Rule #${idx + 1}</span>`;
+                grid.appendChild(card);
+            });
+        }
+
+        function startQuiz() {
+            document.getElementById('tutorialCard').style.display = 'none';
+            document.getElementById('quizCard').style.display = 'flex';
+            document.getElementById('keypadSection').style.display = 'flex';
+            document.getElementById('gameHeader').style.visibility = 'visible';
+            generateTask();
+        }
+
+        function goHome() {
+            score = 0;
+            currentTask = null;
+            document.getElementById('tutorialCard').style.display = 'flex';
+            document.getElementById('quizCard').style.display = 'none';
+            document.getElementById('keypadSection').style.display = 'none';
+            document.getElementById('gameHeader').style.visibility = 'hidden';
+            updateUITranslations();
+        }
+
+        function generateTask() {
+            busy = false; userVal = "";
+            const level = Math.floor(score / 100) + 1;
+            
+            const lvl1_Direct = [
+                { v: 1, u: 'kg', target: 'g', ans: 1000 },
+                { v: 3, u: 'kg', target: 'g', ans: 3000 },
+                { v: 1, u: 'q', target: 'kg', ans: 100 },
+                { v: 5, u: 'q', target: 'kg', ans: 500 },
+                { v: 10, u: 'q', target: 't', ans: 1 },
+                { v: 1, u: 't', target: 'kg', ans: 1000 }
+            ];
+
+            const lvl2_Reverse = [
+                { v: 2000, u: 'g', target: 'kg', ans: 2 },
+                { v: 5000, u: 'g', target: 'kg', ans: 5 },
+                { v: 400, u: 'kg', target: 'q', ans: 4 },
+                { v: 800, u: 'kg', target: 'q', ans: 8 },
+                { v: 20, u: 'q', target: 't', ans: 2 }
+            ];
+
+            const lvl3_Mixed = [
+                { isMixed: true, v1: 8, u1: 'kg', v2: 250, u2: 'g', target: 'g', ans: 8250 },
+                { isMixed: true, v1: 1, u1: 'kg', v2: 500, u2: 'g', target: 'g', ans: 1500 },
+                { isMixed: true, v1: 3, u1: 'q', v2: 25, u2: 'kg', target: 'kg', ans: 325 },
+                { isMixed: true, v1: 1, u1: 't', v2: 2, u2: 'q', target: 'q', ans: 12 }
+            ];
+
+            const lvl4_Fraction = [
+                { v: '1/2', u: 't', target: 'kg', ans: 500 },
+                { v: '1/2', u: 'kg', target: 'g', ans: 500 },
+                { v: '1/4', u: 'kg', target: 'g', ans: 250 },
+                { v: '1/2', u: 'q', target: 'kg', ans: 50 }
+            ];
+
+            let pool = [];
+            if (level === 1) pool = lvl1_Direct;
+            else if (level === 2) pool = [...lvl1_Direct, ...lvl2_Reverse];
+            else if (level === 3) pool = [...lvl2_Reverse, ...lvl3_Mixed];
+            else pool = [...lvl3_Mixed, ...lvl4_Fraction];
+
+            currentTask = pool[Math.floor(Math.random() * pool.length)];
+            renderUI();
+        }
+
+        function renderUI() {
+            if (!currentTask) return;
+            const t = i18n[lang];
+            const u = t.units;
+            document.getElementById('valLvl').innerText = Math.floor(score / 100) + 1;
+            document.getElementById('valScore').innerText = score;
+
+            let qText = "";
+            if (currentTask.isMixed) {
+                qText = `${currentTask.v1} ${u[currentTask.u1]} ${t.and} ${currentTask.v2} ${u[currentTask.u2]} ${t.howMany} ${u[currentTask.target]} ${t.isIt}`;
+            } else {
+                qText = `${currentTask.v} ${u[currentTask.u]} ${t.howMany} ${u[currentTask.target]} ${t.isIt}`;
+            }
+
+            document.getElementById('questionText').innerText = qText;
+            document.getElementById('targetUnit').innerText = u[currentTask.target];
+            document.getElementById('ansBox').innerText = userVal || "?";
+        }
+
+        function press(k) {
+            if (busy) return;
+            if (k === 'bk') userVal = userVal.slice(0, -1);
+            else if (userVal.length < 9) userVal += k;
+            document.getElementById('ansBox').innerText = userVal || "?";
+        }
+
+        function checkAnswer() {
+            if (busy || userVal === "") return;
+            if (parseInt(userVal) === currentTask.ans) {
+                score += 25; handleWin();
+            } else {
+                handleErr();
+            }
+        }
+
+        function handleWin() {
+            busy = true; burst(300);
+            const overlay = document.getElementById('success-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => { overlay.style.display = 'none'; generateTask(); }, 1800);
+        }
+
+        function handleErr() {
+            busy = true;
+            const overlay = document.getElementById('error-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => { overlay.style.display = 'none'; userVal = ""; busy = false; renderUI(); }, 1500);
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#f39c12', '#1abc9c', '#e74c3c', '#3498db'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random()*c.width, y: c.height+20, vx: (Math.random()-0.5)*40, vy: (Math.random()-1.2)*65,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 2.5, r: Math.random()*360, rv: (Math.random()-0.5)*20
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.vx *= 0.99; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => {
+            const selectors = document.querySelectorAll('.lang-switcher');
+            selectors.forEach(select => {
+                const available = {
+                    ti: 'ትግርኛ',
+                    am: 'አማርኛ',
+                    en: 'English',
+                    om: 'Oromoo',
+                    so: 'Soomaali'
+                };
+                Object.keys(available).forEach(l => {
+                    const opt = document.createElement('option');
+                    opt.value = l; opt.innerText = available[l];
+                    select.appendChild(opt);
+                });
+                select.addEventListener('change', (e) => setLanguage(e.target.value));
+            });
+            
+            // Hardcode forced default to Tigrinya
+            lang = 'ti';
+            setLanguage(lang);
+
+            const kp = document.getElementById('keypad');
+            [1,2,3,4,5,6,7,8,9,0,'00','bk'].forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key'; 
+                if(k === 'bk') { b.innerText = '⌫'; b.classList.add('del'); }
+                else b.innerText = k;
+                b.onclick = () => press(k); 
+                kp.appendChild(b);
+            });
+        };
+    </script>
+</body>
+</html>

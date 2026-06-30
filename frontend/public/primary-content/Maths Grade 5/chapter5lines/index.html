@@ -1,0 +1,940 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lines - መስመራት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700;900&family=Noto+Sans+Ethiopic:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Candy Palette matching Geometry */
+            --primary: #FF006E;   /* Hot Pink */
+            --secondary: #3A86FF; /* Bright Blue */
+            --accent: #FFBE0B;    /* Sunny Yellow */
+            --green: #06D6A0;     /* Mint Green */
+            --purple: #8338EC;    /* Deep Purple */
+            --text: #2B2D42;
+            --white: #ffffff;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Comic Neue', 'Noto Sans Ethiopic', sans-serif;
+            background-color: #E0F7FA;
+            /* Grid Pattern */
+            background-image: 
+                linear-gradient(rgba(58, 134, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(58, 134, 255, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 10% 15%, rgba(255, 0, 110, 0.16), transparent 45%),
+                radial-gradient(circle at 90% 18%, rgba(58, 134, 255, 0.16), transparent 45%),
+                radial-gradient(circle at 15% 90%, rgba(6, 214, 160, 0.14), transparent 48%),
+                radial-gradient(circle at 90% 88%, rgba(255, 190, 11, 0.18), transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* --- Header --- */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 6px solid var(--secondary);
+            border-radius: 0 0 25px 25px;
+            background-image: linear-gradient(90deg, rgba(255, 0, 110, 0.10), rgba(58, 134, 255, 0.10), rgba(6, 214, 160, 0.10));
+        }
+
+        .grade-badge {
+            background: var(--secondary);
+            color: white;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.5rem;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            border: 3px solid white;
+            transform: rotate(10deg);
+        }
+
+        h1 {
+            color: var(--secondary);
+            font-size: 1.8rem;
+            font-weight: 900;
+            margin: 0 15px;
+            text-align: center;
+            text-shadow: 2px 2px 0px white;
+        }
+
+        /* Custom Select */
+        .custom-select-wrapper { position: relative; z-index: 200; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; font-weight: 800; color: var(--text);
+            height: 45px; background: #fff; cursor: pointer;
+            border: 3px solid #e2e8f0; border-radius: 25px;
+            width: 150px; font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .custom-select__trigger:hover { border-color: var(--primary); transform: scale(1.05); }
+        .custom-options {
+            position: absolute; top: 125%; left: 0; right: 0;
+            background: #fff; border: 3px solid #e2e8f0; border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            opacity: 0; visibility: hidden; transform: translateY(-15px);
+            padding: 8px; display: flex; flex-direction: column; gap: 5px;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; transform: translateY(0); }
+        .custom-option { padding: 10px 12px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+        .custom-option:hover { background: #E0E7FF; color: var(--secondary); }
+
+        /* --- Container --- */
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+            justify-content: center;
+            background: white;
+            padding: 8px;
+            border-radius: 35px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 25px;
+            border: none;
+            font-weight: 900;
+            font-size: 1.1rem;
+            cursor: pointer;
+            background: transparent;
+            color: #A0AEC0;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { transform: translateY(-2px); }
+        .tab-btn.active {
+            background: var(--purple);
+            color: white;
+            box-shadow: 0 4px 0 #5b21b6;
+            transform: translateY(-2px);
+        }
+        .tab-btn.active:active { transform: translateY(0); box-shadow: none; }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 40px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            border: 6px solid white;
+            width: 100%;
+            min-height: 550px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            animation: fadeIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .card.active { display: flex; }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 40px;
+            background: linear-gradient(135deg, rgba(255, 190, 11, 0.10), rgba(58, 134, 255, 0.10), rgba(131, 56, 236, 0.10));
+            opacity: 0.55;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 40px;
+            background: radial-gradient(circle at 18% 18%, rgba(255,255,255,0.9), transparent 36%);
+            opacity: 0.45;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .card > * { position: relative; z-index: 1; }
+
+        /* --- Explore Mode --- */
+        .visual-area {
+            width: 100%;
+            height: 300px;
+            background: #F8FAFC;
+            border-radius: 30px;
+            border: 3px dashed #CBD5E0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .visual-area::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 22% 20%, rgba(58, 134, 255, 0.12), transparent 45%),
+                radial-gradient(circle at 82% 65%, rgba(255, 0, 110, 0.10), transparent 45%);
+            pointer-events: none;
+        }
+
+        .definition-box {
+            background: #FFFBEB;
+            border-left: 6px solid var(--accent);
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #78350f;
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            min-height: 80px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .definition-box {
+            border-radius: 22px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            width: 100%;
+        }
+
+        .control-btn {
+            background: white;
+            border: 3px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 20px;
+            font-weight: 800;
+            color: var(--text);
+            cursor: pointer;
+            box-shadow: 0 4px 0 #cbd5e0;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+        }
+        .control-btn:hover { border-color: var(--secondary); background: #eff6ff; transform: translateY(-4px); filter: brightness(1.02); }
+        .control-btn.active { border-color: var(--primary); background: #fff1f2; color: var(--primary); transform: translateY(-4px); }
+        .control-btn:active { transform: translateY(2px); box-shadow: none; }
+        .control-btn span { font-size: 2rem; }
+
+        /* --- Quiz Mode --- */
+        .score-board {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .score-pill {
+            background: #fff;
+            padding: 8px 25px;
+            border-radius: 25px;
+            font-weight: 900;
+            font-size: 1.2rem;
+            border: 3px solid #eee;
+            display: flex; gap: 8px; align-items: center;
+            box-shadow: 0 4px 0 #eee;
+        }
+        .score-pill.high { color: #B7791F; border-color: var(--accent); background: #FFFBEB; }
+        .score-pill.curr { color: var(--green); border-color: var(--green); background: #F0FFF4; }
+
+        .quiz-question {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--text);
+            margin-bottom: 25px;
+            text-align: center;
+            background: #E2E8F0;
+            padding: 12px 25px;
+            border-radius: 15px;
+            width: 100%;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 25px;
+        }
+
+        .opt-btn {
+            background: white;
+            border: 3px solid #E2E8F0;
+            padding: 20px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 0 5px 0 #CBD5E0;
+        }
+        .opt-btn:hover { border-color: var(--secondary); background: #EBF8FF; transform: translateY(-3px); }
+        .opt-btn:active { transform: translateY(3px); box-shadow: none; }
+
+        /* Feedback / Game Over */
+        .feedback-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95);
+            border-radius: 40px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            animation: fadeIn 0.3s;
+        }
+        .feedback-overlay.show { display: flex; }
+
+        .fb-icon { font-size: 6rem; margin-bottom: 10px; animation: popIn 0.5s; }
+        .fb-title { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; }
+        .fb-sub { font-size: 1.3rem; color: #718096; margin-bottom: 30px; font-weight: bold; }
+        
+        .btn-action {
+            padding: 15px 50px;
+            border-radius: 40px;
+            font-size: 1.4rem; font-weight: 900;
+            color: white; border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+        .btn-next { background: var(--secondary); box-shadow: 0 6px 0 #1D4ED8; }
+        .btn-next:hover { transform: scale(1.05); }
+        .btn-restart { background: var(--primary); box-shadow: 0 6px 0 #C53030; }
+        .btn-restart:hover { transform: scale(1.05); }
+        .btn-action:active { transform: translateY(4px); box-shadow: none; }
+
+        @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        #confetti-canvas.show { opacity: 1; }
+
+        /* SVG */
+        .line-draw {
+            stroke-width: 6;
+            stroke-linecap: round;
+            fill: none;
+        }
+        .point-dot { fill: var(--text); }
+        .arrow-head { fill: var(--primary); }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            header { padding: 10px 15px; }
+            h1 { font-size: 1.4rem; margin: 0 5px; }
+            .container { padding: 0 15px; margin: 20px auto; }
+            .card { padding: 20px; border-width: 4px; min-height: 480px; border-radius: 30px; }
+            .visual-area { height: 250px; }
+            .controls-grid { grid-template-columns: 1fr 1fr; }
+            .control-btn { padding: 10px; font-size: 0.9rem; }
+            .quiz-options { grid-template-columns: 1fr; gap: 10px; }
+            .opt-btn { padding: 15px; font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="grade-badge">5</div>
+    <h1 id="app-title">Lines</h1>
+    <div class="custom-select-wrapper">
+        <div class="custom-select">
+            <div class="custom-select__trigger">
+                <span id="current-lang-label">🗺️ ትግርኛ</span>
+                <div style="font-size:0.8rem">▼</div>
+            </div>
+            <div class="custom-options">
+                <span class="custom-option selected" data-value="ti">ትግርኛ</span>
+                <span class="custom-option" data-value="am">አማርኛ</span>
+                <span class="custom-option" data-value="en">English</span>
+                <span class="custom-option" data-value="om">Afan Oromoo</span>
+                <span class="custom-option" data-value="so">Soomaali</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchMode('explore')" id="tab-explore">Explore 🧠</button>
+        <button class="tab-btn" onclick="switchMode('quiz')" id="tab-quiz">Quiz 🎮</button>
+    </div>
+
+    <!-- EXPLORE MODE -->
+    <div id="card-explore" class="card active">
+        <div class="visual-area">
+            <svg width="400" height="300" viewBox="0 0 400 300" id="explore-svg" style="width:100%; height:100%;">
+                <!-- Dynamic Content -->
+            </svg>
+        </div>
+        
+        <div class="definition-box" id="definition">
+            Select a line type below to learn!
+        </div>
+
+        <div class="controls-grid" id="controls-container">
+            <!-- Buttons injected -->
+        </div>
+    </div>
+
+    <!-- QUIZ MODE -->
+    <div id="card-quiz" class="card">
+        <div class="score-board">
+            <div class="score-pill high">🏆 <span id="high-score">0</span></div>
+            <div class="score-pill curr">⭐ <span id="score">0</span></div>
+        </div>
+
+        <div class="quiz-question" id="quiz-q">What type of line is this?</div>
+
+        <div class="visual-area" style="background:#fff; border-color:#E2E8F0;">
+            <svg width="400" height="300" viewBox="0 0 400 300" id="quiz-svg" style="width:100%; height:100%;">
+                <!-- Quiz Shape -->
+            </svg>
+        </div>
+
+        <div class="quiz-options" id="options-container">
+            <!-- Buttons injected here -->
+        </div>
+
+        <!-- Feedback Overlay -->
+        <div class="feedback-overlay" id="feedback">
+            <div class="fb-icon" id="fb-icon">🎉</div>
+            <div class="fb-title" id="fb-title">Correct!</div>
+            <div class="fb-sub" id="fb-sub"></div>
+            
+            <button class="btn-action btn-next" onclick="nextQuestion()" id="btn-next">Next ➡</button>
+            <button class="btn-action btn-restart" onclick="restartGame()" id="btn-restart" style="display:none;">Play Again 🔄</button>
+        </div>
+    </div>
+
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+    // --- Audio ---
+    const AudioEngine = {
+        ctx: null,
+        init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+        playTone(freq, type, duration) {
+            this.init();
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+        },
+        playSuccess() { 
+            this.playTone(600, 'sine', 0.1); setTimeout(() => this.playTone(800, 'sine', 0.2), 100); 
+        },
+        playError() { 
+            this.playTone(200, 'sawtooth', 0.2); setTimeout(() => this.playTone(150, 'sawtooth', 0.3), 150);
+        },
+        playGameOver() {
+            this.playTone(300, 'sawtooth', 0.4); setTimeout(() => this.playTone(200, 'sawtooth', 0.6), 400);
+        }
+    };
+
+    // --- Data & Translations ---
+    const lineTypes = ['point', 'line', 'ray', 'segment', 'parallel', 'intersecting', 'perpendicular'];
+    
+    const translations = {
+        ti: {
+            title: "መስመራት (Lines)",
+            tabExplore: "መሰልጠኒ 🧠",
+            tabQuiz: "ጸወታ 🎮",
+            qText: "እዚ እንታይ ዓይነት መስመር እዩ?",
+            correct: "ትኽክል!",
+            wrong: "ተጋግዩ!",
+            gameover: "ጸወታ ተወዲኡ!",
+            finalScore: "ውፅኢትኩም: ",
+            btnNext: "ቀፃሊ ➡",
+            btnRestart: "እንደገና ጀምር 🔄",
+            types: {
+                point: { label: "ነጥቢ", desc: "ነጥቢ ቦታ የመልክት።" },
+                line: { label: "መስመር", desc: "መስመር ብክልቲኡ ወገን መወዳእታ የብሉን።" },
+                ray: { label: "ጨረር", desc: "ጨረር ሓደ መበገሲ ነጥቢ ኣለዎ፣ ብሓደ ወገን ድማ መወዳእታ የብሉን።" },
+                segment: { label: "ክፋል መስመር", desc: "ክፋል መስመር ክልተ መወዳእታ ነጥቢታት ኣለዎ።" },
+                parallel: { label: "ማዕረ ጎኒ", desc: "ማዕረ ጎኒ መስመራት ፈጺሞም ኣይራኸቡን።" },
+                intersecting: { label: "ዝራኸቡ", desc: "ዝራኸቡ መስመራት ኣብ ሓደ ነጥቢ ይተሓላለፉ።" },
+                perpendicular: { label: "ቀጥታ (ቋሚ)", desc: "ቀጥታ መስመራት 90 ዲግሪ ኩርናዕ ይፈጥሩ።" }
+            }
+        },
+        am: {
+            title: "መስመሮች (Lines)",
+            tabExplore: "መለማመጃ 🧠",
+            tabQuiz: "ጨዋታ 🎮",
+            qText: "ይህ ምን አይነት መስመር ነው?",
+            correct: "ትክክል!",
+            wrong: "ስህተት!",
+            gameover: "ጨዋታው አብቅቷል!",
+            finalScore: "የእርስዎ ውጤት: ",
+            btnNext: "ቀጣይ ➡",
+            btnRestart: "እንደገና ጀምር 🔄",
+            types: {
+                point: { label: "ነጥብ", desc: "ነጥብ ቦታን ያመለክታል።" },
+                line: { label: "መስመር", desc: "መስመር በሁለቱም አቅጣጫ ማለቂያ የለውም።" },
+                ray: { label: "ጨረር", desc: "ጨረር አንድ መነሻ ነጥብ አለው፣ በአንድ በኩል ማለቂያ የለውም።" },
+                segment: { label: "የመስመር ክፍል", desc: "የመስመር ክፍል ሁለት መጨረሻ ነጥቦች አሉት።" },
+                parallel: { label: "ትይዩ መስመሮች", desc: "ትይዩ መስመሮች በጭራሽ አይገናኙም።" },
+                intersecting: { label: "ተጠላፊ", desc: "ተጠላፊ መስመሮች በአንድ ነጥብ ላይ ይገናኛሉ።" },
+                perpendicular: { label: "ቀጥታ (ቋሚ)", desc: "ቀጥታ መስመሮች 90 ዲግሪ ማዕዘን ይፈጥራሉ።" }
+            }
+        },
+        en: {
+            title: "Lines",
+            tabExplore: "Explore 🧠",
+            tabQuiz: "Quiz 🎮",
+            qText: "What type of line is this?",
+            correct: "Correct!",
+            wrong: "Incorrect!",
+            gameover: "Game Over!",
+            finalScore: "Your Score: ",
+            btnNext: "Next ➡",
+            btnRestart: "Play Again 🔄",
+            types: {
+                point: { label: "Point", desc: "A point shows an exact location." },
+                line: { label: "Line", desc: "A line goes on forever in both directions." },
+                ray: { label: "Ray", desc: "A ray has one endpoint and goes on forever in one direction." },
+                segment: { label: "Line Segment", desc: "A line segment has two endpoints." },
+                parallel: { label: "Parallel Lines", desc: "Parallel lines never meet, like train tracks." },
+                intersecting: { label: "Intersecting", desc: "Intersecting lines cross at one point." },
+                perpendicular: { label: "Perpendicular", desc: "Perpendicular lines meet at a right angle (90°)." }
+            }
+        },
+        om: {
+            title: "Sarara (Lines)",
+            tabExplore: "Qoradhu 🧠",
+            tabQuiz: "Qormaata 🎮",
+            qText: "Kun sarara gosa kamii?",
+            correct: "Sirrii!",
+            wrong: "Dogoggora!",
+            gameover: "Tapha Dhumate!",
+            finalScore: "Qabxii Keessan: ",
+            btnNext: "Itti Aanu ➡",
+            btnRestart: "Irra Deebi'ii 🔄",
+            types: {
+                point: { label: "Qabxii", desc: "Qabxiin bakka murtaa'e agarsiisa." },
+                line: { label: "Sarara", desc: "Sararri kallattii lamaanittuu dhuma hin qabu." },
+                ray: { label: "Xiyya", desc: "Xiyyi ka'umsa qaba, garuu kallattii tokkoon dhuma hin qabu." },
+                segment: { label: "Kutaa Sararaa", desc: "Kutaan sararaa qabxii dhumaa lama qaba." },
+                parallel: { label: "Sararoota Walsimoo", desc: "Sararootni walsimoo gonkumaa wal hin tuqan." },
+                intersecting: { label: "Wal-qaxxaamuraa", desc: "Sararootni wal-qaxxaamuraan qabxii tokko irratti wal tuqu." },
+                perpendicular: { label: "Kof-sirrii", desc: "Sararootni kof-sirrii kofoo 90° uumuun wal tuqu." }
+            }
+        },
+        so: {
+            title: "Xariiqyo (Lines)",
+            tabExplore: "Baadh 🧠",
+            tabQuiz: "Imtixaan 🎮",
+            qText: "Waa noocee xariiqdani?",
+            correct: "Sax!",
+            wrong: "Qaldan!",
+            gameover: "Ciyaartu way dhamaatay!",
+            finalScore: "Dhibcahaaga: ",
+            btnNext: "Xiga ➡",
+            btnRestart: "Dib u billow 🔄",
+            types: {
+                point: { label: "Dhibic", desc: "Dhibicdu waxay tilmaamaysaa goob cayiman." },
+                line: { label: "Xariiq", desc: "Xariiqdu labada dhinacba uma laha dhammaad." },
+                ray: { label: "Fallaar", desc: "Fallaadhu waxay leedahay hal dhibic oo bilow ah." },
+                segment: { label: "Cad Xariiq", desc: "Cadka xariiqdu wuxuu leeyahay laba dhibic oo dhammaad ah." },
+                parallel: { label: "Barbarro", desc: "Xariiqyada barbarrunu waligood iskama horyimaadaan." },
+                intersecting: { label: "Is-goysa", desc: "Xariiqyada is-goysaa waxay ku kulmaan hal dhibic." },
+                perpendicular: { label: "Quman", desc: "Xariiqyada qumani waxay sameeyaan xagal 90° ah." }
+            }
+        }
+    };
+
+    let currentLang = 'ti';
+    let currentSelection = 'point';
+    let currentQuizItem = null;
+    let score = 0;
+    let highScore = localStorage.getItem('linesHighScore') || 0;
+
+    // --- Core Logic ---
+
+    function init() {
+        document.getElementById('high-score').textContent = highScore;
+        
+        // Setup Control Buttons
+        const container = document.getElementById('controls-container');
+        lineTypes.forEach(type => {
+            const btn = document.createElement('div');
+            btn.className = 'control-btn';
+            btn.dataset.type = type;
+            btn.onclick = () => selectExplore(type);
+            
+            // Icon logic
+            let icon = '';
+            if(type=='point') icon = '•';
+            if(type=='line') icon = '↔';
+            if(type=='ray') icon = '➝';
+            if(type=='segment') icon = '━';
+            if(type=='parallel') icon = '∥';
+            if(type=='intersecting') icon = '╳';
+            if(type=='perpendicular') icon = '⊥';
+            
+            btn.innerHTML = `<span>${icon}</span><div class="btn-lbl">${type}</div>`;
+            container.appendChild(btn);
+        });
+
+        updateLanguage();
+        selectExplore('line'); // Default
+    }
+
+    function switchMode(mode) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-'+mode).classList.add('active');
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+        document.getElementById('card-'+mode).classList.add('active');
+        
+        if (mode === 'quiz') nextQuestion();
+    }
+
+    // --- Explore Mode ---
+    function selectExplore(type) {
+        currentSelection = type;
+        
+        // Update Buttons
+        document.querySelectorAll('.control-btn').forEach(b => {
+            b.classList.remove('active');
+            if(b.dataset.type === type) b.classList.add('active');
+        });
+
+        // Update Text
+        const t = translations[currentLang].types[type];
+        document.getElementById('definition').textContent = t.desc;
+
+        // Draw Visual
+        drawShape(document.getElementById('explore-svg'), type, "#3A86FF");
+    }
+
+    // --- SVG Drawing Logic ---
+    function drawShape(svg, type, color) {
+        svg.innerHTML = '';
+        const cx = 200, cy = 150;
+        
+        if (type === 'point') {
+            createCircle(svg, cx, cy, 8, color, true);
+            createText(svg, cx, cy - 20, "P", color);
+        }
+        else if (type === 'line') {
+            createLine(svg, 50, 150, 350, 150, color, true, true); // Arrows both ends
+        }
+        else if (type === 'ray') {
+            createLine(svg, 100, 150, 300, 150, color, false, true); // Arrow end
+            createCircle(svg, 100, 150, 6, color, true); // Point start
+        }
+        else if (type === 'segment') {
+            createLine(svg, 100, 150, 300, 150, color, false, false);
+            createCircle(svg, 100, 150, 6, color, true);
+            createCircle(svg, 300, 150, 6, color, true);
+        }
+        else if (type === 'parallel') {
+            createLine(svg, 50, 100, 350, 100, color, true, true);
+            createLine(svg, 50, 200, 350, 200, color, true, true);
+        }
+        else if (type === 'intersecting') {
+            createLine(svg, 80, 80, 320, 220, color, true, true);
+            createLine(svg, 80, 220, 320, 80, color, true, true);
+        }
+        else if (type === 'perpendicular') {
+            createLine(svg, 200, 50, 200, 250, color, true, true); // Vert
+            createLine(svg, 100, 200, 300, 200, color, true, true); // Horiz
+            // Right angle symbol
+            const box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            box.setAttribute("x", 200); box.setAttribute("y", 170);
+            box.setAttribute("width", 30); box.setAttribute("height", 30);
+            box.setAttribute("fill", "none"); box.setAttribute("stroke", color);
+            box.setAttribute("stroke-width", 3);
+            svg.appendChild(box);
+        }
+    }
+
+    function createLine(svg, x1, y1, x2, y2, color, arrowStart, arrowEnd) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+        line.setAttribute("class", "geo-shape");
+        line.setAttribute("stroke", color);
+        svg.appendChild(line);
+
+        // Define Marker ID uniquely? Simple approach: Draw triangles manually for control
+        if (arrowEnd) drawArrowHead(svg, x2, y2, Math.atan2(y2-y1, x2-x1), color);
+        if (arrowStart) drawArrowHead(svg, x1, y1, Math.atan2(y1-y2, x1-x2), color);
+    }
+
+    function drawArrowHead(svg, x, y, angle, color) {
+        const size = 15;
+        const x1 = x - size * Math.cos(angle - Math.PI / 6);
+        const y1 = y - size * Math.sin(angle - Math.PI / 6);
+        const x2 = x - size * Math.cos(angle + Math.PI / 6);
+        const y2 = y - size * Math.sin(angle + Math.PI / 6);
+        
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        path.setAttribute("points", `${x},${y} ${x1},${y1} ${x2},${y2}`);
+        path.setAttribute("fill", color);
+        svg.appendChild(path);
+    }
+
+    function createCircle(svg, cx, cy, r, color, fill) {
+        const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        c.setAttribute("cx", cx); c.setAttribute("cy", cy); c.setAttribute("r", r);
+        c.setAttribute("fill", fill ? color : "none");
+        c.setAttribute("stroke", color);
+        if(!fill) c.setAttribute("stroke-width", 3);
+        svg.appendChild(c);
+    }
+
+    function createText(svg, x, y, txt, color) {
+        const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        t.setAttribute("x", x); t.setAttribute("y", y);
+        t.setAttribute("fill", color);
+        t.setAttribute("font-size", "24");
+        t.setAttribute("font-weight", "bold");
+        t.setAttribute("text-anchor", "middle");
+        t.textContent = txt;
+        svg.appendChild(t);
+    }
+
+    // --- Quiz Mode ---
+    function nextQuestion() {
+        document.getElementById('feedback').classList.remove('show');
+        document.getElementById('btn-next').style.display = 'none';
+        document.getElementById('btn-restart').style.display = 'none';
+
+        const type = lineTypes[Math.floor(Math.random() * lineTypes.length)];
+        currentQuizItem = type;
+
+        const t = translations[currentLang];
+        document.getElementById('quiz-q').textContent = t.qText;
+
+        const color = ['#FF006E', '#3A86FF', '#06D6A0', '#8338EC'][Math.floor(Math.random()*4)];
+        drawShape(document.getElementById('quiz-svg'), type, color);
+
+        // Options
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        let opts = [type];
+        while(opts.length < 4) {
+            let r = lineTypes[Math.floor(Math.random() * lineTypes.length)];
+            if(!opts.includes(r)) opts.push(r);
+        }
+        opts.sort(() => Math.random() - 0.5);
+
+        opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-btn';
+            btn.textContent = t.types[opt].label;
+            btn.onclick = () => handleAnswer(opt);
+            container.appendChild(btn);
+        });
+    }
+
+    function handleAnswer(selected) {
+        const t = translations[currentLang];
+        const overlay = document.getElementById('feedback');
+        const icon = document.getElementById('fb-icon');
+        const title = document.getElementById('fb-title');
+        const sub = document.getElementById('fb-sub');
+        const btnNext = document.getElementById('btn-next');
+        const btnRestart = document.getElementById('btn-restart');
+
+        if (selected === currentQuizItem) {
+            score += 10;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('linesHighScore', highScore);
+            }
+            document.getElementById('score').textContent = score;
+            document.getElementById('high-score').textContent = highScore;
+            
+            AudioEngine.playSuccess();
+            triggerConfetti();
+            
+            icon.textContent = '🎉';
+            title.textContent = t.correct;
+            title.style.color = "var(--green)";
+            sub.textContent = "";
+            btnNext.style.display = 'block';
+            btnRestart.style.display = 'none';
+        } else {
+            AudioEngine.playGameOver();
+            AudioEngine.playError();
+            
+            icon.textContent = '❌';
+            title.textContent = t.gameover;
+            title.style.color = "var(--primary)";
+            sub.textContent = t.finalScore + score;
+            
+            btnNext.style.display = 'none';
+            btnRestart.style.display = 'block';
+        }
+        overlay.classList.add('show');
+    }
+
+    function restartGame() {
+        score = 0;
+        document.getElementById('score').textContent = 0;
+        nextQuestion();
+    }
+
+    // --- Language & Init ---
+    const selectWrapper = document.querySelector('.custom-select-wrapper');
+    const selectCustom = document.querySelector('.custom-select');
+    const options = document.querySelectorAll('.custom-option');
+
+    selectWrapper.addEventListener('click', (e) => {
+        selectCustom.classList.toggle('open'); e.stopPropagation();
+    });
+
+    options.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!this.classList.contains('selected')) {
+                const prev = this.parentNode.querySelector('.custom-option.selected');
+                if(prev) prev.classList.remove('selected');
+                this.classList.add('selected');
+                
+                const label = this.textContent;
+                const value = this.getAttribute('data-value');
+                document.getElementById('current-lang-label').textContent = "🗺️ " + label;
+                selectCustom.classList.remove('open');
+                
+                currentLang = value;
+                updateLanguage();
+            }
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (!selectCustom.contains(e.target)) selectCustom.classList.remove('open');
+    });
+
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('tab-explore').textContent = t.tabExplore;
+        document.getElementById('tab-quiz').textContent = t.tabQuiz;
+        document.getElementById('btn-next').textContent = t.btnNext;
+        document.getElementById('btn-restart').textContent = t.btnRestart;
+
+        // Update control labels
+        document.querySelectorAll('.control-btn').forEach(btn => {
+            const type = btn.dataset.type;
+            const labelEl = btn.querySelector('.btn-lbl');
+            if(labelEl) labelEl.textContent = t.types[type].label;
+        });
+
+        // Update current definition
+        selectExplore(currentSelection);
+    }
+
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.classList.add('show');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const pieces = [];
+        for(let i=0; i<80; i++) {
+            pieces.push({
+                x: canvas.width/2, y: canvas.height/2,
+                vx: (Math.random() - 0.5) * 20,
+                vy: (Math.random() - 0.5) * 20 - 10,
+                c: `hsl(${Math.random()*360}, 100%, 50%)`,
+                r: Math.random() * 6 + 3
+            });
+        }
+        function anim() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            let active = false;
+            pieces.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.5;
+                if(p.y < canvas.height) active = true;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                ctx.fillStyle = p.c;
+                ctx.fill();
+            });
+            if(active) {
+                requestAnimationFrame(anim);
+            } else {
+                canvas.classList.remove('show');
+            }
+        }
+        anim();
+    }
+
+    window.onload = init;
+
+</script>
+</body>
+</html>

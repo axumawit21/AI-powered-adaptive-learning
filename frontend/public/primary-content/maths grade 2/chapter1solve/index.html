@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title> Solve the problem</title>
+    <style>
+        
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1e40af;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 20%, #a1c4fd 40%, #c2e9fb 60%, #e0c3fc 80%, #88d3ce 100%);
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --font-ethiopic: 'Noto Sans Ethiopic', 'Abyssinica SIL', 'Nyala', 'Ebrima', sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+        
+        #bg-main {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -5;
+            background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        body {
+            font-family: var(--font-main);
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            color: #1f2937;
+            overflow-x: hidden; 
+            overflow-y: auto;   
+            padding: 10px;
+        }
+
+        @keyframes gradientBG { 
+            0% { background-position: 0% 50%; } 
+            50% { background-position: 100% 50%; } 
+            100% { background-position: 0% 50%; } 
+        }
+
+        
+        .emoji-float {
+            position: fixed;
+            pointer-events: none;
+            z-index: -3;
+            user-select: none;
+            font-size: 2rem;
+            animation: floatAway linear infinite;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1));
+            opacity: 0.6;
+        }
+
+        @keyframes floatAway {
+            from { transform: translateY(110vh) rotate(0deg); }
+            to { transform: translateY(-20vh) rotate(360deg); }
+        }
+
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-image: radial-gradient(rgba(255,255,255,0.3) 2px, transparent 2px);
+            background-size: 30px 30px;
+            pointer-events: none;
+        }
+
+        .bg-decorations {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -4;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .shape {
+            position: absolute;
+            filter: blur(50px);
+            opacity: 0.5;
+            animation: floatShape 20s infinite ease-in-out alternate;
+            will-change: transform, border-radius;
+        }
+
+        @keyframes floatShape {
+            0% { transform: translate(0, 0) rotate(0deg) scale(1); border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+            50% { transform: translate(50px, -80px) rotate(90deg) scale(1.1); border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%; }
+            100% { transform: translate(-30px, 40px) rotate(180deg) scale(0.9); border-radius: 67% 33% 47% 53% / 37% 20% 80% 63%; }
+        }
+
+        .app-container { 
+            max-width: 500px; 
+            margin: 0 auto; 
+            width: 100%; 
+            min-height: 100%;
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative;
+            z-index: 1;
+        }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .text-center { text-align: center; }
+        .hidden { display: none; }
+
+        .header { 
+            background: rgba(255, 255, 255, 0.4); 
+            backdrop-filter: blur(10px); 
+            padding: 10px; 
+            border-radius: 2rem; 
+            margin-bottom: 0.1rem; 
+            border: 2px solid rgba(255, 255, 255, 0.6); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+            flex-shrink: 0;
+        }
+        .card { 
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(12px);
+            padding: 1.5rem; 
+            border-radius: 2.5rem; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.06); 
+            border: 4px solid white; 
+            margin-bottom: 1.2rem; 
+        }
+        
+        .btn { cursor: pointer; border: none; transition: all 0.2s; display: flex; align-items: center; justify-content: center; font-weight: 900; }
+        .btn:active { transform: scale(0.92); }
+        .btn-icon { background: white; padding: 10px; border-radius: 1.2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); color: var(--primary); border: 2px solid white; }
+        
+        .btn-play { 
+            background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%);
+            color: white; 
+            width: 100%; 
+            padding: 1.6rem; 
+            border-radius: 2.5rem; 
+            font-size: 1.8rem; 
+            border: none;
+            border-bottom: 8px solid #00c6ff; 
+            box-shadow: 0 12px 25px rgba(59, 130, 246, 0.4); 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .btn-next { background: var(--success); color: white; width: 100%; padding: 1.2rem; border-radius: 1.5rem; font-size: 1.4rem; border-bottom: 6px solid #166534; }
+        .btn-try { background: var(--warning); color: white; width: 100%; padding: 1.2rem; border-radius: 1.5rem; font-size: 1.4rem; border-bottom: 6px solid #b45309; }
+
+        .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; width: 100%; }
+        .option-btn { background: rgb(73, 179, 211); border-radius: 2rem; padding: 2rem 1rem; font-size: 2.8rem; font-weight: 900; border: none; border-bottom: 8px solid #f3f4f6; transition: all 0.2s; box-shadow: 0 10px 20px rgba(0,0,0,0.04); }
+        .option-btn:active { border-bottom-width: 2px; transform: translateY(6px); }
+        .option-btn.correct { background: var(--success) !important; color: white !important; border-bottom-color: #166534 !important; }
+        .option-btn.wrong { background: var(--danger) !important; color: white !important; border-bottom-color: #991b1b !important; }
+
+        .lang-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; width: 100%; margin-bottom: 0.3rem; max-width: 320px; align-self: center; }
+        .lang-card { background: rgba(80, 194, 146, 0.527); border-radius: 0.8rem; padding: 0.4rem; display: flex; flex-direction: column; align-items: center; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+        .lang-card.active { border-color: var(--primary); background: white; transform: scale(1.05); box-shadow: 0 8px 15px rgba(0,0,0,0.08); }
+        .lang-card span:first-child { font-size: 1.4rem; margin-bottom: 0.1rem; }
+        .lang-card span:last-child { font-size: 0.5rem; text-transform: uppercase; font-weight: 900; color: #6b7280; }
+
+        .ethiopic-text { font-family: var(--font-ethiopic); line-height: 1.6; }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-15px) rotate(3deg); } }
+        
+        .shake { animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        
+        @keyframes streakPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .streak-pop { animation: streakPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        @keyframes streakReset {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); filter: grayscale(1); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        .streak-reset { animation: streakReset 0.4s ease-in-out; }
+
+        .footer { margin-top: auto; padding: 1.2rem 0; display: flex; justify-content: center; align-items: center; gap: 1rem; flex-shrink: 0; }
+        .streak-badge { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; padding: 0.7rem 1.6rem; border-radius: 2rem; font-weight: 900; font-size: 1.2rem; display: flex; align-items: center; gap: 0.6rem; border-bottom: 5px solid #92400e; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3); transition: transform 0.2s; }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+    </style>
+</head>
+<body class="select-none">
+    <div id="bg-main"></div>
+    <div class="bg-pattern"></div>
+    <div class="bg-decorations" id="bgDecorations"></div>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="app-container">
+        <header class="header">
+            <div class="flex items-center">
+                <div style="position: relative;">
+                    <button onclick="toggleLangMenu(event)" class="btn btn-icon" id="lang-btn">
+                        <span id="headerLangFlag" style="font-size: 1.4rem;">🇺🇸</span>
+                    </button>
+                    <div id="headerLangMenu" class="hidden" style="position: absolute; top: 120%; left: 0; background: white; border-radius: 1.5rem; box-shadow: 0 15px 35px rgba(0,0,0,0.2); z-index: 100; min-width: 200px; overflow: hidden; border: 1px solid #e5e7eb;"></div>
+                </div>
+            </div>
+
+            <div class="flex" style="gap: 8px;">
+                <button onclick="handleBack()" class="btn btn-icon">
+                    <svg style="width:24px; height:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                </button>
+                <button onclick="showView('home')" class="btn btn-icon">
+                    <svg style="width:24px; height:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <main id="mainContent" style="flex: 1; display: flex; flex-direction: column; justify-content: center;"></main>
+
+        <footer class="footer">
+            <div class="streak-badge" id="streakBadge">
+                
+                <svg style="width:24px; height:24px; fill:white;" viewBox="0 0 24 24">
+                   <path d="M18 2H6C4.9 2 4 2.9 4 4V7C4 8.7 5.1 10.2 6.6 10.8C7.1 13.1 8.9 14.9 11 15.1V19H7V21H17V19H13V15.1C15.1 14.8 16.9 13 17.4 10.8C18.9 10.2 20 8.7 20 7V4C20 2.9 19.1 2 18 2ZM6 7V4H8V9.1C6.9 8.7 6 7.9 6 7ZM18 7C18 7.9 17.1 8.7 16 9.1V4H18V7Z"/>
+                </svg>
+                <span id="streakCount">0</span>
+            </div>
+            <button onclick="toggleSound()" class="btn btn-icon" style="padding: 16px; border-radius: 1.5rem;">
+                <svg id="soundIcon" style="width:24px; height:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg>
+            </button>
+        </footer>
+    </div>
+
+    <script>
+        function initBackground() {
+            const container = document.getElementById('bgDecorations');
+            const colors = ['#60a5fa', '#f472b6', '#fbbf24', '#4ade80', '#a78bfa', '#fb7185'];
+            
+            
+            for (let i = 0; i < 6; i++) {
+                const shape = document.createElement('div');
+                shape.className = 'shape';
+                const size = Math.random() * 200 + 100;
+                shape.style.width = `${size}px`;
+                shape.style.height = `${size}px`;
+                shape.style.background = colors[i % colors.length];
+                shape.style.left = `${Math.random() * 100}%`;
+                shape.style.top = `${Math.random() * 100}%`;
+                shape.style.animationDelay = `${Math.random() * -20}s`;
+                shape.style.animationDuration = `${Math.random() * 10 + 15}s`;
+                container.appendChild(shape);
+            }
+
+            
+            const kidEmojis = ['🚀', '🦄', '🍦', '🎈', '🎨', '🧸', '🦖', '⭐', '🌈', '🍭', '🦁', '🛸'];
+            for (let i = 0; i < 15; i++) {
+                const emoji = document.createElement('div');
+                emoji.className = 'emoji-float';
+                emoji.innerText = kidEmojis[i % kidEmojis.length];
+                emoji.style.left = `${Math.random() * 100}vw`;
+                emoji.style.fontSize = `${Math.random() * 1.5 + 1.5}rem`;
+                emoji.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                emoji.style.animationDelay = `${Math.random() * -20}s`;
+                container.appendChild(emoji);
+            }
+        }
+
+        const Confetti = (() => {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let animationId = null;
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+            class Particle {
+                constructor() {
+                    this.x = canvas.width / 2 + (Math.random() * 40 - 20);
+                    this.y = canvas.height * 0.8;
+                    this.color = ['#3b82f6', '#fbbf24', '#ec4899', '#22c55e', '#a855f7', '#ff6b6b', '#ffd93d'][Math.floor(Math.random() * 7)];
+                    this.angle = Math.random() * Math.PI * 2;
+                    this.velocity = Math.random() * 15 + 8;
+                    this.gravity = 0.25;
+                    this.friction = 0.95;
+                    this.size = Math.random() * 10 + 5;
+                    this.opacity = 1;
+                }
+                update() {
+                    this.velocity *= this.friction;
+                    this.x += Math.cos(this.angle) * this.velocity;
+                    this.y += Math.sin(this.angle) * this.velocity + this.gravity;
+                    this.gravity += 0.15;
+                    this.opacity -= 0.008;
+                }
+                draw() {
+                    ctx.globalAlpha = this.opacity;
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, i) => {
+                    p.update();
+                    p.draw();
+                    if (p.opacity <= 0) particles.splice(i, 1);
+                });
+                if (particles.length > 0) animationId = requestAnimationFrame(animate);
+                else animationId = null;
+            }
+            return { fire: () => { for (let i = 0; i < 300; i++) particles.push(new Particle()); if (!animationId) animate(); } };
+        })();
+
+        const APP_CONFIG = {
+            languages: {
+                en: { flag: '🇺🇸', name: 'English', title: 'Smart Kids Quest', play: 'START!', next: 'NEXT ➔', try: 'TRY AGAIN ↻', home: 'Home', back: 'Back', t: { 
+                    apples: (a,b)=>`Sara has ${a} apples. She finds ${b} more. Total?`,
+                    cars: (a,b)=>`Leo has ${a} cars. He gives away ${b}. Left?`,
+                    birds: (a,b)=>`${a} birds on a tree. ${b} more fly in. Total?`,
+                    balloons: (a,b)=>`There are ${a} balloons. ${b} pop. How many left?`,
+                    cookies: (a,b)=>`Mom baked ${a} cookies. You ate ${b}. How many left?`,
+                    fish: (a,b)=>`There are ${a} fish in a tank. Dad adds ${b}. Total?`
+                }},
+                am: { flag: '🇪🇹', name: 'አማርኛ', title: 'የልጆች ዕውቀት', play: 'እንጀምር!', next: 'ቀጣይ ➔', try: 'ድጋሚ ሞክር ↻', home: 'መነሻ', back: 'ተመለስ', t: { 
+                    apples: (a,b)=>`ሳራ ${a} ፖሞችን ቀጠፈች። ${b} ተጨመረላት። አጠቃላይ ስንት ሆነ?`,
+                    cars: (a,b)=>`ሊዮ ${a} መኪናዎች አሉት። ለጛደኛው ${b} ሰጠ። ስንት ቀረው?`,
+                    birds: (a,b)=>`${a} ወፎች ዛፍ ላይ ነበሩ። ${b} ተጨማሪ መጡ። ጠቅላላ ስንት ሆኑ?`,
+                    balloons: (a,b)=>`${a} ፊኛዎች ነበሩ። ${b} ተነፈሱ። ስንት ቀሩ?`,
+                    cookies: (a,b)=>`እማማ ${a} ኩኪዎችን ጋገሩ። አንተ ${b} በላህ። ስንት ቀሩ?`,
+                    fish: (a,b)=>`በኩሬ ውስጥ ${a} ዓሳዎች አሉ። አባባ ${b} ጨመረ። ስንት ሆኑ?`
+                }},
+                ti: { flag: '🇪🇹', name: 'ትግርኛ', title: 'ቃል ግድላት', play: 'ንጀምር!', next: 'ቀፃሊ ➔', try: 'ደጊምካ ፈትን ↻', home: 'ገዛ', back: 'ተመለስ', t: { 
+                    apples: (a,b)=>`ሳራ ${a} ኣፕል ኔሩዋ። ኣዲኣ ${b} ወሲኻትላ። ጠቕላላ ክንደይ ኮይኑ?`,
+                    cars: (a,b)=>`ሊዮ ${a} መኪናታት ኣለዎ። ንዓርኩ ${b} ሂብዎ። ክንደይ መኪና ተሪፉዎ?`,
+                    birds: (a,b)=>`${a} ኣዕዋፍ ነይረን። ${b} መጺአን። ሐዚ ክንደይ ኮይነን?`,
+                    balloons: (a,b)=>`${a} ጋንቲ ነይረን። ${b} ነቲጎን። ክንደይ ተሪፈን?`,
+                    cookies: (a,b)=>`ማማ ${a} ኮኪሳት ሰሪሓ። ንስኹመ ${b} በሊዕኹም። ክንደይ ተሪፉ?`,
+                    fish: (a,b)=>`${a} ዓሳታት ነይሮም። ኣቦኻ ${b} ወሲኹ። ሐዚ ክንደይ ኮይኖም?`
+                }},
+                om: { flag: '🌳', name: 'Oromo', title: 'Herrega Ijoollee', play: 'JALQABI!', next: 'ITTI AANI ➔', try: 'IRRA DEEBI\'I ↻', home: 'Mana', back: 'Duba', t: { 
+                    apples: (a,b)=>`Saaraan tufaatii ${a} qabdi. ${b} dabalatteef. Meeqa?`,
+                    cars: (a,b)=>`Lee'oon konkolaataa ${a} qaba. ${b} kenne. Meeqa hafe?`,
+                    birds: (a,b)=>`Simbirroon ${a} muka irra jiru. ${b} dabalatan. Meeqa ta'an?`,
+                    balloons: (a,b)=>`Ballooniin ${a} ture. ${b} dhowwan. Meeqa hafan?`,
+                    cookies: (a,b)=>`Haati keenya kukkii ${a} tolchite. Ati ${b} nyaatte. Meeqa hafan?`,
+                    fish: (a,b)=>`Qurxummiin ${a} bishaan keessa jiru. Abbaan ${b} dabalate. Meeqa?`
+                }},
+                so: { flag: '🇸🇴', name: 'Somali', title: 'Xisaabta Carruurta', play: 'BILOW!', next: 'XIGTA ➔', try: 'MAR KALE ↻', home: 'Hoyga', back: 'Dib', t: { 
+                    apples: (a,b)=>`Sara waxay haysataa ${a} tufaax. ${b} kale ayaa la siiyay. Isugeyn?`,
+                    cars: (a,b)=>`Leo wuxuu haystaa ${a} baabuur. ${b} ayuu bixiyay. Imisa u haray?`,
+                    birds: (a,b)=>`${a} shimbirrood ayaa geed saaran. ${b} kale ayaa yimid. Isugeyn?`,
+                    balloons: (a,b)=>`${a} buufin ayaa jiray. ${b} ayaa qarxay. Imisa haray?`,
+                    cookies: (a,b)=>`Hooyo waxay dubtay ${a} buskut. ${b} ayaad cuntay. Imisa haray?`,
+                    fish: (a,b)=>`${a} kalluun ayaa barkad ku jira. Aabe ${b} ayuu ku daray. Isugeyn?`
+                }}
+            }
+        };
+
+        let state = {
+            view: 'home',
+            lang: localStorage.getItem('gk_lang') || 'en',
+            streak: parseInt(localStorage.getItem('gk_streak')) || 0,
+            sound: localStorage.getItem('gk_sound') !== 'false',
+            q: null
+        };
+
+        const save = () => {
+            localStorage.setItem('gk_lang', state.lang);
+            localStorage.setItem('gk_streak', state.streak);
+            localStorage.setItem('gk_sound', state.sound);
+        };
+
+        function setLang(l) {
+            state.lang = l;
+            save();
+            document.getElementById('headerLangMenu').classList.add('hidden');
+            if(state.view === 'game') generateQuestion();
+            render();
+        }
+
+        function toggleLangMenu(e) { e.stopPropagation(); document.getElementById('headerLangMenu').classList.toggle('hidden'); }
+        function toggleSound() { state.sound = !state.sound; save(); render(); }
+        function handleBack() { if (state.view === 'game') showView('home'); }
+        function showView(v) { state.view = v; if(v === 'game') generateQuestion(); render(); }
+
+        function generateQuestion() {
+            const langT = APP_CONFIG.languages[state.lang].t;
+            const scenarioIds = Object.keys(langT);
+            const sid = scenarioIds[Math.floor(Math.random() * scenarioIds.length)];
+            const isSub = ['balloons', 'cookies', 'cars'].includes(sid);
+            let n1 = Math.floor(Math.random()*8)+1, n2 = Math.floor(Math.random()*8)+1;
+            if(isSub) { n1 = Math.floor(Math.random()*9)+10; n2 = Math.floor(Math.random()*8)+1; }
+            const ans = isSub ? n1 - n2 : n1 + n2;
+            let opts = new Set([ans]);
+            while(opts.size < 4) opts.add(Math.max(0, ans + Math.floor(Math.random()*5)-2));
+            state.q = { text: langT[sid](n1, n2), ans, options: Array.from(opts).sort(() => Math.random() - 0.5), selected: null, correct: null };
+            render();
+        }
+
+        function retryQuestion() { if (!state.q) return; state.q.selected = null; state.q.correct = null; render(); }
+
+        function handleAnswer(idx) {
+            if(state.q.correct !== null) return;
+            state.q.selected = idx;
+            const isCorrect = state.q.options[idx] === state.q.ans;
+            state.q.correct = isCorrect;
+            
+            const badge = document.getElementById('streakBadge');
+            badge.classList.remove('streak-pop', 'streak-reset');
+
+            if(isCorrect) {
+                state.streak++;
+                Confetti.fire();
+                if(state.sound) playTone(true);
+                void badge.offsetWidth; // trigger reflow
+                badge.classList.add('streak-pop');
+            } else {
+                state.streak = 0; // Explicit Reset
+                if(state.sound) playTone(false);
+                document.body.classList.add('shake');
+                setTimeout(() => document.body.classList.remove('shake'), 400);
+                void badge.offsetWidth; // trigger reflow
+                badge.classList.add('streak-reset');
+            }
+            save();
+            render();
+        }
+
+        function playTone(win) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const o = ctx.createOscillator(), g = ctx.createGain();
+                o.type = win ? 'sine' : 'sawtooth';
+                o.frequency.setValueAtTime(win ? 523.25 : 110, ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                o.connect(g); g.connect(ctx.destination);
+                o.start(); o.stop(ctx.currentTime + 0.3);
+            } catch(e) {}
+        }
+
+        function render() {
+            const root = document.getElementById('mainContent');
+            const lang = APP_CONFIG.languages[state.lang];
+            const isEth = ['am', 'ti'].includes(state.lang);
+            document.getElementById('streakCount').innerText = state.streak;
+            document.getElementById('headerLangFlag').innerText = lang.flag;
+            document.getElementById('soundIcon').innerHTML = state.sound ? 
+                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>' :
+                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>';
+            document.getElementById('headerLangMenu').innerHTML = Object.keys(APP_CONFIG.languages).map(l => `
+                <div onclick="setLang('${l}')" style="padding: 15px 25px; cursor: pointer; display: flex; align-items: center; gap: 12px; ${state.lang === l ? 'background: #eff6ff; border-left: 6px solid var(--primary); font-weight: 900;' : ''}">
+                    <span style="font-size: 1.5rem;">${APP_CONFIG.languages[l].flag}</span>
+                    <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">${APP_CONFIG.languages[l].name}</span>
+                </div>
+            `).join('');
+            if(state.view === 'home') {
+                root.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <div class="animate-float" style="font-size: 5.5rem; margin-bottom: 0;">🦉</div>
+                    <h1 class="text-center ${isEth ? 'ethiopic-text' : ''}" style="font-size: 2.8rem; font-weight: 900; color: white; margin-bottom: 0.1rem; margin-top: -0.5rem; text-shadow: 0 5px 15px rgba(0,0,0,0.15);">${lang.title}</h1>
+                    <div class="lang-grid">
+                        ${Object.keys(APP_CONFIG.languages).map(l => `
+                            <div onclick="setLang('${l}')" class="lang-card ${state.lang === l ? 'active' : ''}">
+                                <span>${APP_CONFIG.languages[l].flag}</span>
+                                <span>${APP_CONFIG.languages[l].name}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button onclick="showView('game')" class="btn btn-play ${isEth ? 'ethiopic-text' : ''}">${lang.play}</button>
+                </div>`;
+            } else {
+                const q = state.q;
+                root.innerHTML = `
+                <div class="flex flex-col w-full">
+                    <div class="card">
+                        <h2 class="text-center ${isEth ? 'ethiopic-text' : ''}" style="font-size: 2rem; font-weight: 900; color: #374151;">${q.text}</h2>
+                    </div>
+                    <div class="option-grid">
+                        ${q.options.map((o, i) => {
+                            let cls = "";
+                            if(q.correct === true) { if(o === q.ans) cls = "correct"; } 
+                            else if(q.correct === false) { if(i === q.selected) cls = "wrong"; }
+                            return `<button onclick="handleAnswer(${i})" class="option-btn ${cls}">${o}</button>`;
+                        }).join('')}
+                    </div>
+                    <div style="height: 100px; display: flex; align-items: center; margin-top: 1rem;">
+                        ${q.correct === true ? `<button onclick="generateQuestion()" class="btn btn-next ${isEth ? 'ethiopic-text' : ''}">${lang.next}</button>` : ''}
+                        ${q.correct === false ? `<button onclick="retryQuestion()" class="btn btn-try ${isEth ? 'ethiopic-text' : ''}">${lang.try}</button>` : ''}
+                    </div>
+                </div>`;
+            }
+        }
+
+        window.onload = () => {
+            initBackground();
+            window.onclick = (e) => { if(!e.target.closest('#lang-btn')) document.getElementById('headerLangMenu').classList.add('hidden'); };
+            render();
+        };
+    </script>
+</body>
+</html>

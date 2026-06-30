@@ -1,0 +1,606 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Length Conversion - Ruler Adventure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #E3F2FD;
+            --primary: #29B6F6;
+            --accent: #FF7043;
+            --success: #66BB6A;
+            --wood-dark: #5D4037;
+            --ruler-yellow: #FFEB3B;
+            --text-dark: #37474F;
+            --grid-line: rgba(33, 150, 243, 0.1);
+            --white: #ffffff;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* --- Header --- */
+        header {
+            width: 100%;
+            padding: 15px 40px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(15px);
+            z-index: 100;
+            border-bottom: 5px solid var(--primary);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .header-item-left { display: flex; justify-content: flex-start; }
+        .header-item-right { display: flex; justify-content: flex-end; }
+
+        .grade-badge {
+            background: var(--accent); color: white; width: 55px; height: 55px;
+            border-radius: 15px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.8rem; border: 3px solid white;
+            box-shadow: 0 5px 0 #d84315; transform: rotate(-5deg);
+        }
+
+        h1 { margin: 0; color: var(--text-dark); font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; text-align: center; }
+
+        /* Custom Dropdown */
+        .custom-select-wrapper { position: relative; display: inline-block; cursor: pointer; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; font-weight: 800; color: var(--primary);
+            height: 48px; background: white; border-radius: 24px;
+            width: 170px; border: 2px solid var(--primary);
+            box-shadow: 0 4px 0 rgba(41, 182, 246, 0.2);
+        }
+        .custom-options {
+            position: absolute; top: 115%; right: 0; left: 0;
+            background: white; opacity: 0; visibility: hidden;
+            pointer-events: none; transform: translateY(-10px);
+            transition: all 0.3s ease; display: flex; flex-direction: column;
+            border-radius: 20px; padding: 6px; box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border: 1px solid #eee; z-index: 200;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; pointer-events: all; transform: translateY(0); }
+        .custom-option { padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 600; color: #444; }
+        .custom-option:hover { background: #f0f9ff; color: var(--primary); }
+
+        /* --- Main Container --- */
+        .container {
+            flex: 1; width: 100%; max-width: 1000px;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px; z-index: 10;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .score-board { display: flex; gap: 20px; }
+        .score-pill {
+            background: white; padding: 12px 30px; border-radius: 35px;
+            font-weight: 900; color: var(--text-dark);
+            border: 3px solid var(--primary);
+            box-shadow: 0 8px 0 rgba(41, 182, 246, 0.1);
+            display: flex; align-items: center; gap: 12px;
+            font-size: 1.4rem;
+        }
+
+        .formula-banner {
+            background: var(--primary); color: white;
+            padding: 12px 40px; border-radius: 40px;
+            font-size: 1.8rem; font-weight: 900;
+            box-shadow: 0 10px 0 #0288d1;
+            margin-bottom: 10px;
+        }
+
+        /* --- Question Card --- */
+        .question-card {
+            background: white; width: 100%; max-width: 800px;
+            padding: 50px 30px; border-radius: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            text-align: center; border: 6px solid white;
+            position: relative;
+        }
+
+        .question-text {
+            font-size: 3rem; color: var(--text-dark);
+            font-weight: bold; margin-bottom: 30px;
+            display: flex; justify-content: center; align-items: center; gap: 15px;
+        }
+        .highlight { color: var(--accent); font-weight: 900; background: #fff5f2; padding: 0 15px; border-radius: 15px; }
+
+        .input-group { display: flex; align-items: center; justify-content: center; gap: 15px; }
+        input[type="number"] {
+            width: 140px; height: 80px; font-size: 3rem;
+            text-align: center; border: 4px solid #e2e8f0;
+            border-radius: 25px; outline: none; font-weight: 900;
+            color: var(--primary); background: #f8fafc;
+        }
+        input:focus { border-color: var(--primary); transform: scale(1.05); background: white; }
+        .unit-lbl { font-size: 2rem; font-weight: 900; color: #94a3b8; }
+
+        /* --- Visual Ruler --- */
+        .visual-aid {
+            width: 100%; max-width: 800px;
+            background: white; padding: 40px 30px; border-radius: 40px;
+            border: 4px dashed #cbd5e1; display: flex; flex-direction: column; align-items: center;
+        }
+        .aid-label { font-size: 1.2rem; color: #64748b; font-weight: 800; margin-bottom: 20px; }
+
+        .ruler-frame {
+            width: 100%; height: 100px; background: var(--ruler-yellow);
+            border: 4px solid #fbc02d; border-radius: 10px;
+            position: relative; overflow: hidden; display: flex; align-items: flex-end;
+            box-shadow: 0 8px 0 rgba(251, 192, 45, 0.3);
+        }
+        .ruler-fill {
+            position: absolute; left: 0; top: 0; bottom: 0;
+            background: rgba(41, 182, 246, 0.3); border-right: 4px solid var(--primary);
+            width: 0%; z-index: 5;
+        }
+        .ticks-container { display: flex; width: 100%; justify-content: space-between; z-index: 10; padding: 0 2px; }
+        .tick { width: 2px; background: #333; height: 25px; }
+        .tick.major { height: 50px; width: 4px; position: relative; }
+        .tick.major::after {
+            content: attr(data-val); position: absolute; top: -35px; left: 50%;
+            transform: translateX(-50%); font-size: 1.2rem; font-weight: 900;
+        }
+
+        .btn-check-main {
+            background: var(--success); color: white; border: none;
+            padding: 20px 80px; border-radius: 60px; font-size: 2.2rem;
+            font-weight: 900; cursor: pointer; box-shadow: 0 10px 0 #388e3c;
+            margin-top: 10px;
+        }
+        .btn-check-main:active { transform: translateY(4px); box-shadow: none; }
+
+        /* --- Overlays --- */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(10px); padding: 20px;
+        }
+        .overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+        
+        .modal {
+            background: white; padding: 50px; border-radius: 50px;
+            text-align: center; max-width: 500px; width: 95%;
+            border: 12px solid var(--primary);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        }
+        
+        .modal-icon { font-size: 8rem; display: block; margin-bottom: 20px; }
+        .modal-title { font-size: 3rem; font-weight: 900; color: var(--text-dark); margin-bottom: 15px; }
+        .modal-body { font-size: 1.6rem; color: #555; margin-bottom: 40px; font-weight: bold; }
+
+        .btn-modal {
+            background: var(--primary); color: white; border: none;
+            padding: 20px 60px; border-radius: 50px; font-weight: 900;
+            font-size: 1.6rem; cursor: pointer; box-shadow: 0 10px 0 #0288d1;
+        }
+        .btn-modal:active { transform: translateY(6px); box-shadow: none; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 1100; }
+
+        @media (max-width: 850px) {
+            header { padding: 10px 15px; grid-template-columns: auto 1fr auto; }
+            h1 { font-size: 1.4rem; }
+            .grade-badge { width: 45px; height: 45px; font-size: 1.4rem; }
+            .custom-select__trigger { width: 140px; height: 40px; padding: 0 15px; font-size: 0.9rem; }
+            .score-pill { padding: 8px 20px; font-size: 1rem; }
+            .question-text { font-size: 1.8rem; }
+            input[type="number"] { width: 100px; height: 60px; font-size: 1.8rem; }
+            .unit-lbl { font-size: 1.2rem; }
+            .formula-banner { font-size: 1.2rem; padding: 10px 25px; }
+            .btn-check-main { font-size: 1.6rem; padding: 15px 40px; }
+            .ruler-frame { height: 80px; }
+            .tick.major::after { font-size: 0.9rem; top: -25px; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+    <div class="header-item-left">
+        <div class="grade-badge">3</div>
+    </div>
+    
+    <h1 id="app-title">Length Units</h1>
+    
+    <div class="header-item-right">
+        <div class="custom-select-wrapper" id="lang-dropdown">
+            <div class="custom-select">
+                <div class="custom-select__trigger">
+                    <span id="current-lang-text">🗺️ ትግርኛ</span>
+                    <span style="font-size:0.8rem">▼</span>
+                </div>
+                <div class="custom-options">
+                    <div class="custom-option" data-value="ti">ትግርኛ</div>
+                    <div class="custom-option" data-value="am">አማርኛ</div>
+                    <div class="custom-option" data-value="en">English</div>
+                    <div class="custom-option" data-value="om">Afan Oromoo</div>
+                    <div class="custom-option" data-value="so">Soomaali</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="score-board">
+        <div class="score-pill">🏅 <span id="lbl-record">Record</span>: <span id="val-high" style="margin-left:8px">0</span></div>
+        <div class="score-pill">⭐ <span id="lbl-score">Score</span>: <span id="val-score" style="margin-left:8px">0</span></div>
+    </div>
+
+    <div class="formula-banner" id="formula-txt">1 ሳ.ሜ = 10 ሚ.ሜ</div>
+
+    <div class="question-card">
+        <div class="question-text" id="q-display">
+            <!-- Dynamic Q -->
+        </div>
+        <div class="input-group">
+            <input type="number" id="user-input" placeholder="?" inputmode="numeric">
+            <span class="unit-lbl" id="lbl-unit">ሚ.ሜ</span>
+        </div>
+    </div>
+
+    <div class="visual-aid">
+        <div class="aid-label" id="lbl-hint">Visual Hint (ሳ.ሜ):</div>
+        <div class="ruler-frame">
+            <div class="ruler-fill" id="ruler-fill"></div>
+            <div class="ticks-container" id="ticks-container">
+                <!-- JS generated ticks -->
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-check-main" id="btn-check" onclick="checkAnswer()">ፈትሽ (Check) ✔️</button>
+</div>
+
+<!-- Reactions Overlays -->
+<div class="overlay" id="overlay-win">
+    <div class="modal">
+        <span class="modal-icon">📏💎</span>
+        <div class="modal-title" id="win-title">ትኽክል!</div>
+        <div class="modal-body" id="win-body">ብጣዕሚ ጽቡቕ! ቀፅል</div>
+        <button class="btn-modal" onclick="nextLevel()" id="btn-next">ቀፃሊ ➡</button>
+    </div>
+</div>
+
+<div class="overlay" id="overlay-fail">
+    <div class="modal" style="border-color: var(--accent);">
+        <span class="modal-icon">✏️</span>
+        <div class="modal-title" id="fail-title">እንደገና ፈትን!</div>
+        <div class="modal-body">
+            <span id="fail-body">ጸወታ ተወዲኡ።</span><br><br>
+            <span id="lbl-final-score" style="font-weight: 800;">ውፅኢትካ</span>: <span id="final-score-val" style="font-size:4rem; color:var(--accent); font-weight:900;">0</span>
+        </div>
+        <button class="btn-modal" onclick="restartGame()" id="btn-restart" style="background:var(--accent); box-shadow: 0 10px 0 #d84315;">እንደገና ጀምር 🔄</button>
+    </div>
+</div>
+
+<script>
+    const translations = {
+        ti: {
+            title: "ምቅያር ኣሃዱታት",
+            formula: "1 ሳ.ሜ = 10 ሚ.ሜ",
+            unit: "ሚ.ሜ",
+            hint: "ሓገዝ (ሳ.ሜ):",
+            check: "ፈትሽ ✔️",
+            score: "ነጥቢ",
+            record: "ዝለዓለ",
+            win: "ትኽክል!",
+            winSub: "ብጣዕሚ ጽቡቕ! ቀፅል",
+            fail: "እንደገና ፈትን!",
+            failSub: "ጸወታ ተወዲኡ።",
+            final: "ውፅኢትካ",
+            next: "ቀፃሊ ➡",
+            restart: "እንደገና ጀምር 🔄",
+            q1: "{v} ሳ.ሜ = ",
+            q2: "{v1} ሳ.ሜ + {v2} ሚ.ሜ = "
+        },
+        am: {
+            title: "የመለኪያ ክፍሎች",
+            formula: "1 ሳ.ሜ = 10 ሚ.ሜ",
+            unit: "ሚ.ሜ",
+            hint: "ምልከታ (ሳ.ሜ):",
+            check: "ፈትሽ ✔️",
+            score: "ውጤት",
+            record: "ሪከርድ",
+            win: "ትክክል!",
+            winSub: "በጣም ጎበዝ! ቀጥል",
+            fail: "እንደገና ሞክር!",
+            failSub: "ጨዋታው ተጠናቋል።",
+            final: "የእርስዎ ውጤት",
+            next: "ቀጣይ ➡",
+            restart: "እንደገና ጀምር 🔄",
+            q1: "{v} ሳ.ሜ = ",
+            q2: "{v1} ሳ.ሜ + {v2} ሚ.ሜ = "
+        },
+        en: {
+            title: "Unit Conversion",
+            formula: "1 cm = 10 mm",
+            unit: "mm",
+            hint: "Visual Hint (cm):",
+            check: "Check ✔️",
+            score: "Score",
+            record: "Record",
+            win: "Correct!",
+            winSub: "Excellent measurement! Keep going",
+            fail: "Try Again!",
+            failSub: "Game Over.",
+            final: "Your Score",
+            next: "Next Question ➡",
+            restart: "Restart Game 🔄",
+            q1: "{v} cm = ",
+            q2: "{v1} cm + {v2} mm = "
+        },
+        om: {
+            title: "Safara",
+            formula: "1 cm = 10 mm",
+            unit: "mm",
+            hint: "Gargaarsa (cm):",
+            check: "Mirkaneessi ✔️",
+            score: "Qabxii",
+            record: "Rikardii",
+            win: "Sirrii!",
+            winSub: "Baay'ee gaariidha! Itti fufi",
+            fail: "Irra deebi'ii!",
+            failSub: "Tapha dhumate.",
+            final: "Qabxii Keessan",
+            next: "Itti Aanu ➡",
+            restart: "Irra deebi'i 🔄",
+            q1: "{v} cm = ",
+            q2: "{v1} cm + {v2} mm = "
+        },
+        so: {
+            title: "Beddelka Cabbirka",
+            formula: "1 cm = 10 mm",
+            unit: "mm",
+            hint: "Tusaale (cm):",
+            check: "Hubi ✔️",
+            score: "Dhibco",
+            record: "Rikoodh",
+            win: "Sax!",
+            winSub: "Shaqo fiican! Horay u soco",
+            fail: "Isku day mar kale!",
+            failSub: "Ciyaartu way dhammaatay.",
+            final: "Dhibcahaaga",
+            next: "Xiga ➡",
+            restart: "Dib u billow 🔄",
+            q1: "{v} cm = ",
+            q2: "{v1} cm + {v2} mm = "
+        }
+    };
+
+    let currentLang = 'ti';
+    let score = 0;
+    let highScore = localStorage.getItem('unitConvHighScore_V1') || 0;
+    let currentProblem = {};
+    const MAX_CM = 15;
+
+    function init() {
+        document.getElementById('val-high').textContent = highScore;
+        initRuler();
+        updateLanguage();
+        generateProblem();
+    }
+
+    function initRuler() {
+        const container = document.getElementById('ticks-container');
+        container.innerHTML = '';
+        for(let i=0; i<=MAX_CM; i++) {
+            const tick = document.createElement('div');
+            tick.className = 'tick major';
+            tick.setAttribute('data-val', i);
+            container.appendChild(tick);
+            if(i < MAX_CM) {
+                for(let j=0; j<4; j++) {
+                    const s = document.createElement('div');
+                    s.className = 'tick';
+                    container.appendChild(s);
+                }
+            }
+        }
+    }
+
+    function generateProblem() {
+        const isComplex = Math.random() > 0.5;
+        const t = translations[currentLang];
+        
+        if (!isComplex) {
+            const cm = Math.floor(Math.random() * (MAX_CM - 1)) + 1;
+            currentProblem = {
+                text: t.q1.replace('{v}', `<span class="highlight">${cm}</span>`),
+                answer: cm * 10,
+                cmVal: cm
+            };
+        } else {
+            const cm = Math.floor(Math.random() * 8) + 1;
+            const mm = (Math.floor(Math.random() * 5) + 1) * 10;
+            currentProblem = {
+                text: t.q2.replace('{v1}', `<span class="highlight">${cm}</span>`).replace('{v2}', `<span class="highlight">${mm}</span>`),
+                answer: (cm * 10) + mm,
+                cmVal: cm
+            };
+        }
+
+        document.getElementById('q-display').innerHTML = currentProblem.text;
+        document.getElementById('user-input').value = '';
+        document.getElementById('ruler-fill').style.width = ((currentProblem.cmVal / MAX_CM) * 100) + '%';
+        document.getElementById('user-input').focus();
+    }
+
+    function checkAnswer() {
+        const val = parseInt(document.getElementById('user-input').value);
+        if (isNaN(val)) return;
+
+        if (val === currentProblem.answer) {
+            score += 15;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('unitConvHighScore_V1', highScore);
+            }
+            updateScoreUI();
+            showWin();
+        } else {
+            showFail();
+        }
+    }
+
+    function showWin() {
+        triggerConfetti();
+        playSound('win');
+        document.getElementById('overlay-win').classList.add('show');
+    }
+
+    function showFail() {
+        playSound('fail');
+        document.getElementById('final-score-val').textContent = score;
+        document.getElementById('overlay-fail').classList.add('show');
+    }
+
+    function nextLevel() {
+        document.getElementById('overlay-win').classList.remove('show');
+        generateProblem();
+    }
+
+    function restartGame() {
+        score = 0;
+        updateScoreUI();
+        document.getElementById('overlay-fail').classList.remove('show');
+        generateProblem();
+    }
+
+    function updateScoreUI() {
+        document.getElementById('val-score').textContent = score;
+        document.getElementById('val-high').textContent = highScore;
+    }
+
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('formula-txt').textContent = t.formula;
+        document.getElementById('lbl-unit').textContent = t.unit;
+        document.getElementById('lbl-hint').textContent = t.hint;
+        document.getElementById('lbl-score').textContent = t.score;
+        document.getElementById('lbl-record').textContent = t.record;
+        document.getElementById('btn-check').textContent = t.check;
+        document.getElementById('win-title').textContent = t.win;
+        document.getElementById('win-body').textContent = t.winSub;
+        document.getElementById('btn-next').textContent = t.next;
+        document.getElementById('fail-title').textContent = t.fail;
+        document.getElementById('fail-body').textContent = t.failSub;
+        document.getElementById('lbl-final-score').textContent = t.final;
+        document.getElementById('btn-restart').textContent = t.restart;
+        
+        // Refresh question if active
+        if(currentProblem.cmVal !== undefined) {
+             const isComplex = document.getElementById('q-display').innerHTML.includes('+');
+             if(!isComplex) {
+                 document.getElementById('q-display').innerHTML = t.q1.replace('{v}', `<span class="highlight">${currentProblem.cmVal}</span>`);
+             } else {
+                 const v1 = currentProblem.cmVal;
+                 const v2 = currentProblem.answer - (v1 * 10);
+                 document.getElementById('q-display').innerHTML = t.q2.replace('{v1}', `<span class="highlight">${v1}</span>`).replace('{v2}', `<span class="highlight">${v2}</span>`);
+             }
+        }
+    }
+
+    // Dropdown Handling
+    const dropdown = document.getElementById('lang-dropdown');
+    const trigger = dropdown.querySelector('.custom-select__trigger');
+    const options = dropdown.querySelectorAll('.custom-option');
+
+    trigger.addEventListener('click', (e) => {
+        dropdown.querySelector('.custom-select').classList.toggle('open');
+        e.stopPropagation();
+    });
+
+    options.forEach(opt => {
+        opt.addEventListener('click', function(e) {
+            e.stopPropagation();
+            currentLang = this.dataset.value;
+            document.getElementById('current-lang-text').textContent = "🗺️ " + this.textContent;
+            dropdown.querySelector('.custom-select').classList.remove('open');
+            updateLanguage();
+        });
+    });
+
+    window.addEventListener('click', () => dropdown.querySelector('.custom-select').classList.remove('open'));
+
+    // Sound
+    function playSound(type) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        if (type === 'win') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(523, t); osc.frequency.exponentialRampToValueAtTime(1046, t + 0.1);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+            osc.start(t); osc.stop(t + 0.4);
+        } else {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); osc.frequency.linearRampToValueAtTime(80, t + 0.4);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.4);
+            osc.start(t); osc.stop(t + 0.4);
+        }
+    }
+
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const pieces = [];
+        for(let i=0; i<80; i++) {
+            pieces.push({
+                x: canvas.width / 2, y: canvas.height / 2,
+                vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20 - 10,
+                color: `hsl(${Math.random()*360}, 100%, 50%)`, size: Math.random() * 10 + 5
+            });
+        }
+        function anim() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            let alive = false;
+            pieces.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.8;
+                if (p.y < canvas.height) {
+                    ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
+                    alive = true;
+                }
+            });
+            if (alive) requestAnimationFrame(anim);
+        }
+        anim();
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>

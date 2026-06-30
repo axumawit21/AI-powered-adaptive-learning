@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="ti">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Solving Equations - ምፍታሕ ምዕሪታት</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* Candy Space Palette */
+            --primary: #FF006E;
+            /* Hot Pink */
+            --secondary: #4361EE;
+            /* Bright Blue */
+            --accent: #FFBE0B;
+            /* Golden Yellow */
+            --success: #06D6A0;
+            /* Mint Green */
+            --wrong: #EF476F;
+            /* Soft Red */
+            --purple: #7209B7;
+            /* Deep Purple */
+            --text: #2B2D42;
+            /* Dark Navy */
+            --bg-gradient: linear-gradient(135deg, #E0C3FC 0%, #8EC5FC 100%);
+            --glass: rgba(255, 255, 255, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* Animated Background Elements */
+        .bg-circle {
+            position: fixed;
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.6;
+            animation: float 20s infinite linear;
+        }
+
+        .bg-1 {
+            width: 300px;
+            height: 300px;
+            background: #FF99C8;
+            top: -50px;
+            left: -50px;
+            filter: blur(60px);
+        }
+
+        .bg-2 {
+            width: 200px;
+            height: 200px;
+            background: #A9DEF9;
+            bottom: 10%;
+            right: -20px;
+            filter: blur(40px);
+            animation-duration: 25s;
+            animation-direction: reverse;
+        }
+
+        .bg-3 {
+            width: 150px;
+            height: 150px;
+            background: #FCF6BD;
+            top: 40%;
+            left: 20%;
+            filter: blur(30px);
+            animation-duration: 15s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(20px) rotate(180deg);
+            }
+
+            100% {
+                transform: translateY(0) rotate(360deg);
+            }
+        }
+
+        /* --- Header --- */
+        header {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-radius: 0 0 30px 30px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+            /* Added for absolute positioning of title */
+        }
+
+        .grade-badge {
+            background: var(--purple);
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+            border: 3px solid white;
+        }
+
+        h1 {
+            color: var(--purple);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        /* Language Dropdown */
+        .lang-btn {
+            background: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 2px solid var(--secondary);
+            color: var(--secondary);
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #BDD5EA;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .lang-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #BDD5EA;
+        }
+
+        .lang-menu {
+            position: absolute;
+            top: 75px;
+            right: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 2px solid var(--secondary);
+        }
+
+        .lang-menu.show {
+            display: flex;
+            animation: slideDown 0.2s;
+        }
+
+        .lang-opt {
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .lang-opt:hover {
+            background: #E3F2FD;
+        }
+
+        /* --- Main Container --- */
+        .container {
+            flex-grow: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Instructions */
+        .instruction-card {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.2rem;
+            border: 3px solid white;
+            position: relative;
+        }
+
+
+
+        /* Equation Display */
+        .equation-box {
+            background: white;
+            border-radius: 25px;
+            padding: 20px 40px;
+            box-shadow: 0 10px 0 #E2E8F0;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            border: 2px solid #F8F9FA;
+            animation: bounceIn 0.8s;
+        }
+
+        .eq-item {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .mystery-box {
+            width: 70px;
+            height: 70px;
+            background: var(--primary);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            box-shadow: 0 5px 0 #C9184A;
+            animation: pulse 2s infinite;
+        }
+
+        .mystery-box.solved {
+            background: var(--success);
+            box-shadow: 0 5px 0 #049F76;
+            animation: popIn 0.4s;
+        }
+
+        /* Robot Scale */
+        .scale-area {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .robot-body {
+            width: 120px;
+            height: 110px;
+            background: #E0E1DD;
+            border-radius: 60px 60px 20px 20px;
+            position: absolute;
+            bottom: 0;
+            z-index: 5;
+            box-shadow: inset -5px -5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            padding-top: 30px;
+        }
+
+        .robot-face {
+            width: 80px;
+            height: 50px;
+            background: #0D1B2A;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            position: relative;
+        }
+
+        .robot-eye {
+            width: 12px;
+            height: 12px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: blink 4s infinite;
+        }
+
+        .beam-wrapper {
+            position: absolute;
+            bottom: 90px;
+            width: 90%;
+            height: 20px;
+            transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 10;
+        }
+
+        .beam {
+            width: 100%;
+            height: 20px;
+            background: var(--secondary);
+            border-radius: 10px;
+            box-shadow: 0 5px 0 #2b45b0;
+        }
+
+        .pan {
+            position: absolute;
+            top: 10px;
+            width: 90px;
+            height: 100px;
+            border: 3px solid rgba(255, 255, 255, 0.6);
+            border-top: none;
+            border-radius: 0 0 45px 45px;
+            background: rgba(255, 255, 255, 0.4);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 10px;
+        }
+
+        .pan.left {
+            left: 0;
+        }
+
+        .pan.right {
+            right: 0;
+        }
+
+        .chain {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            width: 2px;
+            height: 50px;
+            background: #EEE;
+            transform: translateX(-50%);
+        }
+
+        .weight {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+            margin-top: -10px;
+            position: relative;
+        }
+
+        .w-unknown {
+            background: var(--primary);
+            border: 2px dashed white;
+        }
+
+        .w-num {
+            background: var(--secondary);
+        }
+
+        .w-total {
+            background: var(--accent);
+            color: #5F2F00;
+        }
+
+        /* Input Zone */
+        .input-zone {
+            background: white;
+            border-radius: 30px;
+            padding: 25px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.05);
+            border: 2px solid white;
+        }
+
+        .options-grid {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .opt-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            background: radial-gradient(circle at 30% 30%, #fff, #F0F2F5);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1), inset 0 0 0 2px var(--secondary);
+            color: var(--secondary);
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'Fredoka', sans-serif;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .opt-btn:hover {
+            transform: scale(1.1);
+            background: #E3F2FD;
+        }
+
+        .opt-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Feedback */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: white;
+            padding: 30px 50px;
+            border-radius: 40px;
+            font-size: 2rem;
+            font-weight: 700;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            z-index: 999;
+            flex-direction: column;
+        }
+
+        .toast.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .toast.success {
+            border: 3px solid var(--success);
+            color: var(--success);
+        }
+
+        .toast.error {
+            border: 3px solid var(--wrong);
+            color: var(--wrong);
+        }
+
+        .btn-next {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            border-radius: 40px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #038C65;
+            margin-top: 30px;
+            display: none;
+            animation: bounceIn 0.5s;
+        }
+
+        .btn-next:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-next.show {
+            display: inline-block;
+        }
+
+        @keyframes blink {
+
+            0%,
+            95% {
+                transform: scaleY(1);
+            }
+
+            98% {
+                transform: scaleY(0.1);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+
+            70% {
+                transform: scale(0.9);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .scale-area {
+                height: 200px;
+                transform: scale(0.9);
+            }
+
+            .beam-wrapper {
+                width: 95%;
+                bottom: 80px;
+            }
+
+            .robot-body {
+                width: 100px;
+                height: 90px;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            .opt-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-circle bg-1"></div>
+    <div class="bg-circle bg-2"></div>
+    <div class="bg-circle bg-3"></div>
+
+    <header>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div class="grade-badge">5</div>
+        </div>
+
+        <h1 id="hdr-title"
+            style="position: absolute; left: 50%; transform: translateX(-50%); width: max-content; margin: 0;">Solving
+            Equations</h1>
+
+        <div style="position:relative;">
+            <div class="lang-btn" onclick="toggleLang()">
+                <span id="lang-lbl">🗺️ ትግርኛ</span> ▼
+            </div>
+            <div class="lang-menu" id="lang-menu">
+                <div class="lang-opt" onclick="setLang('ti')">ትግርኛ</div>
+                <div class="lang-opt" onclick="setLang('am')">አማርኛ</div>
+                <div class="lang-opt" onclick="setLang('en')">English</div>
+                <div class="lang-opt" onclick="setLang('om')">Afan Oromoo</div>
+                <div class="lang-opt" onclick="setLang('so')">Soomaali</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <div class="instruction-card" id="inst-text">
+            Find the value of <span style="color:var(--primary)">?</span> to balance the scale!
+        </div>
+
+        <!-- Equation Bubble -->
+        <div class="equation-box">
+            <div class="mystery-box" id="eq-x">?</div>
+            <div class="eq-item">+</div>
+            <div class="eq-item" id="eq-add">3</div>
+            <div class="eq-item">=</div>
+            <div class="eq-item" id="eq-res">8</div>
+        </div>
+
+        <!-- Robot Scale -->
+        <div class="scale-area">
+            <div class="robot-body">
+                <div class="robot-face">
+                    <div class="robot-eye"></div>
+                    <div class="robot-eye"></div>
+                </div>
+            </div>
+
+            <div class="beam-wrapper" id="beam">
+                <div class="beam"></div>
+
+                <div class="pan left">
+                    <div class="chain"></div>
+                    <div class="weight w-unknown" id="pan-x">?</div>
+                    <div class="weight w-num" id="pan-add">3</div>
+                </div>
+
+                <div class="pan right">
+                    <div class="chain"></div>
+                    <div class="weight w-total" id="pan-res">8</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inputs -->
+        <div class="input-zone">
+            <div style="margin-bottom:15px; font-weight:700; color:#888; letter-spacing:1px;" id="tap-lbl">TAP THE
+                ANSWER</div>
+            <div class="options-grid" id="options-area"></div>
+        </div>
+
+        <button class="btn-next" id="btn-next" onclick="nextLevel()">NEXT LEVEL ➡</button>
+
+    </div>
+
+    <!-- Toast Feedback -->
+    <div class="toast" id="toast">
+        <span id="toast-icon">🎉</span>
+        <span id="toast-msg">Correct!</span>
+    </div>
+
+    <canvas id="confetti-canvas"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:99;"></canvas>
+
+    <script>
+        // --- Audio ---
+        const AudioSys = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            playTone(freq, type, dur, vol = 0.1) {
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.frequency.value = freq;
+                osc.type = type;
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+                osc.stop(this.ctx.currentTime + dur);
+            },
+            playSuccess() {
+                [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.playTone(f, 'sine', 0.2, 0.2), i * 100));
+            },
+            playError() {
+                this.playTone(150, 'sawtooth', 0.2, 0.2);
+                setTimeout(() => this.playTone(100, 'sawtooth', 0.3, 0.2), 150);
+            },
+            playClick() { this.playTone(400, 'triangle', 0.05, 0.1); }
+        };
+
+        // --- Content ---
+        const vocab = {
+            ti: {
+                title: "ምፍታሕ ምዕሪታት", inst: "ሚዛን ንምሕላው ናይ <span style='color:#FF006E'>?</span> ዋጋ ድለዩ!",
+                tap: "መልሲ ምረፁ", correct: "ትኽክል!", heavy: "ከቢዱ! (Too Heavy)", light: "ፈኪሱ! (Too Light)", next: "ቀፃሊ"
+            },
+            am: {
+                title: "ቀመር መፍታት", inst: "ሚዛኑን ለመጠበቅ የ <span style='color:#FF006E'>?</span> ዋጋ ያግኙ!",
+                tap: "መልስ ይምረጡ", correct: "ትክክል!", heavy: "ከበደ!", light: "ቀለለ!", next: "ቀጣይ"
+            },
+            en: {
+                title: "Solving Equations", inst: "Find the value of <span style='color:#FF006E'>?</span> to balance the scale!",
+                tap: "TAP THE ANSWER", correct: "Correct!", heavy: "Too Heavy!", light: "Too Light!", next: "Next Level"
+            },
+            om: {
+                title: "Hima Herregaa", inst: "Gatii <span style='color:#FF006E'>?</span> barbaadi!",
+                tap: "Lakkoofsa filadhu", correct: "Sirrii!", heavy: "Ulfaate!", light: "Salphaate!", next: "Itti Aanu"
+            },
+            so: {
+                title: "Xalinta Isle'egyada", inst: "Raadi qiimaha <span style='color:#FF006E'>?</span>!",
+                tap: "Dooro tirada", correct: "Sax!", heavy: "Culus!", light: "Fudud!", next: "Xiga"
+            }
+        };
+
+        let currLang = 'ti';
+        let xVal = 0, addVal = 0, targetVal = 0;
+        let isSolved = false;
+
+        function setLang(l) {
+            currLang = l;
+            document.getElementById('lang-lbl').textContent = "🗺️ " + ({ ti: 'ትግርኛ', am: 'አማርኛ', en: 'English', om: 'Afan Oromoo', so: 'Soomaali' })[l];
+            document.getElementById('lang-menu').classList.remove('show');
+            updateText();
+        }
+        function toggleLang() { document.getElementById('lang-menu').classList.toggle('show'); }
+
+        function updateText() {
+            const t = vocab[currLang];
+            document.getElementById('hdr-title').textContent = t.title;
+            document.getElementById('inst-text').innerHTML = t.inst;
+            document.getElementById('tap-lbl').textContent = t.tap;
+            document.getElementById('btn-next').textContent = t.next + " ➡";
+        }
+
+        function generateLevel() {
+            isSolved = false;
+            xVal = Math.floor(Math.random() * 8) + 2;
+            addVal = Math.floor(Math.random() * 5) + 1;
+            targetVal = xVal + addVal;
+
+            // Reset UI
+            document.getElementById('beam').style.transform = 'rotate(0deg)';
+            document.getElementById('eq-x').textContent = '?';
+            document.getElementById('pan-x').textContent = '?';
+            document.getElementById('eq-x').classList.remove('solved');
+            document.getElementById('btn-next').classList.remove('show');
+
+            document.getElementById('eq-add').textContent = addVal;
+            document.getElementById('pan-add').textContent = addVal;
+            document.getElementById('eq-res').textContent = targetVal;
+            document.getElementById('pan-res').textContent = targetVal;
+
+            // Options
+            const opts = [xVal];
+            while (opts.length < 4) {
+                let r = Math.floor(Math.random() * 12) + 1;
+                if (!opts.includes(r)) opts.push(r);
+            }
+            opts.sort(() => Math.random() - 0.5);
+
+            const area = document.getElementById('options-area');
+            area.innerHTML = '';
+            opts.forEach(v => {
+                let btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                btn.textContent = v;
+                btn.onclick = () => check(v);
+                area.appendChild(btn);
+            });
+            updateText();
+        }
+
+        function check(val) {
+            if (isSolved) return;
+            AudioSys.playClick();
+
+            const beam = document.getElementById('beam');
+            const eqX = document.getElementById('eq-x');
+            const panX = document.getElementById('pan-x');
+
+            eqX.textContent = val;
+            panX.textContent = val;
+
+            const total = val + addVal;
+
+            if (total === targetVal) {
+                isSolved = true;
+                beam.style.transform = 'rotate(0deg)';
+                eqX.classList.add('solved');
+                AudioSys.playSuccess();
+                fireConfetti();
+                showToast(true, 'correct');
+                document.getElementById('btn-next').classList.add('show');
+            } else if (total < targetVal) {
+                beam.style.transform = 'rotate(15deg)'; // Text tilts left up
+                showToast(false, 'light');
+                AudioSys.playError();
+            } else {
+                beam.style.transform = 'rotate(-15deg)';
+                showToast(false, 'heavy');
+                AudioSys.playError();
+            }
+        }
+
+        function showToast(success, key) {
+            const t = document.getElementById('toast');
+            const msg = vocab[currLang][key];
+            document.getElementById('toast-msg').textContent = msg;
+            document.getElementById('toast-icon').textContent = success ? '🎉' : (key === 'heavy' ? '⬇️' : '⬆️');
+            t.className = `toast show ${success ? 'success' : 'error'}`;
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        function nextLevel() { generateLevel(); }
+
+        // --- Confetti ---
+        function fireConfetti() {
+            const c = document.getElementById('confetti-canvas');
+            const ctx = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            let p = Array(400).fill().map(() => ({
+                x: c.width / 2, y: c.height / 2,
+                vx: (Math.random() - 0.5) * 30, vy: (Math.random() - 0.5) * 30,
+                color: `hsl(${Math.random() * 360},100%,50%)`, life: 150
+            }));
+            function loop() {
+                ctx.clearRect(0, 0, c.width, c.height);
+                let active = false;
+                p.forEach(pt => {
+                    if (pt.life > 0) {
+                        pt.x += pt.vx; pt.y += pt.vy; pt.vy += 0.5; pt.life--;
+                        ctx.fillStyle = pt.color; ctx.fillRect(pt.x, pt.y, 8, 8);
+                        active = true;
+                    }
+                });
+                if (active) requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // Init
+        window.onload = generateLevel;
+
+    </script>
+</body>
+
+</html>

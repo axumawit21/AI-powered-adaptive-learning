@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Time Forge | ምድማርን ምጉዳልን ግዘ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bronze: #cd7f32;
+            --gear-gold: #d4af37;
+            --steam-blue: #0ea5e9;
+            --deep-rust: #451a03;
+            --white: #ffffff;
+            --ink: #0f172a;
+            --danger: #f43f5e;
+            --success: #22c55e;
+            --hint: #8b5cf6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: radial-gradient(circle at center, #78350f, #451a03);
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+            color: var(--white); overflow-x: hidden; position: relative;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* Clockwork Background */
+        .gear {
+            position: fixed; color: rgba(212, 175, 55, 0.1); z-index: 0;
+            animation: rotateGear 20s infinite linear; pointer-events: none;
+        }
+        @keyframes rotateGear { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        header {
+            width: 100%; max-width: 1000px; padding: 15px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            gap: 10px; flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px);
+            padding: 8px 14px; border-radius: 15px; border: 2px solid var(--gear-gold);
+            display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 0.85rem;
+        }
+        .stat-val { color: var(--gear-gold); }
+
+        .container {
+            flex: 1; width: 100%; max-width: 800px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; padding: 10px; z-index: 10; gap: 10px;
+        }
+
+        .forge-card {
+            background: rgba(255, 255, 255, 0.95); border-radius: 30px; border: 6px solid var(--bronze);
+            padding: 20px; width: 100%; color: var(--ink); text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 12px;
+            position: relative; min-height: 280px; justify-content: center;
+        }
+
+        .level-badge {
+            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+            background: var(--gear-gold); color: var(--deep-rust); padding: 4px 15px;
+            border-radius: 20px; font-weight: 900; font-size: 0.9rem; border: 3px solid var(--deep-rust);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 20;
+        }
+
+        .op-display {
+            font-size: clamp(1.4rem, 5vw, 2.2rem); font-weight: 900; color: var(--deep-rust);
+            background: #fef3c7; padding: 15px; border-radius: 20px; border: 3px dashed var(--bronze);
+            line-height: 1.2;
+        }
+
+        .input-area {
+            display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;
+        }
+
+        .input-group { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+
+        .ans-box {
+            min-width: 90px; height: 75px; background: #fff; border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--steam-blue); font-size: 2.2rem; cursor: pointer;
+            border: 4px solid var(--steam-blue); box-shadow: 0 5px 0 var(--steam-blue);
+            font-family: monospace; transition: 0.1s;
+        }
+        .ans-box.active { border-color: var(--gear-gold); box-shadow: 0 5px 0 var(--gear-gold); color: var(--gear-gold); transform: scale(1.05); }
+        .ans-box.hinted { border-color: var(--hint); color: var(--hint); box-shadow: 0 5px 0 var(--hint); }
+
+        .unit-label { font-size: 0.9rem; font-weight: 900; color: #64748b; text-transform: uppercase; }
+
+        /* Keypad */
+        .keypad-section { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 8px; }
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .key {
+            height: 55px; background: #f1f5f9; border: none; border-radius: 12px;
+            font-size: 1.4rem; font-weight: 800; color: #475569; cursor: pointer;
+            box-shadow: 0 4px 0 #cbd5e1; transition: 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 1px 0 #cbd5e1; }
+        .key.del { color: var(--danger); }
+        
+        .action-row { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; margin-top: 5px; }
+
+        .btn-action {
+            height: 70px; border-radius: 18px; font-weight: 900; border: none;
+            cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.2rem;
+        }
+        .btn-action:active { transform: translateY(4px); }
+
+        .btn-show { background: var(--hint); box-shadow: 0 6px 0 #6d28d9; }
+        .btn-show:active { box-shadow: 0 2px 0 #6d28d9; }
+
+        .btn-check { background: var(--success); box-shadow: 0 6px 0 #16a34a; font-size: 1.6rem; }
+        .btn-check:active { box-shadow: 0 2px 0 #16a34a; }
+
+        /* Overlays */
+        .overlay {
+            position: fixed; inset: 0; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 5000;
+            background: rgba(255, 255, 255, 0.98); color: var(--ink); text-align: center; padding: 20px;
+        }
+
+        .big-x { 
+            font-size: 15rem; font-weight: 950; font-family: 'Arial Black', sans-serif;
+            color: var(--danger); text-shadow: 0 0 30px rgba(0,0,0,0.2);
+            animation: xImpact 0.5s infinite; line-height: 1;
+        }
+        @keyframes xImpact {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3) rotate(5deg); }
+            100% { transform: scale(1); }
+        }
+
+        .big-icon { font-size: 8rem; margin-bottom: 20px; animation: bounce 1s infinite alternate; }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.15); } }
+
+        .lang-select {
+            padding: 6px 10px; border-radius: 12px; border: 2.5px solid var(--gear-gold);
+            background: white; font-weight: bold; cursor: pointer; color: var(--ink); font-size: 0.8rem;
+        }
+
+        @media (min-width: 768px) {
+            .forge-card { padding: 40px; gap: 20px; }
+            .ans-box { min-width: 120px; height: 90px; font-size: 3rem; }
+            .key { height: 75px; font-size: 1.8rem; }
+            .btn-action { height: 90px; font-size: 1.8rem; }
+            .big-x { font-size: 20rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="gear" style="top: -50px; left: -50px; font-size: 20rem;">⚙️</div>
+    <div class="gear" style="bottom: -80px; right: -80px; font-size: 25rem; animation-direction: reverse;">⚙️</div>
+    <div class="gear" style="top: 20%; right: 10%; font-size: 8rem; animation-duration: 10s;">⚙️</div>
+
+    <canvas id="confetti-canvas" style="position:fixed; inset:0; pointer-events:none; z-index:6000;"></canvas>
+
+    <header>
+        <div style="display: flex; gap: 8px;">
+            <div class="stat-pill">⭐ <span id="lblScore">Score</span>: <span id="valScore" class="stat-val">0</span></div>
+            <div class="stat-pill">👑 <span id="lblHigh">High</span>: <span id="valHigh" class="stat-val">0</span></div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="key" style="width: 36px; height: 36px; border-radius: 50%; font-size: 1rem; box-shadow: 0 2px 0 #cbd5e1;" onclick="toggleMute()" id="muteBtn">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="setLanguage(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="forge-card" id="mainCard">
+            <div class="level-badge"><span id="lblLvl">LEVEL</span> <span id="valLvlDisplay">1</span></div>
+            <h2 id="pageTitle" style="font-weight: 900; color: var(--bronze); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px; margin-top: 10px;">Time Unit Operations</h2>
+            <div id="opDisplay" class="op-display">---</div>
+            
+            <div class="input-area" id="inputArea">
+                <!-- Dynamic Input Groups -->
+            </div>
+        </div>
+
+        <div class="keypad-section">
+            <div class="keypad" id="keypad"></div>
+            <div class="action-row">
+                <button class="btn-action btn-show" id="btnShow" onclick="showHint()">?</button>
+                <button class="btn-action btn-check" id="btnCheck" onclick="checkAnswer()">ኣረጋግፅ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Overlays -->
+    <div id="success-overlay" class="overlay">
+        <div class="big-icon">⏳</div>
+        <h2 id="txtWin" style="font-size: 3rem; color: var(--success);">ንፉዕ!</h2>
+        <p style="font-size: 1.5rem; color: #64748b;" id="txtWinSub">Correct!</p>
+    </div>
+
+    <div id="error-overlay" class="overlay" style="background: #fee2e2;">
+        <div class="big-x">✕</div>
+        <h2 id="txtFail" style="font-size: 3rem; color: var(--danger);">ጌጋ!</h2>
+        <p style="font-size: 1.5rem; color: var(--danger);" id="txtFailSub">Try Again</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { title: "ምድማርን ምጉዳልን ኣሃድታት ግዘ", check: "ኣረጋግፅ", win: "ንፉዕ!", winsub: "ልክዕ መልሲ!", fail: "ጌጋ!", failsub: "እንደገና ፈትን", score: "ውፅኢት", high: "ዝለዓለ", level: "ደረጃ", units: { h: "ሰዓት", m: "ደቒቓ", s: "ሰከንድ" }, show: "መልሲ" },
+            am: { title: "የጊዜ መለኪያዎች መደመር እና መቀነስ", check: "አረጋግጥ", win: "ድንቅ ስራ!", winsub: "ትክክል!", fail: "ስህተት!", failsub: "እንደገና ይሞክሩ", score: "ውጤት", high: "ከፍተኛ", level: "ደረጃ", units: { h: "ሰዓት", m: "ደቂቃ", s: "ሰከንድ" }, show: "መልስ" },
+            en: { title: "Time Unit Operations", check: "Confirm", win: "Great!", winsub: "Correct Answer!", fail: "Wrong!", failsub: "Try Again", score: "Score", high: "High", level: "Level", units: { h: "hr", m: "min", s: "sec" }, show: "Show" },
+            om: { title: "Ida'uu fi Hir'isuu Yeroo", check: "Mirkaneessi", win: "Baay'ee Gaarii!", winsub: "Sirriidha!", fail: "Dogoggora!", failsub: "Irra deebi'i yaali", score: "Qabxii", high: "Olaanaa", level: "Sadarkaa", units: { h: "sa'a", m: "daq", s: "sek" }, show: "Agarsiisi" },
+            so: { title: "Isugeynta & Ka-goynta Waqtiga", check: "Hubi", win: "Shaqo Fiican!", winsub: "Waa sax!", fail: "Khalad!", failsub: "Markale isku day", score: "Dhibco", high: "Sare", level: "Heerka", units: { h: "saac", m: "daq", s: "ilb" }, show: "Tus" }
+        };
+
+        let score = 0, lang = 'ti', currentTask = null, busy = false, muted = false;
+        let userVals = ["", ""];
+        let activeIdx = 0;
+        let highScore = parseInt(localStorage.getItem('time_ops_623_high')) || 0;
+        let particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function toggleMute() {
+            muted = !muted;
+            document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊';
+        }
+
+        function sfx(type) {
+            if (muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if (type === 'tap') { o.type = 'sine'; o.frequency.setValueAtTime(800, n); g.gain.setValueAtTime(0.05, n); o.start(); o.stop(n + 0.05); }
+            else if (type === 'win') { o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1)); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.5); }
+            else if (type === 'err') { o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.exponentialRampToValueAtTime(40, n + 0.3); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.3); }
+        }
+
+        function setLanguage(l) {
+            lang = l;
+            localStorage.setItem('time_ops_lang', lang);
+            updateUI();
+        }
+
+        function updateUI() {
+            const t = i18n[lang];
+            document.getElementById('lblScore').innerText = t.score;
+            document.getElementById('lblHigh').innerText = t.high;
+            document.getElementById('lblLvl').innerText = t.level;
+            document.getElementById('pageTitle').innerText = t.title;
+            document.getElementById('btnCheck').innerText = t.check;
+            document.getElementById('btnShow').innerText = t.show;
+            document.getElementById('txtWin').innerText = t.win;
+            document.getElementById('txtWinSub').innerText = t.winsub;
+            document.getElementById('txtFail').innerText = t.fail;
+            document.getElementById('txtFailSub').innerText = t.failsub;
+            document.getElementById('valScore').innerText = score;
+            document.getElementById('valHigh').innerText = highScore;
+            document.getElementById('valLvlDisplay').innerText = Math.floor(score / 200) + 1;
+            if (currentTask) renderTask();
+        }
+
+        function generateTask() {
+            busy = false; userVals = ["", ""]; activeIdx = 0;
+            const level = Math.floor(score / 200) + 1;
+            const isAdd = Math.random() > 0.4;
+            const useHours = Math.random() > 0.5;
+            
+            const u1 = useHours ? 'h' : 'm';
+            const u2 = useHours ? 'm' : 's';
+            
+            let v1a, v1b, v2a, v2b, ansA, ansB;
+
+            if (level === 1) {
+                v1a = 0; v1b = Math.floor(Math.random() * 40) + 10;
+                v2a = 0; v2b = isAdd ? (Math.floor(Math.random() * 19) + 1) : (Math.floor(Math.random() * (v1b - 1)) + 1);
+                ansA = 0;
+                ansB = isAdd ? (v1b + v2b) : (v1b - v2b);
+            } else if (level === 2) {
+                v1a = Math.floor(Math.random() * 5) + 1;
+                v1b = Math.floor(Math.random() * 25) + 5;
+                v2a = Math.floor(Math.random() * 3) + 1;
+                v2b = isAdd ? Math.floor(Math.random() * 25) + 5 : Math.floor(Math.random() * (v1b - 1)) + 1;
+                ansA = isAdd ? (v1a + v2a) : (v1a - v2a);
+                ansB = isAdd ? (v1b + v2b) : (v1b - v2b);
+            } else if (level === 3) {
+                v1a = Math.floor(Math.random() * 4) + 4;
+                v1b = isAdd ? Math.floor(Math.random() * 40) + 10 : Math.floor(Math.random() * 20) + 5;
+                v2a = Math.floor(Math.random() * 3) + 1;
+                v2b = isAdd ? Math.floor(Math.random() * 30) + 30 : Math.floor(Math.random() * 20) + 30;
+                
+                if (isAdd) {
+                    let total = (v1a + v2a) * 60 + (v1b + v2b);
+                    ansA = Math.floor(total / 60);
+                    ansB = total % 60;
+                } else {
+                    let total1 = v1a * 60 + v1b;
+                    let total2 = v2a * 60 + v2b;
+                    let diff = total1 - total2;
+                    ansA = Math.floor(diff / 60);
+                    ansB = diff % 60;
+                }
+            } else {
+                v1a = Math.floor(Math.random() * 10) + 10;
+                v1b = Math.floor(Math.random() * 59);
+                v2a = Math.floor(Math.random() * 8) + 1;
+                v2b = Math.floor(Math.random() * 59);
+                
+                if (isAdd) {
+                    let total = (v1a + v2a) * 60 + (v1b + v2b);
+                    ansA = Math.floor(total / 60);
+                    ansB = total % 60;
+                } else {
+                    let total1 = v1a * 60 + v1b;
+                    let total2 = v2a * 60 + v2b;
+                    let diff = total1 - total2;
+                    ansA = Math.floor(diff / 60);
+                    ansB = diff % 60;
+                }
+            }
+
+            // Logic to handle 0 results by hiding boxes
+            currentTask = { v1a, v1b, v2a, v2b, ansA, ansB, isAdd, u1, u2 };
+            renderTask();
+        }
+
+        function renderTask() {
+            const t = i18n[lang];
+            const { v1a, v1b, v2a, v2b, isAdd, u1, u2, ansA, ansB } = currentTask;
+            const op = isAdd ? "+" : "-";
+            
+            const format = (a, b) => {
+                let s = "";
+                if (a > 0) s += `${a}${t.units[u1]} `;
+                s += `${b}${t.units[u2]}`;
+                return s;
+            };
+
+            document.getElementById('opDisplay').innerText = `${format(v1a, v1b)} ${op} ${format(v2a, v2b)}`;
+            
+            const showA = ansA !== 0;
+            const showB = ansB !== 0 || ansA === 0; // Show at least B if both are zero
+
+            // Auto-adjust active focus if the current box is hidden
+            if (!showA && activeIdx === 0) activeIdx = 1;
+            if (!showB && activeIdx === 1) activeIdx = 0;
+
+            const area = document.getElementById('inputArea');
+            area.innerHTML = `
+                ${showA ? `
+                <div class="input-group">
+                    <div class="ans-box ${activeIdx === 0 ? 'active' : ''}" id="box0" onclick="activeIdx=0; renderTask()">${userVals[0] || '?'}</div>
+                    <div class="unit-label">${t.units[u1]}</div>
+                </div>` : ''}
+                ${showB ? `
+                <div class="input-group">
+                    <div class="ans-box ${activeIdx === 1 ? 'active' : ''}" id="box1" onclick="activeIdx=1; renderTask()">${userVals[1] || '?'}</div>
+                    <div class="unit-label">${t.units[u2]}</div>
+                </div>` : ''}
+            `;
+        }
+
+        function press(k) {
+            if (busy) return;
+            sfx('tap');
+            const targetBox = document.getElementById(`box${activeIdx}`);
+            if (targetBox) targetBox.classList.remove('hinted');
+            
+            if (k === 'bk') userVals[activeIdx] = userVals[activeIdx].slice(0, -1);
+            else if (userVals[activeIdx].length < 3) userVals[activeIdx] += k;
+            renderTask();
+        }
+
+        function showHint() {
+            if (busy) return;
+            sfx('tap');
+            userVals[0] = currentTask.ansA.toString();
+            userVals[1] = currentTask.ansB.toString();
+            score = Math.max(0, score - 10);
+            updateUI();
+            
+            const b0 = document.getElementById('box0');
+            const b1 = document.getElementById('box1');
+            if(b0) b0.classList.add('hinted');
+            if(b1) b1.classList.add('hinted');
+            if(b0) b0.innerText = userVals[0];
+            if(b1) b1.innerText = userVals[1];
+        }
+
+        function checkAnswer() {
+            const { ansA, ansB } = currentTask;
+            const showA = ansA !== 0;
+            const showB = ansB !== 0 || ansA === 0;
+
+            if (busy) return;
+            // Check if visible fields are filled
+            if ((showA && userVals[0] === "") || (showB && userVals[1] === "")) return;
+            
+            busy = true;
+            const a = showA ? parseInt(userVals[0]) : 0;
+            const b = showB ? parseInt(userVals[1]) : 0;
+            
+            if (a === ansA && b === ansB) {
+                const multiplier = Math.floor(score / 200) + 1;
+                score += 30 * multiplier;
+                if (score > highScore) { highScore = score; localStorage.setItem('time_ops_623_high', highScore); }
+                handleWin();
+            } else {
+                handleErr();
+            }
+        }
+
+        function handleWin() {
+            sfx('win'); burst(300);
+            const overlay = document.getElementById('success-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                generateTask();
+                updateUI();
+            }, 1800);
+        }
+
+        function handleErr() {
+            sfx('err');
+            const overlay = document.getElementById('error-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                userVals = ["", ""]; 
+                // Reset active index to the first visible box
+                activeIdx = (currentTask.ansA !== 0) ? 0 : 1;
+                busy = false; renderTask();
+            }, 1800);
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#cd7f32', '#d4af37', '#0ea5e9', '#ffffff'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random()*c.width, y: c.height+20, vx: (Math.random()-0.5)*40, vy: (Math.random()-1.2)*65,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 2.5, r: Math.random()*360, rv: (Math.random()-0.5)*20
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => {
+            const kp = document.getElementById('keypad');
+            [1,2,3,4,5,6,7,8,9,0,'00','bk'].forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key'; 
+                if(k === 'bk') { b.innerText = '⌫'; b.classList.add('del'); }
+                else b.innerText = k;
+                b.onclick = () => press(k); 
+                kp.appendChild(b);
+            });
+            setLanguage('ti');
+            generateTask();
+        };
+    </script>
+</body>
+</html>

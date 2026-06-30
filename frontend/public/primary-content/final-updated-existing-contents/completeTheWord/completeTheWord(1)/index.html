@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <audio src="" id="sound" autoplay></audio>
+    
+    <title>FillWord</title>
+    <style>
+        /* Navigation Buttons */
+        .nav-buttons {
+            position: fixed;
+            top: 25px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+        }
+        
+        .nav-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .nav-button:hover {
+            transform: scale(1.1);
+            background: #45a049;
+        }
+        
+        .nav-button svg {
+            width: 24px;
+            height: 24px;
+            stroke: white;
+        }
+        
+        #muteButton.muted {
+            background: #f44336;
+        }
+        
+        #muteButton.muted:hover {
+            background: #d32f2f;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-buttons {
+                top: 15px;
+                left: 15px;
+                gap: 10px;
+            }
+            
+            .nav-button {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .nav-button svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+        
+        /* Stars Display */
+        .stars-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 25px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        @media (max-width: 768px) {
+            .stars-container {
+                top: 10px;
+                padding: 8px 15px;
+                gap: 6px;
+            }
+        }
+        
+        .star {
+            width: 35px;
+            height: 35px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23e0e0e0"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>') no-repeat center;
+            background-size: contain;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+        
+        @media (max-width: 768px) {
+            .star {
+                width: 25px;
+                height: 25px;
+            }
+        }
+        
+        .star.filled {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23FFD700"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>') no-repeat center;
+            background-size: contain;
+            transform: scale(1.3);
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.7));
+        }
+        
+        .star.lost {
+            animation: shake 0.5s ease-in-out, flashRed 0.5s ease-in-out;
+        }
+        
+        @keyframes flashRed {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.5)); }
+            50% { filter: drop-shadow(0 0 15px rgba(255, 0, 0, 0.8)); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        /* Completion Modal */
+        .completion-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            flex-direction: column;
+            text-align: center;
+            color: white;
+        }
+        
+        .completion-content {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 80%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: bounceIn 0.8s;
+        }
+        
+        @media (max-width: 768px) {
+            .completion-content {
+                padding: 30px 20px;
+                max-width: 90%;
+            }
+        }
+        
+        .completion-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .completion-icon {
+                font-size: 3.5rem;
+                margin-bottom: 15px;
+            }
+        }
+        
+        .completion-message {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .completion-message {
+                font-size: 1.5rem;
+                margin-bottom: 15px;
+            }
+        }
+        
+        .completion-submessage {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            .completion-submessage {
+                font-size: 1rem;
+                margin-bottom: 15px;
+            }
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(500px) rotate(360deg); opacity: 0; }
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 15px;
+            height: 15px;
+            background-color: #f0f;
+            opacity: 0;
+            animation: confetti 3s ease-in-out forwards;
+            z-index: 1000;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 80%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .modal-content {
+                padding: 25px 20px;
+                max-width: 90%;
+                border-radius: 12px;
+            }
+        }
+        
+        .modal h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .modal h2 {
+                font-size: 1.5rem;
+                margin-bottom: 15px;
+            }
+        }
+        
+        .modal p {
+            font-size: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .modal p {
+                font-size: 0.9rem;
+            }
+        }
+        
+        .start-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1.2rem;
+            margin: 10px 2px;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .start-btn {
+                padding: 10px 25px;
+                font-size: 1rem;
+            }
+        }
+        
+        .start-btn:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Restart Button Styles */
+        .restart-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ffffff;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .restart-btn {
+                top: 10px;
+                right: 10px;
+                width: 45px;
+                height: 45px;
+            }
+        }
+        
+        .restart-btn:hover {
+            transform: rotate(180deg);
+            background: #f8f9fa;
+        }
+        
+        .restart-icon {
+            width: 24px;
+            height: 24px;
+            color: #4CAF50;
+        }
+        
+        @media (max-width: 768px) {
+            .restart-icon {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Buttons -->
+    <div class="nav-buttons">
+        <button id="backButton" class="nav-button" title="Go Back">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </button>
+        <button id="muteButton" class="nav-button" title="Mute/Unmute">
+            <svg id="muteIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+        </button>
+    </div>
+    
+    <!-- Stars Display -->
+    <div class="stars-container" id="starsContainer">
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+    </div>
+    <!-- Completion Modal -->
+    <div id="completionModal" class="completion-modal">
+        <div class="completion-content">
+            <span class="completion-icon">🎉</span>
+            <div class="completion-message">Amazing Job!</div>
+            <div class="completion-submessage">You've completed all the words!</div>
+        </div>
+    </div>
+    
+    <!-- Start Game Modal -->
+    <div id="startModal" class="modal">
+        <div class="modal-content">
+            <h2>Complete the Word!</h2>
+            <p>Fill in the missing letters to complete the words.</p>
+            <button id="startBtn" class="start-btn">Start Game</button>
+        </div>
+    </div>
+    
+    <!-- Restart Button -->
+    <button id="restartBtn" class="restart-btn hidden" title="Restart Game">
+        <svg class="restart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6"></path>
+            <path d="M21.34 15.57a10 10 0 1 1-.57-8.38"></path>
+        </svg>
+    </button>
+    
+</body>
+<script>
+    let pageTitle = ["FillWord"];//end-var
+    let stars = 0;
+    const MAX_STARS = 5; // Maximum number of stars that can be earned
+    let consecutiveCorrect = 0; // Track consecutive correct answers
+    
+    // Initialize stars display
+    function updateStarsDisplay() {
+        const starsContainer = document.getElementById('starsContainer');
+        starsContainer.innerHTML = ''; // Clear existing stars
+        
+        for (let i = 0; i < MAX_STARS; i++) {
+            const star = document.createElement('div');
+            star.className = 'star' + (i < stars ? ' filled' : '');
+            starsContainer.appendChild(star);
+        }
+    }
+    
+    // Update stars based on correct/incorrect answer
+    function updateStars(isCorrect) {
+        if (isCorrect) {
+            consecutiveCorrect++;
+            // Add a star for every 2 consecutive correct answers
+            if (consecutiveCorrect >= 2 && stars < MAX_STARS) {
+                stars++;
+                updateStarsDisplay();
+                consecutiveCorrect = 0; // Reset counter after adding a star
+            }
+        } else {
+            consecutiveCorrect = 0; // Reset consecutive correct counter on wrong answer
+            if (stars > 0) {
+                const starElements = document.querySelectorAll('.star');
+                starElements[stars - 1].classList.add('lost');
+                setTimeout(() => {
+                    stars--;
+                    updateStarsDisplay();
+                }, 500);
+            }
+        }
+    }
+    function setPageTitle(selector) {
+      let titleElt = document.querySelector(selector);
+      let title = document.querySelector("title");
+      title.innerText = pageTitle[0];
+      if (titleElt) {
+        titleElt.innerText = pageTitle[0];
+      }
+    }
+    setPageTitle('.headerTextId')
+    let arrOfStr = ["Bad", "Rat", "Horse", "Goat"];//end-var
+    let arrOfStr2 = ["B", "R", "H", "G"];//end-var
+
+    let chosen = [];
+    let word;
+    let createdInput = null;
+
+    function createHintDiv(mainDiv) {
+        let div = createElement("div", "hint-div", "");
+        arrOfStr2.forEach(item=>{
+            let span = createElement("div", "span-hint", "");
+            span.innerText = item;
+            div.appendChild(span);
+        })
+
+        mainDiv.appendChild(div);
+    }
+
+    function createQuestionDiv(mainDiv) {
+        let div = createElement("div", "ques-div", "");
+        let randomIndex = randInt(0, arrOfStr.length - 1);
+        word = arrOfStr.splice(randomIndex, 1)[0]; // Remove and get the word
+        chosen.push(word);
+
+        let firstLetter = String(word).charAt(0);
+        createdInput = firstLetter; // Set createdInput to the first letter of the current word
+
+        String(word).forEachStr(letter=>{
+            if(letter === firstLetter) { // This is the letter to be filled in
+                let inp = createElement("input", "ques-input", "");
+                inp.maxLength = "1"; // Ensure only one character can be entered
+                div.appendChild(inp);
+            } else {
+                let span = createElement("span", "ques-span", "");
+                span.innerText = letter;
+                div.appendChild(span);
+            }
+        })
+
+        mainDiv.appendChild(div);
+    }
+
+    function reset() {
+        createdInput = null;
+        getElement(".ques-div")?.remove(); // Use optional chaining to prevent errors if element doesn't exist
+        getElement(".hint-div")?.remove(); // Use optional chaining
+    }
+
+    function chooseCorrect(str) {
+        let spanHints = getElements(".span-hint").clone();
+        spanHints.forEach(item=>{
+            if(item.innerText.toLowerCase() === str.toLowerCase()) {
+                item.onclick = correct
+            } else {
+                item.onclick = wrong
+            }
+        })
+    }
+
+    function createConfetti() {
+        const colors = ['#ff0', '#f0f', '#0ff', '#f80', '#8f0'];
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confFetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.top = '-20px';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.width = Math.random() * 10 + 5 + 'px';
+            confetti.style.height = Math.random() * 10 + 5 + 'px';
+            confetti.style.animationDelay = Math.random() * 2 + 's';
+            document.body.appendChild(confetti);
+            
+            // Remove confetti after animation
+            setTimeout(() => confetti.remove(), 3000);
+        }
+    }
+    
+    function showCompletionScreen() {
+        const messages = [
+            { main: 'Perfect!', sub: 'You\'re a word wizard! 🎩✨' },
+            { main: 'Awesome!', sub: 'You know your words well! 🌟' },
+            { main: 'Brilliant!', sub: 'You\'re on fire! 🔥' },
+            { main: 'Incredible!', sub: 'You make it look easy! 😎' },
+            { main: 'Superb!', sub: 'You\'re unstoppable! 💪' }
+        ];
+        
+        const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+        const completionModal = document.getElementById('completionModal');
+        
+        document.querySelector('.completion-message').textContent = randomMsg.main;
+        document.querySelector('.completion-submessage').textContent = randomMsg.sub;
+        
+        createConfetti();
+        completionModal.style.display = 'flex';
+        
+        // Hide completion modal and show start modal after delay
+        setTimeout(() => {
+            completionModal.style.display = 'none';
+            document.getElementById('startModal').classList.remove('hidden');
+            document.getElementById('restartBtn').classList.add('hidden');
+        }, 3000);
+    }
+    
+    function correctCondition() {
+        if(arrOfStr.length) {
+            reset();
+            createBothDivs()
+        } else {
+            // All words completed
+            reset();
+            showCompletionScreen();
+            // Reset game state for next round
+            arrOfStr = ["Bad", "Rat", "Horse", "Goat"]; // Reset to initial values
+            chosen = [];
+        }
+    }
+
+    function correct(e) {
+        e.target.style.color = "chartreuse";
+        getElement("#sound").src = "./assets/applause_greatjob_0.mp3"
+        getElement("input").value = createdInput;
+        getElement("input").style.border = "none";
+        updateStars(true); // Update stars for correct answer
+        setTimeout(correctCondition, 1500);
+    }
+
+    function wrong(e) {
+        e.target.style.color = "red";
+        getElement("#sound").src = "./assets/voice_text_tryagain.mp3"
+        getElement("input").style.border = "solid 10px red";
+        updateStars(false); // Update stars for wrong answer
+        setTimeout(function(){
+            e.target.style.color = "white"
+        }, 1000);
+    }
+
+    function createBothDivs() {
+        let mainDiv = createElement("div", "main-div", "");
+        createHintDiv(mainDiv);
+        createQuestionDiv(mainDiv);
+
+        document.body.insertBefore(mainDiv, document.body.childNodes[0]);
+        chooseCorrect(createdInput);
+    }
+
+    // Initialize stars display when the page loads
+    updateStarsDisplay();
+    
+    // Back button functionality
+    document.getElementById('backButton').addEventListener('click', function() {
+        window.history.back();
+    });
+    
+    // Mute/Unmute functionality
+    const sound = document.getElementById('sound');
+    const muteButton = document.getElementById('muteButton');
+    const muteIcon = document.getElementById('muteIcon');
+    let isMuted = false;
+    
+    muteButton.addEventListener('click', function() {
+        isMuted = !isMuted;
+        sound.muted = isMuted;
+        muteButton.classList.toggle('muted', isMuted);
+        
+        // Update the icon and button style
+        if (isMuted) {
+            muteIcon.innerHTML = `
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="1" y1="1" x2="23" y2="23" stroke="white" stroke-width="2"></line>
+            `;
+        } else {
+            muteIcon.innerHTML = `
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            `;
+        }
+    });
+    
+    // Start game when button is clicked
+    document.getElementById('startBtn').addEventListener('click', function() {
+        document.getElementById('startModal').classList.add('hidden');
+        document.getElementById('restartBtn').classList.remove('hidden');
+        createBothDivs();
+    });
+    
+    // Restart game functionality
+    document.getElementById('restartBtn').addEventListener('click', function() {
+        // Reset game state
+        arrOfStr = ["Bad", "Rat", "Horse", "Goat"]; // Reset to initial values
+        chosen = [];
+        createdInput = null;
+        // Reset score
+        stars = 0;
+        consecutiveCorrect = 0;
+        updateStarsDisplay();
+        
+        // Remove existing game elements
+        const mainDiv = document.querySelector('.main-div');
+        if (mainDiv) {
+            mainDiv.remove();
+        }
+        
+        // Create new game
+        createBothDivs();
+    });
+
+
+    //adding the utils.js file
+    
+    console.log('Hello from utils mod');
+
+let log = console.log;
+let table = console.table;
+
+function getElement(selector) {
+    return document.querySelector(selector);
+}
+
+function getElements(selector) {
+    return document.querySelectorAll(selector);
+}
+
+function createElement(_elem, _class="", _id="") {
+    let elem = document.createElement(_elem);
+    if(_class) {
+        elem.className = _class;
+    }
+    if(_id) {
+        elem.id = _id;
+    }
+    return elem;
+}
+
+function applyStyle(elem, style) { 
+    return elem.setAttribute("style", style);
+}
+
+async function playAudio(elem, src) {
+    elem.src = src;
+    await elem.play();
+}
+
+function pandaNews(state=1) { 
+    let bg = createElement("div", "pandaBg", "");
+    bg.style = {
+        width: `${window.innerWidth}px`,
+        height: `${window.innerHeight}px`,
+        background: "rgb(0, 0, 0, 0.9)"
+    };
+    let panda = createElement("img", "ok_panda", "");
+    if(state) panda.src = "./win.jpg";
+    else panda.src = "./null.jpg";
+    panda.animationName = "ok_panda";
+    panda.animationDuration = "2s";
+    return bg.appendChild(panda);
+}
+
+function randInt(min, max) {
+    return Math.floor(min + Math.random() * (max + 1 - min));
+}
+
+function myRandom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function arrify(coll) {
+    return Array.prototype.slice.call(coll);
+}
+
+function getRandomHexColor() {
+    let hexes = ["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"]
+    let hex = "#";
+    for(let i=0; i<6; i++) {
+        hex += myRandom(hexes);
+    }
+    return hex;
+}
+
+
+HTMLCollection.prototype.clone = function () {
+    let elems = [];
+    for (let i = 0; i < this.length; i++) {
+        elems.push(this[i]);
+    }
+    return elems;
+}
+
+NodeList.prototype.clone = function () {
+    let elems = [];
+    for (let i = 0; i < this.length; i++) {
+        elems.push(this[i]);
+    }
+    return elems;
+}
+
+Array.prototype.randomize = function () {
+    let _arr = [].concat(this);
+    _arr.forEach((item, index, __arr) => {
+        let a = Math.floor(Math.random() * __arr.length);
+        let tempA = __arr[a];
+        _arr[index] = tempA;
+        _arr[a] = item
+    })
+    return _arr;
+}
+
+String.prototype.forEachStr = function (func) {
+    for(let i=0; i<this.length; i++) {
+        func(this.slice(i, i+1));
+    }
+}
+</script>
+
+<style>
+    * {
+        padding: 0;
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+    
+    body {
+        background: url('./assets/background_summer_2.png') no-repeat;
+        background-size: cover;
+        background-position: center;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+    .hint-div {
+        position: absolute;
+        top: 65%;
+        left: 0;
+        right: 0;
+        cursor: pointer;
+        border-radius: 5px;
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+        padding: 15px 0;
+    }
+    
+    @media (max-width: 480px) {
+        .hint-div {
+            top: auto;
+            bottom: 15%;
+            padding: 10px 5px;
+        }
+    }
+
+    .span-hint {
+        text-align: center;
+        margin: 10px;
+        width: 60px;
+        height: 60px;
+        background:url("assets/ball_12.png") no-repeat center center;
+        background-size: contain;
+        border-radius: 50%;
+        font-weight: bold;
+        font-size: 2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        line-height: 1;
+    }
+    
+    @media (max-width: 480px) {
+        .span-hint {
+            width: 45px;
+            height: 45px;
+            font-size: 1.5rem;
+            margin: 6px;
+        }
+    }
+    .span-hint:hover{
+        transform: scale(1.2);
+        transition: .7s;
+    }
+
+    .ques-div {
+        position: absolute;
+        top: 25%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgb(107, 206, 8);
+        border: white solid 10px;
+        border-radius: 15px;
+        padding: 15px 25px;
+        white-space: nowrap;
+        max-width: 90%;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+    
+    @media (max-width: 480px) {
+        .ques-div {
+            top: 20%;
+            padding: 8px 12px;
+            border-width: 6px;
+            border-radius: 10px;
+            max-width: 95%;
+        }
+    }
+    .ques-span{
+        color: white;
+        font-size: 3.5rem;
+        font-weight: bold;
+        display: inline-block;
+        line-height: 1.2;
+        vertical-align: middle;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    @media (max-width: 768px) {
+        .ques-span {
+            font-size: 2.5rem;
+        }
+        .span-hint {
+            width: 50px;
+            height: 50px;
+            font-size: 1.8rem;
+            margin: 5px;
+        }
+        .hint-div {
+            top: auto;
+            bottom: 10%;
+            padding: 10px 0;
+        }
+        .ques-div {
+            top: 20%;
+            padding: 10px 15px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .ques-span {
+            font-size: 2rem;
+        }
+    }
+    input {
+        width: 70px;
+        height: 70px;
+        font-size: 3rem;
+        font-weight: bold;
+        background: white;
+        color: #333;
+        border: none;
+        border-radius: 10px;
+        text-align: center;
+        margin: 0 5px;
+        vertical-align: middle;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    @media (max-width: 768px) {
+        input {
+            width: 50px;
+            height: 50px;
+            font-size: 2rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        input {
+            width: 40px;
+            height: 40px;
+            font-size: 1.6rem;
+            margin: 0 3px;
+            border-radius: 8px;
+        }
+    }
+</style>
+</html>

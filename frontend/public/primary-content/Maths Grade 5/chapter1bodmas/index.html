@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BODMAS Rule - ቦድማስ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --b-color: #F72585; /* Brackets */
+            --o-color: #7209B7; /* Orders */
+            --dm-color: #4361EE; /* Div/Mul */
+            --as-color: #4CC9F0; /* Add/Sub */
+            --success: #43AA8B;
+            --wrong: #F94144;
+            --text: #2d3748;
+            --bg: #fdf4ff;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+
+        body {
+            font-family: 'Comic Neue', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--bg);
+            background-image: radial-gradient(#e9d5ff 2px, transparent 2px);
+            background-size: 30px 30px;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        /* --- Header --- */
+        header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 6px solid var(--o-color);
+            border-radius: 0 0 20px 20px;
+        }
+
+        .header-left, .header-right { width: 140px; }
+        .header-center { flex-grow: 1; text-align: center; }
+
+        .grade-badge {
+            background: var(--o-color);
+            color: white;
+            width: 45px; height: 45px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 1.2rem;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            border: 2px solid white;
+        }
+
+        h1 { color: var(--text); font-size: 1.6rem; font-weight: 800; margin: 0; }
+
+        /* Custom Dropdown */
+        .custom-select-wrapper { position: relative; display: inline-block; cursor: pointer; z-index: 200; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; font-weight: bold; color: var(--text);
+            height: 45px; background: #fff; border: 2px solid var(--o-color);
+            border-radius: 25px; box-shadow: 0 4px 0 #560bad;
+            width: 160px; transition: 0.2s;
+        }
+        .custom-select__trigger:active { transform: translateY(4px); box-shadow: none; }
+        .custom-select__options {
+            position: absolute; top: 120%; left: 0; right: 0;
+            background: transparent; opacity: 0; visibility: hidden;
+            pointer-events: none; transform: translateY(-10px);
+            transition: all 0.3s ease; display: flex; flex-direction: column; gap: 8px;
+        }
+        .custom-select.open .custom-select__options { opacity: 1; visibility: visible; pointer-events: all; transform: translateY(0); }
+        .custom-option { 
+            padding: 12px 15px; font-weight: 600; background: white;
+            border-radius: 12px; border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .custom-option:hover { background-color: var(--bg); color: var(--o-color); border-color: var(--o-color); transform: translateX(5px); }
+        .custom-option.selected { background-color: var(--o-color); color: #fff; border-color: #3f37c9; }
+        .arrow { width: 10px; height: 10px; border-left: 2px solid var(--o-color); border-bottom: 2px solid var(--o-color); transform: rotate(-45deg); transition: 0.3s; margin-top: -5px; }
+        .custom-select.open .arrow { transform: rotate(135deg); margin-top: 5px; }
+
+        /* --- Main Layout --- */
+        .container { max-width: 1400px; margin: 40px auto; padding: 0 40px; text-align: center; }
+
+        /* --- Legend / Cheat Sheet --- */
+        .bodmas-legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            width: 160px;
+            height: 180px;
+            border-radius: 15px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            position: relative;
+            cursor: help;
+        }
+        .legend-item:hover { transform: translateY(-5px); }
+        
+        .l-letter { font-size: 3.4rem; font-weight: 900; }
+        .l-desc { font-size: 1.15rem; text-align: center; margin-top: 10px; opacity: 0.95; padding: 0 10px; line-height: 1.2; }
+
+        .l-rank { position: absolute; top: -12px; background: white; color: #333; width: 34px; height: 34px; border-radius: 50%; font-size: 1rem; display: flex; align-items: center; justify-content: center; border: 2px solid #eee; font-weight: 900; }
+
+        .li-b { background: var(--b-color); }
+        .li-o { background: var(--o-color); }
+        .li-d { background: var(--dm-color); }
+        .li-m { background: var(--dm-color); }
+        .li-a { background: var(--as-color); }
+        .li-s { background: var(--as-color); }
+
+        /* --- Game Area --- */
+        .game-card {
+            background: white;
+            border-radius: 30px;
+            padding: 70px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 5px solid white;
+            min-height: 560px;
+            position: relative;
+        }
+
+        .instruction-box {
+            font-size: 1.9rem;
+            color: #4b5563;
+            margin-bottom: 50px;
+            font-weight: bold;
+        }
+
+        /* Interactive Equation */
+        .equation-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 4.4rem;
+            font-weight: 900;
+            margin: 50px 0;
+            min-height: 100px;
+        }
+
+        /* Equation Elements */
+        .eq-num { color: #2d3748; transition: all 0.5s; }
+        
+        .eq-op {
+            cursor: pointer;
+            padding: 18px 34px;
+            border-radius: 18px;
+            background: #f3f4f6;
+            color: var(--o-color);
+            border: 3px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .eq-op:hover {
+            background: #e0e7ff;
+            border-color: var(--o-color);
+            transform: scale(1.1);
+        }
+
+        .eq-op.shake { animation: shake 0.5s; background: #ffe4e6; color: var(--wrong); border-color: var(--wrong); }
+        
+        /* Merging Animation Container */
+        .merge-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px;
+            border-radius: 20px;
+            transition: all 0.5s;
+        }
+        .merge-group.active {
+            background: #dcfce7;
+            transform: scale(1.1);
+        }
+        .merge-group.collapsing {
+            transform: scale(0);
+            opacity: 0;
+        }
+
+        /* Next Button */
+        .btn-next {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 14px 48px;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #15803d;
+            margin-top: 30px;
+            display: none;
+        }
+        .btn-next:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Hint */
+        .hint-text {
+            color: var(--o-color);
+            font-size: 1.2rem;
+            margin-top: 20px;
+            min-height: 30px;
+            font-weight: bold;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes popResult {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            header { padding: 1rem; flex-wrap: wrap; gap: 10px; }
+            .header-center { order: 3; width: 100%; margin-top: 5px; }
+            .header-left, .header-right { width: auto; }
+            .container { padding: 0 16px; margin: 20px auto; }
+            .game-card { padding: 28px; min-height: 420px; }
+            .instruction-box { font-size: 1.3rem; margin-bottom: 25px; }
+            .legend-item { width: 110px; height: 130px; }
+            .l-letter { font-size: 2.2rem; }
+            .l-desc { font-size: 0.9rem; margin-top: 6px; padding: 0 6px; }
+            .l-rank { width: 26px; height: 26px; font-size: 0.85rem; top: -10px; }
+            .equation-wrapper { font-size: 2.6rem; gap: 10px; margin: 25px 0; }
+            .eq-op { padding: 10px 18px; }
+        }
+
+        @media (max-width: 480px) {
+            .bodmas-legend { gap: 10px; margin-bottom: 25px; }
+            .legend-item { width: 96px; height: 118px; border-radius: 14px; }
+            .l-letter { font-size: 2rem; }
+            .l-desc { font-size: 0.8rem; margin-top: 5px; padding: 0 6px; }
+            .equation-wrapper { font-size: 2.2rem; gap: 8px; }
+            .eq-op { padding: 8px 14px; border-radius: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <div class="grade-badge">5</div>
+    </div>
+    <div class="header-center">
+        <h1 id="header-title">ቦድማስ (BODMAS)</h1>
+    </div>
+    <div class="header-right">
+        <!-- Custom Dropdown -->
+        <div class="custom-select-wrapper">
+            <div class="custom-select">
+                <div class="custom-select__trigger">
+                    <span id="current-lang-label">🗺️ ትግርኛ</span>
+                    <div class="arrow"></div>
+                </div>
+                <div class="custom-select__options">
+                    <span class="custom-option selected" data-value="ti">ትግርኛ</span>
+                    <span class="custom-option" data-value="am">አማርኛ</span>
+                    <span class="custom-option" data-value="en">English</span>
+                    <span class="custom-option" data-value="om">Afan Oromoo</span>
+                    <span class="custom-option" data-value="so">Soomaali</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    
+    <!-- Cheat Sheet -->
+    <div class="bodmas-legend">
+        <div class="legend-item li-b">
+            <div class="l-rank">1</div>
+            <span class="l-letter">B</span>
+            <span class="l-desc" id="desc-b">Brackets<br>(ቅንፍ)</span>
+        </div>
+        <div class="legend-item li-o">
+            <div class="l-rank">2</div>
+            <span class="l-letter">O</span>
+            <span class="l-desc" id="desc-o">Orders<br>(ሓይሊ)</span>
+        </div>
+        <div class="legend-item li-d">
+            <div class="l-rank">3</div>
+            <span class="l-letter">D</span>
+            <span class="l-desc" id="desc-d">Division<br>(ምምቃል)</span>
+        </div>
+        <div class="legend-item li-m">
+            <div class="l-rank">3</div>
+            <span class="l-letter">M</span>
+            <span class="l-desc" id="desc-m">Multiplication<br>(ምርባሕ)</span>
+        </div>
+        <div class="legend-item li-a">
+            <div class="l-rank">4</div>
+            <span class="l-letter">A</span>
+            <span class="l-desc" id="desc-a">Addition<br>(ምድማር)</span>
+        </div>
+        <div class="legend-item li-s">
+            <div class="l-rank">4</div>
+            <span class="l-letter">S</span>
+            <span class="l-desc" id="desc-s">Subtraction<br>(ምጉዳል)</span>
+        </div>
+    </div>
+
+    <div class="game-card">
+        <p class="instruction-box" id="instruction">ቅድም ክሰርሕ ዝግበኦ ምልክት ጠውቁ።</p>
+
+        <div class="equation-wrapper" id="equation-area">
+            <!-- Dynamic Equation Content -->
+        </div>
+
+        <div class="hint-text" id="hint-area"></div>
+
+        <button class="btn-next" onclick="nextLevel()" id="btn-next">
+            <span id="lbl-next">ቀፃሊ (Next)</span> ➡
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- Audio Engine ---
+    const AudioEngine = {
+        ctx: new (window.AudioContext || window.webkitAudioContext)(),
+        playTone(freq, type, duration) {
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.stop(this.ctx.currentTime + duration);
+        },
+        playPop() { this.playTone(600, 'sine', 0.1); },
+        playError() { this.playTone(150, 'sawtooth', 0.3); },
+        playWin() { 
+            this.playTone(523, 'sine', 0.2); 
+            setTimeout(() => this.playTone(659, 'sine', 0.2), 200);
+            setTimeout(() => this.playTone(784, 'sine', 0.4), 400);
+        }
+    };
+
+    const translations = {
+        ti: {
+            title: "ቦድማስ (BODMAS)",
+            inst: "ቅድም ክስራሕ ዝግበኦ ምልክት ጠውቁ።",
+            hint: "ኣይኮነን! መጀመርታ {op} ክሰርሕ ኣለዎ።",
+            next: "ቀፃሊ",
+            desc: { b:"ቅንፍ", o:"ሓይሊ", d:"ምምቃል", m:"ምርባሕ", a:"ምድማር", s:"ምጉዳል" },
+            done: "ብሉጽ! መልሲ፡ "
+        },
+        am: {
+            title: "ቦድማስ (BODMAS)",
+            inst: "መጀመሪያ ሊሰራ የሚገባውን ምልክት ይጫኑ።",
+            hint: "አይደለም! መጀመሪያ {op} መስራት አለበት።",
+            next: "ቀጣይ",
+            desc: { b:"ቅንፍ", o:"ርቢ", d:"ማካፈል", m:"ማባዛት", a:"መደመር", s:"መቀነስ" },
+            done: "ጎበዝ! መልስ፡ "
+        },
+        en: {
+            title: "BODMAS Rule",
+            inst: "Click the operation to solve first.",
+            hint: "Oops! You must do {op} first.",
+            next: "Next Level",
+            desc: { b:"Brackets", o:"Orders", d:"Division", m:"Multiply", a:"Addition", s:"Subtract" },
+            done: "Great! Answer: "
+        },
+        om: {
+            title: "Seera BODMAS",
+            inst: "Mallattoo dura hojjetamuu qabu tuqi.",
+            hint: "Lakki! Dura {op} hojjechuu qabda.",
+            next: "Itti Aanu",
+            desc: { b:"Kutaa", o:"Ajaja", d:"Hiru", m:"Baay'isuu", a:"Ida'uu", s:"Hir'isuu" },
+            done: "Baay'ee gaarii! Deebii: "
+        },
+        so: {
+            title: "Sharciga BODMAS",
+            inst: "Guji calaamadda ay tahay in marka hore la xaliyo.",
+            hint: "Maya! Waa inaad {op} marka hore sameysaa.",
+            next: "Xiga",
+            desc: { b:"Qawsta", o:"Awooda", d:"Qaybin", m:"Iskudhufasho", a:"Kudarid", s:"Kalagoyn" },
+            done: "Wanaagsan! Jawaabta: "
+        }
+    };
+
+    let currentLang = 'ti';
+    let currentLevelIdx = 0;
+    
+    // Levels Logic
+    // Structure: array of tokens. Operators are objects { type: 'op', val: '+', p: 1 }
+    // p = priority (higher is first). 
+    // Brackets are simulated by grouping in logic or visually represented.
+    // For simplicity in this demo, we will use a flat structure with explicit priorities.
+    // Level 1: 3 + 5 x 2. x has p=2, + has p=1.
+    
+    const levels = [
+        {
+            // 3 + 5 x 2
+            tokens: [
+                { id: 'n1', val: 3 },
+                { id: 'op1', val: '+', p: 1, type: 'op' },
+                { id: 'n2', val: 5 },
+                { id: 'op2', val: 'x', p: 2, type: 'op' },
+                { id: 'n3', val: 2 }
+            ]
+        },
+        {
+            // 10 - 4 ÷ 2
+            tokens: [
+                { id: 'n1', val: 10 },
+                { id: 'op1', val: '-', p: 1, type: 'op' },
+                { id: 'n2', val: 4 },
+                { id: 'op2', val: '÷', p: 2, type: 'op' },
+                { id: 'n3', val: 2 }
+            ]
+        },
+        {
+            // (2 + 3) x 4
+            // Represent brackets visually, click '+' inside brackets first
+            // We give inside bracket op higher priority
+            tokens: [
+                { id: 'b1', val: '(', type: 'text' },
+                { id: 'n1', val: 2 },
+                { id: 'op1', val: '+', p: 10, type: 'op' }, // High priority due to brackets
+                { id: 'n2', val: 3 },
+                { id: 'b2', val: ')', type: 'text' },
+                { id: 'op2', val: 'x', p: 2, type: 'op' },
+                { id: 'n3', val: 4 }
+            ]
+        },
+        {
+            // 20 ÷ 2 + 3 x 2
+            tokens: [
+                { id: 'n1', val: 20 },
+                { id: 'op1', val: '÷', p: 2, type: 'op', order: 1 }, // Left to right rule for equal precedence
+                { id: 'n2', val: 2 },
+                { id: 'op2', val: '+', p: 1, type: 'op' },
+                { id: 'n3', val: 3 },
+                { id: 'op3', val: 'x', p: 2, type: 'op', order: 2 },
+                { id: 'n4', val: 2 }
+            ]
+        }
+    ];
+
+    let currentTokens = [];
+
+    function initLevel(idx) {
+        // Deep copy tokens to avoid mutation issues on reset
+        currentTokens = JSON.parse(JSON.stringify(levels[idx].tokens));
+        renderEquation();
+        document.getElementById('btn-next').style.display = 'none';
+        document.getElementById('hint-area').innerText = '';
+    }
+
+    function renderEquation() {
+        const container = document.getElementById('equation-area');
+        container.innerHTML = '';
+
+        currentTokens.forEach((tok, index) => {
+            if (tok.type === 'op') {
+                const el = document.createElement('div');
+                el.className = 'eq-op';
+                el.innerText = tok.val;
+                el.onclick = () => handleOpClick(index);
+                el.id = `token-${index}`;
+                container.appendChild(el);
+            } else if (tok.type === 'text') {
+                const el = document.createElement('span');
+                el.className = 'eq-num'; // Style brackets like numbers color-wise
+                el.style.color = 'var(--b-color)';
+                el.innerText = tok.val;
+                container.appendChild(el);
+            } else {
+                // Number
+                const el = document.createElement('span');
+                el.className = 'eq-num';
+                el.innerText = tok.val;
+                el.id = `token-${index}`;
+                container.appendChild(el);
+            }
+        });
+    }
+
+    function handleOpClick(index) {
+        const clickedOp = currentTokens[index];
+        
+        // Check if this is the highest priority op available
+        // Rule: Higher P first. If Ps are equal, check 'order' (Left to Right) or index.
+        // For simplicity in this game: standard BODMAS. D&M equal, A&S equal.
+        // We defined explicit 'p' in level data.
+        
+        // Find max P currently in tokens
+        let maxP = -1;
+        let ops = currentTokens.filter(t => t.type === 'op');
+        ops.forEach(o => { if(o.p > maxP) maxP = o.p; });
+
+        // Filter ops with maxP
+        const topOps = ops.filter(o => o.p === maxP);
+        
+        // If multiple top ops, usually Left to Right rule applies.
+        // Our data includes an optional 'order' property for L-R tie breaking
+        // If 'order' exists, pick lowest order. If not, pick lowest index (leftmost).
+        // Let's assume leftmost index is correct for simple BODMAS L-R.
+        // We need to find the token in currentTokens that corresponds to the topOp
+        
+        // Is clickedOp valid?
+        const isValid = (clickedOp.p === maxP) && (topOps.indexOf(clickedOp) === 0); 
+        // Logic: Must match max priority. If multiple match max, must be the first one (Left to Right).
+
+        if (isValid) {
+            // CORRECT
+            solveStep(index);
+        } else {
+            // WRONG
+            const el = document.getElementById(`token-${index}`);
+            el.classList.add('shake');
+            setTimeout(() => el.classList.remove('shake'), 500);
+            
+            AudioEngine.playError();
+            
+            // Hint
+            const t = translations[currentLang];
+            let missingOp = "BODMAS";
+            if(maxP > clickedOp.p) {
+                // Determine what category maxP is
+                // Rough mapping based on P values assigned in levels
+                if(maxP >= 10) missingOp = t.desc.b;
+                else if(maxP === 2) missingOp = t.desc.d + "/" + t.desc.m;
+            } else {
+                // Same priority but wrong order (L-R)
+                missingOp = "Left to Right";
+            }
+            
+            document.getElementById('hint-area').innerText = t.hint.replace('{op}', missingOp);
+        }
+    }
+
+    function solveStep(opIndex) {
+        AudioEngine.playPop();
+        document.getElementById('hint-area').innerText = '';
+
+        const opToken = currentTokens[opIndex];
+        const prevToken = currentTokens[opIndex - 1]; // Number before
+        const nextToken = currentTokens[opIndex + 1]; // Number after
+
+        // Calculate Result
+        let result = 0;
+        const v1 = prevToken.val;
+        const v2 = nextToken.val;
+        
+        if(opToken.val === '+') result = v1 + v2;
+        if(opToken.val === '-') result = v1 - v2;
+        if(opToken.val === 'x') result = v1 * v2;
+        if(opToken.val === '÷') result = v1 / v2;
+
+        // Animate
+        // We want to visually replace [prev, op, next] with [result]
+        // Simple approach: Re-render array with new value.
+        // Better: Wrap them in a div, shrink, then re-render.
+        
+        // Update Array Logic
+        // Remove prev, op, next. Insert result.
+        // Also check if surrounded by brackets that become redundant (e.g. ( 5 ) -> 5)
+        
+        const newToken = { id: `res-${Date.now()}`, val: result };
+        
+        // Remove 3 items starting at opIndex-1
+        currentTokens.splice(opIndex - 1, 3, newToken);
+
+        // Check for redundant brackets: if prev is '(' and next is ')'
+        // The new token is now at opIndex-1
+        const newIdx = opIndex - 1;
+        if (newIdx > 0 && newIdx < currentTokens.length - 1) {
+            if (currentTokens[newIdx-1].val === '(' && currentTokens[newIdx+1].val === ')') {
+                // Remove brackets
+                currentTokens.splice(newIdx+1, 1); // Remove )
+                currentTokens.splice(newIdx-1, 1); // Remove (
+            }
+        }
+
+        renderEquation();
+
+        // Check Win
+        const remainingOps = currentTokens.filter(t => t.type === 'op');
+        if (remainingOps.length === 0) {
+            // Level Complete
+            AudioEngine.playWin();
+            const t = translations[currentLang];
+            document.getElementById('hint-area').innerText = t.done + currentTokens[0].val;
+            document.getElementById('btn-next').style.display = 'inline-block';
+        }
+    }
+
+    function nextLevel() {
+        currentLevelIdx = (currentLevelIdx + 1) % levels.length;
+        initLevel(currentLevelIdx);
+    }
+
+    // --- Language Logic ---
+    const selectWrapper = document.querySelector('.custom-select-wrapper');
+    const selectCustom = document.querySelector('.custom-select');
+    const options = document.querySelectorAll('.custom-option');
+
+    selectWrapper.addEventListener('click', function() {
+        selectCustom.classList.toggle('open');
+    });
+
+    options.forEach(option => {
+        option.addEventListener('click', function() {
+            if (!this.classList.contains('selected')) {
+                this.parentNode.querySelector('.custom-option.selected').classList.remove('selected');
+                this.classList.add('selected');
+                const label = this.textContent;
+                const value = this.getAttribute('data-value');
+                document.getElementById('current-lang-label').textContent = "🗺️ " + label;
+                currentLang = value;
+                updateText();
+            }
+        });
+    });
+
+    window.addEventListener('click', function(e) {
+        if (!selectCustom.contains(e.target)) {
+            selectCustom.classList.remove('open');
+        }
+    });
+
+    function updateText() {
+        const t = translations[currentLang];
+        document.getElementById('header-title').textContent = t.title;
+        document.getElementById('instruction').textContent = t.inst;
+        document.getElementById('lbl-next').textContent = t.next;
+        
+        // Update Legend
+        document.getElementById('desc-b').innerHTML = "B<br>" + t.desc.b;
+        document.getElementById('desc-o').innerHTML = "O<br>" + t.desc.o;
+        document.getElementById('desc-d').innerHTML = "D<br>" + t.desc.d;
+        document.getElementById('desc-m').innerHTML = "M<br>" + t.desc.m;
+        document.getElementById('desc-a').innerHTML = "A<br>" + t.desc.a;
+        document.getElementById('desc-s').innerHTML = "S<br>" + t.desc.s;
+    }
+
+    // Initial
+    window.onload = function() {
+        initLevel(0);
+    }
+
+</script>
+</body>
+</html>

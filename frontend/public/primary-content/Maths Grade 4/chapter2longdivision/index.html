@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Long Division Master | ስነስርዓት ምምቃል</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #334155;
+            --paper: #ffffff;
+            --line-blue: #e2e8f0;
+            --math-blue: #0ea5e9; /* Quotient Color */
+            --math-red: #ef4444;  /* Subtrahend/Remainder Color */
+            --math-green: #10b981;
+            --accent: #f59e0b;
+            --bg-page: #fdf2f8; /* Soft pinkish/white background */
+            --shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--bg-page);
+            background-image: 
+                linear-gradient(var(--line-blue) 1px, transparent 1px),
+                linear-gradient(90deg, var(--line-blue) 1px, transparent 1px);
+            background-size: 40px 40px;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden;
+            color: var(--ink);
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6000; }
+
+        header {
+            width: 100%; max-width: 1200px; padding: 15px 25px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(10px);
+            border-bottom: 2px solid var(--line-blue);
+        }
+
+        .badges { display: flex; gap: 12px; align-items: center; flex-wrap: nowrap; }
+        .stat-pill { 
+            background: #fff; padding: 8px 16px; border-radius: 12px; font-weight: 800; font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px solid var(--line-blue);
+            display: flex; align-items: center; gap: 8px; white-space: nowrap;
+        }
+        .stat-val { color: var(--math-blue); }
+
+        .controls-row { display: flex; gap: 10px; align-items: center; }
+
+        .btn-mute {
+            background: #fff; border: 2px solid var(--line-blue);
+            color: var(--ink); width: 45px; height: 45px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; transition: 0.2s;
+        }
+
+        .lang-select {
+            padding: 8px 16px; border-radius: 12px; border: 2px solid var(--line-blue); font: inherit; font-weight: bold; cursor: pointer;
+            background: #fff; color: var(--ink); outline: none; font-size: 0.9rem;
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 1400px; display: flex; flex-direction: column; 
+            padding: 20px; gap: 20px; z-index: 10; justify-content: flex-start; align-items: center;
+        }
+
+        .prompt-card {
+            background: white; border-radius: 20px; padding: 20px 40px; border: 3px solid var(--math-blue);
+            width: 100%; max-width: 800px; text-align: center;
+            box-shadow: var(--shadow); position: relative;
+        }
+        .prompt-text { font-size: 1.5rem; font-weight: 800; color: var(--ink); }
+
+        /* Long Division Board - Huge Desktop presence */
+        .board-container {
+            background: white; border-radius: 35px; padding: 50px;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.08); border: 1px solid var(--line-blue);
+            min-width: 450px; max-width: 95%; overflow-x: auto;
+            display: flex; flex-direction: column; align-items: center;
+            position: relative;
+        }
+
+        .division-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 60px);
+            grid-auto-rows: 75px;
+            justify-content: center;
+            font-family: monospace;
+            font-weight: 800;
+            font-size: 3.5rem;
+        }
+
+        .cell {
+            display: flex; align-items: center; justify-content: center;
+            position: relative; width: 60px; height: 75px;
+        }
+
+        .cell.input-cell {
+            background: #f8fafc; border-radius: 12px; border: 3px dashed #94a3b8;
+            cursor: pointer; transition: 0.2s; color: var(--math-blue);
+        }
+        .cell.input-cell.active {
+            background: white; border-style: solid; border-color: var(--math-blue);
+            box-shadow: 0 0 30px rgba(14, 165, 233, 0.4); transform: scale(1.15);
+            z-index: 10;
+        }
+        .cell.input-cell.wrong {
+            border-color: var(--math-red); background: #fee2e2; animation: shake 0.4s;
+        }
+
+        .cell.quotient { color: var(--math-blue); }
+        .cell.dividend { color: var(--ink); }
+        .cell.subtrahend { color: var(--math-red); }
+        .cell.remainder { color: var(--math-red); }
+        .cell.divisor { color: var(--ink); }
+
+        .bracket-top { border-top: 6px solid var(--ink); }
+        .bracket-left { border-left: 6px solid var(--ink); border-radius: 20px 0 0 0; }
+        
+        .sub-line { 
+            position: absolute; bottom: 8px; left: 5%; width: 90%; height: 6px; 
+            background: var(--math-red); border-radius: 4px; 
+        }
+
+        .arrow-down {
+            position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+            width: 4px; height: 110%; background: var(--math-blue);
+            display: flex; align-items: flex-end; justify-content: center; opacity: 0.6;
+        }
+        .arrow-down::after {
+            content: '▼'; color: var(--math-blue); font-size: 1.2rem; margin-bottom: -15px;
+        }
+
+        /* Keypad */
+        .keypad-section { width: 100%; max-width: 550px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 40px; }
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; }
+        .key {
+            height: 75px; background: white; border: 2px solid var(--line-blue); border-radius: 20px;
+            font-size: 2.2rem; font-weight: 800; color: var(--ink); cursor: pointer;
+            box-shadow: 0 6px 0 var(--line-blue); transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(4px); box-shadow: none; }
+        .key.del { background: #fff1f2; color: var(--math-red); border-color: #fecaca; box-shadow: 0 6px 0 #fecaca; }
+        .key.check { 
+            grid-column: 1 / -1; background: var(--math-green); color: white; 
+            box-shadow: 0 8px 0 #065f46; font-size: 2rem; height: 90px; margin-top: 10px;
+            text-transform: uppercase; letter-spacing: 2px; border-radius: 25px; font-weight: 900;
+        }
+        .key.show-ans {
+            grid-column: 1 / -1; background: #f8fafc; color: var(--math-blue);
+            border: 2px solid var(--line-blue); font-size: 1rem; height: 50px; border-radius: 15px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            margin-top: 5px; opacity: 0.9;
+        }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+        #success-overlay {
+            position: fixed; inset: 0; background: rgba(255, 255, 255, 0.98);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 7000; color: var(--ink); text-align: center;
+            backdrop-filter: blur(20px);
+        }
+        #success-overlay h2 { font-size: 5rem; margin: 20px 0; color: var(--math-green); }
+
+        @media (max-width: 1024px) {
+            .division-grid { grid-template-columns: repeat(auto-fill, 45px); grid-auto-rows: 60px; font-size: 2.2rem; }
+            .cell { width: 45px; height: 60px; }
+            .prompt-text { font-size: 1.2rem; }
+        }
+
+        @media (max-width: 600px) {
+            header { flex-direction: column; gap: 10px; }
+            .badges { justify-content: center; width: 100%; }
+            .controls-row { width: 100%; justify-content: center; }
+            .cell { width: 38px; height: 50px; font-size: 1.8rem; }
+            .division-grid { grid-template-columns: repeat(auto-fill, 38px); grid-auto-rows: 50px; }
+            .board-container { padding: 25px 15px; }
+            .key { height: 60px; font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+
+    <header>
+        <div class="badges">
+            <div class="stat-pill">🆙 <span id="lblLvl">Level</span>: <span id="valLvl" class="stat-val">1</span></div>
+            <div class="stat-pill">👑 <span id="lblHigh">High</span>: <span id="valHigh" class="stat-val">0</span></div>
+            <div class="stat-pill">⭐ <span id="lblScore">Score</span>: <span id="valScore" class="stat-val">0</span></div>
+        </div>
+        <div class="controls-row">
+            <button class="btn-mute" id="muteBtn" onclick="toggleMute()">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="prompt-card">
+            <div class="prompt-text" id="promptText">...</div>
+        </div>
+
+        <div class="board-container" id="board">
+            <div class="division-grid" id="divGrid">
+                <!-- Division cells injected here -->
+            </div>
+        </div>
+
+        <div class="keypad-section">
+            <div class="keypad" id="keypad"></div>
+            <button class="key check" id="btnCheck" onclick="processCurrentStep()">ቀጻሊ (Next Step)</button>
+            <button class="key show-ans" id="btnShow" onclick="showAnswer()">💡 መልሲ ኣርእየኒ (Show Answer)</button>
+        </div>
+    </div>
+
+    <div id="success-overlay">
+        <div style="font-size: 8rem; animation: bounce 1s infinite alternate;">🏆</div>
+        <h2 id="txtWin">Great Job!</h2>
+        <p style="font-size: 2rem;" id="txtWinSub">ብትኽክል መቒልካዮ ኣለኻ!</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { prompt: "መቒልካ መልስ ጸሓፍ", check: "ቀጻሊ ስጉምቲ", win: "ንኡድ ስራሕ!", winsub: "ብትኽክል መሊስካዮ ኣለኻ!", score: "ነጥቢ", high: "ዝለዓለ", level: "ደረጃ", step1: "ክንደይ {v} ኣብ {n} ኣለዉ?", step2: "{q} × {v} ክንደይ እዩ?", step3: "{a} - {b} ክንደይ እዩ?", step4: "ነቲ ዝቕፅል ኣሃዝ {d} ኣውርዶ", show: "💡 መልሲ ኣርእየኒ" },
+            am: { prompt: "አካፍልና መልሱን ጻፍ", check: "ቀጣይ እርምጃ", win: "ድንቅ ስራ!", winsub: "በትክክል መልሰዋል!", score: "ነጥብ", high: "ከፍተኛ", level: "ደረጃ", step1: "በ{n} ውስጥ ስንት {v} አሉ?", step2: "{q} × {v} ስንት ነው?", step3: "{a} - {b} ስንት ነው?", step4: "የሚቀጥለውን አሃዝ {d} አውርድ", show: "💡 መልሱን አሳይ" },
+            en: { prompt: "Solve step by step", check: "Next Step", win: "Great Job!", winsub: "You solved it correctly!", score: "Score", high: "High", level: "Level", step1: "How many {v}s are in {n}?", step2: "What is {q} × {v}?", step3: "What is {a} - {b}?", step4: "Bring down the next digit {d}", show: "💡 Show Answer" },
+            om: { prompt: "Tartiibaan furi", check: "Tarkaanfii Itti Aanu", win: "Hojii Gaarii!", winsub: "Sirriitti hiriirsiteetta!", score: "Qabxii", high: "Olaanaa", level: "Sadarkaa", step1: "{n} keessatti {v} meeqatu jira?", step2: "{q} × {v} meeqa ta'a?", step3: "{a} - {b} meeqa ta'a?", step4: "Lakkoofsa itti aanu {d} gadi buusi", show: "💡 Deebii agarsiisi" },
+            so: { prompt: "Tallaabo tallaabo u xalli", check: "Tallaabada Xigta", win: "Shaqo Fiican!", winsub: "Si sax ah ayaad u jawaabtay!", score: "Dhibco", high: "Sare", level: "Heerka", step1: "Imisa {v} ayaa ku jira {n}?", step2: "Waa imisa {q} × {v}?", step3: "Waa imisa {a} - {b}?", step4: "Hoos u soo deji lambarka xiga {d}", show: "💡 Tusi jawaabta" }
+        };
+
+        let score = 0, lang = 'ti', busy = false, muted = false;
+        let highScore = parseInt(localStorage.getItem('long_div_high_full_final')) || 0;
+        let currentProblem = null;
+        let steps = [];
+        let currentStepIdx = 0;
+        let userInput = "";
+        let particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(600, n); o.frequency.exponentialRampToValueAtTime(300, n + 0.1);
+                g.gain.setValueAtTime(0.05, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.8);
+                o.start(); o.stop(n + 0.8);
+            } else {
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.3);
+                o.start(); o.stop(n + 0.3);
+            }
+        }
+
+        function toggleMute() {
+            muted = !muted;
+            document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊';
+        }
+
+        function generateProblem() {
+            const levelNum = Math.floor(score / 50) + 1;
+            let divisor = Math.floor(Math.random() * 7) + 2; 
+            
+            let dividendDigits = levelNum === 1 ? 3 : (levelNum === 2 ? 4 : 5);
+            let dividend = Math.floor(Math.random() * Math.pow(10, dividendDigits - 1) * 8) + Math.pow(10, dividendDigits - 1);
+            
+            const sDividend = dividend.toString();
+            steps = [];
+            let combined = "";
+
+            for (let i = 0; i < sDividend.length; i++) {
+                combined += sDividend[i];
+                let valToDivide = parseInt(combined);
+                
+                if (valToDivide < divisor && i < sDividend.length - 1) {
+                    if (i === 0) continue; 
+                }
+
+                let q = Math.floor(valToDivide / divisor);
+                let p = q * divisor;
+                let r = valToDivide - p;
+
+                steps.push({ 
+                    type: 'divide', val: valToDivide, ans: q, pos: i,
+                    desc: i18n[lang].step1.replace('{v}', divisor).replace('{n}', valToDivide)
+                });
+                steps.push({ 
+                    type: 'multiply', q: q, v: divisor, ans: p, pos: i,
+                    desc: i18n[lang].step2.replace('{q}', q).replace('{v}', divisor)
+                });
+                steps.push({ 
+                    type: 'subtract', a: valToDivide, b: p, ans: r, pos: i,
+                    desc: i18n[lang].step3.replace('{a}', valToDivide).replace('{b}', p)
+                });
+                
+                if (i < sDividend.length - 1) {
+                    steps.push({
+                        type: 'bringDown', digit: sDividend[i+1], pos: i + 1,
+                        desc: i18n[lang].step4.replace('{d}', sDividend[i+1])
+                    });
+                }
+                
+                combined = r.toString();
+            }
+
+            currentProblem = { dividend, divisor, sDividend };
+            currentStepIdx = 0;
+            userInput = "";
+            busy = false;
+            renderBoard();
+        }
+
+        function renderBoard() {
+            const grid = document.getElementById('divGrid');
+            grid.innerHTML = '';
+            const { divisor, sDividend } = currentProblem;
+            const COLS = sDividend.length + 3;
+            grid.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+
+            const createCell = (txt, cls) => {
+                const c = document.createElement('div');
+                c.className = 'cell ' + (cls || '');
+                c.innerText = txt;
+                return c;
+            };
+
+            // ROW 0: Quotient
+            createCell(""); createCell(""); createCell("");
+            for (let i = 0; i < sDividend.length; i++) {
+                let txt = "";
+                let step = steps.find(s => s.type === 'divide' && s.pos === i && steps.indexOf(s) <= currentStepIdx);
+                if (step) {
+                    txt = (steps.indexOf(step) === currentStepIdx && step.type === 'divide') ? (userInput || "?") : step.ans;
+                }
+                let cls = 'quotient bracket-top';
+                if (steps[currentStepIdx]?.type === 'divide' && steps[currentStepIdx].pos === i) cls += ' input-cell active';
+                grid.appendChild(createCell(txt, cls));
+            }
+
+            // ROW 1: Bracket & Dividend
+            grid.appendChild(createCell(divisor, 'divisor'));
+            grid.appendChild(createCell(")", 'bracket-left'));
+            for (let i = 0; i < sDividend.length; i++) {
+                grid.appendChild(createCell(sDividend[i], 'dividend bracket-top'));
+            }
+            grid.appendChild(createCell(""));
+
+            // Dynamic Steps Rows
+            steps.forEach((step, idx) => {
+                if (idx > currentStepIdx) return;
+                
+                if (step.type === 'multiply') {
+                    for(let i=0; i<COLS; i++) {
+                        let cellIdx = i - 2; 
+                        let txt = "";
+                        let cls = 'subtrahend';
+                        const sAns = step.ans.toString();
+                        if (cellIdx >= step.pos - sAns.length + 1 && cellIdx <= step.pos) {
+                            let digitIdx = sAns.length - 1 - (step.pos - cellIdx);
+                            txt = (idx === currentStepIdx) ? (userInput || "?") : sAns[digitIdx];
+                            if (idx === currentStepIdx) cls += ' input-cell active';
+                            const cell = createCell(txt, cls);
+                            if (idx < currentStepIdx) cell.innerHTML += '<div class="sub-line"></div>';
+                            grid.appendChild(cell);
+                        } else {
+                            grid.appendChild(createCell("", ""));
+                        }
+                    }
+                }
+
+                if (step.type === 'subtract') {
+                    for(let i=0; i<COLS; i++) {
+                        let cellIdx = i - 2;
+                        let txt = "";
+                        let cls = 'remainder';
+                        const sAns = step.ans.toString();
+                        
+                        let nextStep = steps[idx+1];
+                        if (nextStep && nextStep.type === 'bringDown' && cellIdx === nextStep.pos && idx + 1 <= currentStepIdx) {
+                            txt = nextStep.digit;
+                            const cell = createCell(txt, 'dividend');
+                            cell.innerHTML += '<div class="arrow-down"></div>';
+                            grid.appendChild(cell);
+                        } else if (cellIdx >= step.pos - sAns.length + 1 && cellIdx <= step.pos) {
+                            let digitIdx = sAns.length - 1 - (step.pos - cellIdx);
+                            txt = (idx === currentStepIdx) ? (userInput || "?") : sAns[digitIdx];
+                            if (idx === currentStepIdx) cls += ' input-cell active';
+                            grid.appendChild(createCell(txt, cls));
+                        } else {
+                            grid.appendChild(createCell("", ""));
+                        }
+                    }
+                }
+            });
+
+            const t = i18n[lang];
+            document.getElementById('promptText').innerText = steps[currentStepIdx]?.desc || t.prompt;
+            document.getElementById('valScore').innerText = score;
+            document.getElementById('valHigh').innerText = highScore;
+            document.getElementById('valLvl').innerText = level;
+            document.getElementById('lblLvl').innerText = t.level;
+            document.getElementById('lblHigh').innerText = t.high;
+            document.getElementById('lblScore').innerText = t.score;
+            document.getElementById('btnCheck').innerText = t.check;
+            document.getElementById('btnShow').innerText = t.show;
+        }
+
+        function press(k) {
+            if (busy) return;
+            sfx('tap');
+            const target = steps[currentStepIdx];
+            if (!target) return;
+
+            if (k === 'bk') {
+                userInput = userInput.slice(0, -1);
+            } else {
+                if (userInput.length < target.ans.toString().length) {
+                    userInput += k;
+                }
+            }
+            renderBoard();
+        }
+
+        function processCurrentStep() {
+            if (busy) return;
+            const target = steps[currentStepIdx];
+            if (!target) return;
+
+            if (parseInt(userInput) === target.ans) {
+                sfx('tap');
+                currentStepIdx++;
+                userInput = "";
+                
+                if (steps[currentStepIdx]?.type === 'bringDown') {
+                    renderBoard();
+                    busy = true;
+                    setTimeout(() => {
+                        currentStepIdx++;
+                        busy = false;
+                        renderBoard();
+                    }, 800);
+                } else if (currentStepIdx >= steps.length) {
+                    handleWin();
+                } else {
+                    renderBoard();
+                }
+            } else {
+                sfx('err');
+                document.querySelectorAll('.active').forEach(c => c.classList.add('wrong'));
+                setTimeout(() => {
+                    document.querySelectorAll('.active').forEach(c => c.classList.remove('wrong'));
+                    userInput = "";
+                    renderBoard();
+                }, 600);
+            }
+        }
+
+        function showAnswer() {
+            if (busy) return;
+            sfx('tap');
+            const target = steps[currentStepIdx];
+            if (target) {
+                userInput = target.ans.toString();
+                renderBoard();
+            }
+        }
+
+        function handleWin() {
+            busy = true;
+            score += 10;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('long_div_high_full_final', highScore);
+            }
+            sfx('win');
+            
+            // Multiple bursts
+            burst(350);
+            setTimeout(() => burst(250), 400);
+            setTimeout(() => burst(200), 800);
+
+            const overlay = document.getElementById('success-overlay');
+            document.getElementById('txtWin').innerText = i18n[lang].win;
+            document.getElementById('txtWinSub').innerText = i18n[lang].winsub;
+            overlay.style.display = 'flex';
+
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                generateProblem();
+            }, 3000);
+        }
+
+        function changeLang(l) { lang = l; renderBoard(); }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#0ea5e9','#ef4444','#f59e0b','#10b981','#ffffff','#ec4899'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random()*c.width, y: c.height+20, vx: (Math.random()-0.5)*40, vy: (Math.random()-0.9)*60,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*25
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.8; p.vx *= 0.99; p.l-=0.012; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => {
+            const kp = document.getElementById('keypad');
+            [1,2,3,4,5,6,7,8,9,0].forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key'; b.innerText = k; b.onclick = () => press(k); kp.appendChild(b);
+            });
+            const del = document.createElement('button');
+            del.className = 'key del'; del.innerText = '⌫'; del.onclick = () => press('bk'); kp.appendChild(del);
+            generateProblem();
+        };
+    </script>
+</body>
+</html>

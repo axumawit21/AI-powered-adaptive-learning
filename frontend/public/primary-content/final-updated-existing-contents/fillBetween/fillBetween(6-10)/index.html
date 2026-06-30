@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>1,_,_,_,5</title>
+    <style>
+@font-face {
+  font-family: child;
+  src: url("../fonts/Dragon\\ Ball.ttf");
+}
+
+@font-face {
+  font-family: q;
+  src: url("../fonts/Quicksand_Book.otf");
+}
+
+@font-face {
+  font-family: h;
+  src: url("../fonts/Heroes\\ Legend\\ Hollow.ttf");
+}
+
+@font-face {
+  font-family: c;
+  src: url("../fonts/DIMIS___.TTF");
+}
+
+@font-face {
+  font-family: d;
+  src: url("../fonts/DJB\\ Get\\ Digital.ttf");
+}
+
+@font-face {
+  font-family: v;
+  src: url("../fonts/Vlump.ttf");
+}
+
+@font-face {
+  font-family: g;
+  src: url("../fonts/Gameplay.ttf");
+}
+
+@font-face {
+  font-family: a;
+  src: url("../fonts/Dinomik.otf");
+}
+
+@font-face {
+  font-family: o;
+  src: url("../fonts/OMEGLE.ttf");
+}
+
+@font-face {
+  font-family: p;
+  src: url("../fonts/Potra.ttf");
+}
+
+@font-face {
+  font-family: cy;
+  src: url("../fonts/unbutton.ttf");
+}
+
+body {
+  background-color:#b4e2f8;
+  background-size: device-width;
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-attachment: fixed;
+  font-family: child;
+  margin: 0;
+  min-height: 100vh;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html::-webkit-scrollbar {
+  width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: #00404b;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: #aebaff;
+}
+
+::selection {
+  background-color: #ffffff00;
+}
+
+div.getReady {
+  position:absolute;
+  left: 30%;
+  top: 25%;
+  z-index: 4;
+  font-size: 12vw;
+  font-family: cy;
+  color: #5c3c04;
+  display: none;
+}
+
+div.input_div {
+  position: absolute;
+  bottom: 0.5%;
+  right: 0;
+  width: 15vw;
+  background-color: #4accf3;
+  border-radius: 20px;
+  border-style: double;
+  border-color: #1fa2ff7a;
+}
+
+div.in_put input {
+  background-color: #7ae79bad;
+  font-size: 3vw;
+  font-family: a;
+  font-weight: bolder;
+  border: 2px solid #98ff98;
+  border-radius: 3px;
+  width: 14.2vw;
+  outline-color: #305223;
+}
+
+div.key_pad {
+  float: left;
+  width: 3.5vw;
+  height: 3.5vw;
+  padding: 0.1vw 0vw;
+  background-color: #9cc5f5;
+  border: 2px solid #0b24af;
+  margin: 0.5vw 0.5vw;
+  text-align: center;
+  font-family: a;
+  font-weight: bolder;
+  font-size: 2.5vw;
+  cursor: pointer;
+  border-radius: 20px;
+}
+
+div.key_pad:hover {
+  background-color: #e2e5ec;
+  color: white;
+}
+
+span#timer_span {
+  font-family: a;
+  font-size: 4vw;
+  color: #bdd6ee;
+  text-align: center;
+  padding-left: 3vw;
+}
+
+div.ques_div {
+  position: absolute;
+  top: 12%;
+  left: 5%;
+  width: 70vw;
+  height: 40vw;
+  background-color: #44ff6dfb;
+  border: 3px solid #a6b8f8;
+  border-radius: 20px;
+  box-shadow: 1px 2px 6px #b6c7ffdc;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 3;
+  padding-top: 100px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0, 0, 0);
+  background-color: #d38d143d;
+}
+
+.modal-content {
+  position: relative;
+  background-color: #fdb33342;
+  margin: auto;
+  padding: 0;
+  width: 35%;
+  height: 70%;
+  border-radius: 50%;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.096),
+    0 6px 20px 0 rgba(0, 0, 0, 0.096);
+  -webkit-animation-name: animatetop;
+  -webkit-animation-duration: 0.4s;
+  animation-name: animatetop;
+  animation-duration: 0.4s;
+}
+
+@-webkit-keyframes animatetop {
+  from {
+    top: -300px;
+    opacity: 0;
+  }
+  to {
+    top: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes animatetop {
+  from {
+    top: -300px;
+    opacity: 0;
+  }
+  to {
+    top: 0;
+    opacity: 1;
+  }
+}
+
+.modal-body {
+  padding: 2px 16px;
+  background: #1fa2ff7a;
+  border-radius: 50%;
+  height: 100%;
+  color: white;
+}
+
+div.signup {
+  position: relative;
+  top: 10%;
+  left: 20%;
+}
+
+div.signup * {
+  display: block;
+  margin-bottom: 2vw;
+}
+
+input.userInp {
+  font-size: 2vw;
+  font-family: a;
+  outline: none;
+  padding: 0.5vw 0.3vw;
+  border-radius: 3px;
+  border: 2px solid #dfe9f7;
+}
+
+button#signup {
+  position: relative;
+  top: 10%;
+  left: 13%;
+  font-size: 2vw;
+  font-family: a;
+  font-weight: bolder;
+  padding: 1vw 2vw;
+  background-color: #adc3f5;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  box-shadow: 1px 6px 1px #3e86f3;
+}
+
+button#signup:active {
+  top: 11%;
+  box-shadow: 1px 6px 1px rgba(0, 102, 102, 0.007);
+}
+
+div.user_div {
+  position: absolute;
+  top: 3%;
+  right: 0%;
+  background-color: #dbdff7f5;
+  padding: 1vw 2.2vw;
+}
+
+div.user_div * {
+  font-family: a;
+  font-weight: bolder;
+  display: block;
+  margin-bottom: 1vw;
+}
+
+div.user_div span {
+  background-color: #afb8ec;
+  color: white;
+  padding: 0.5vw 0.6vw;
+}
+
+div.user_div img {
+  width: 6vw;
+  height: 6vw;
+  position: relative;
+  top: 10%;
+  left: 2%;
+  outline: 9px solid #1b7eff81;
+}
+
+img#profile_id,
+.ppd {
+  width: 10vw;
+  height: 10vw;
+  border: 9px solid #FFAB1Bb7;
+  outline: 12px solid #FFAB1B88;
+  outline-offset: 2px;
+  position: relative;
+  top: 10%;
+  left: 13%;
+}
+
+div.upper_div {
+  width: 100%;
+  height: 10%;
+  background:#ffab1b81;
+  border-bottom: 2px solid #eb9d1783;
+}
+
+div.upper_div * {
+  float: left;
+}
+
+div.lower_div {
+  width: 100%;
+  height: 90%;
+  /* background:#007951a2; */
+}
+
+div.qdiv {
+  /* background-color: rgba(255, 0, 0, 0.466); */
+  width: 83%;
+  height: 98%;
+  margin: 0 auto;
+  position: relative;
+  bottom: 0;
+  left: 0;
+}
+
+div.qimg {
+  width: 12vw;
+  height: 12vw;
+  /* background: rgba(255, 255, 0, 0.068); */
+  float: left;
+  margin: .2vw;
+}
+
+img.qbubble {
+  width: 12vw;
+  height: 12vw;
+  position: relative;
+  left: 0;
+  top: 0;
+  z-index: 1;
+}
+
+div.op_div {
+  position: relative;
+  top: -85%;
+  left: 39%;
+  z-index: 2;
+}
+
+div.op_div span {
+  font-size: 4vw;
+  font-family: a;
+  font-weight: bolder;
+  color: #7a5109;
+  display: block;
+  margin: 0;
+}
+
+span.op_one {
+  /* position: absolute;
+  top: 10%;
+  left: 0%; */
+}
+
+span.operation {
+  display: inline;
+  position: absolute;
+  top: 40%;
+  left: -20%;
+}
+
+span.op_two {
+  /* position: absolute;
+  top: -100%;
+  left: 10%;*/
+  /* border-bottom: 4px solid teal; */
+  width: 45%;
+}
+
+div.lives {
+  width: 30%;
+  /* background: rgba(255, 0, 0, 0.212); */
+}
+
+div.curr_score {
+  width: 30%;
+  /* background: rgba(102, 255, 0, 0.185); */
+  padding: .6vw;
+}
+
+div.score_con {
+  position: relative;
+  left: 50%;
+  top: 0;
+}
+
+div.inner_level {
+  position: relative;
+  left: 35%;
+  top: 0;
+}
+
+div.score_con span, div.inner_level span {
+  font-family: g;
+  font-size: 2.5vw;
+  text-align: center;
+  transition: 1s;
+  color: #e98000;
+}
+
+div.curr_level {
+  width: 36.5%;
+  /* background: rgba(4, 0, 255, 0.199); */
+  padding: .6vw;
+}
+
+img.heart {
+  width: 4vw;
+  height: 4vw;
+  margin-left: .5vw; 
+}
+
+div.header_e {
+  margin-top: 0;
+}
+
+h1 {
+  position: absolute;
+  top: 0;
+  left: 20%;
+  font-family: c;
+  font-size: 4vw;
+  color: #003cff;
+  text-align: center;
+  display: inline;
+  margin: 0 auto;
+  width: 30%;
+}
+
+a#back_link img {
+  width: 4vw;
+  height: 4vw;
+}
+
+div.high_div {
+  position: absolute;
+  top: 0;
+  right: 20%;
+  font-family: g;
+  font-size: 2vw;
+}
+
+div.high_div span {
+  color: #d1ddf8;
+}
+
+#stopMusic {
+  position: absolute;
+  top: 13%;
+  right: 12%;
+  background: rgba(255, 255, 255, 0);
+  border: none;
+  cursor: pointer;
+}
+
+#stopMusic img {
+  width: 6vw;
+  height: 3vw;
+}
+
+#stopMusic img:hover {
+  width: 6.5vw;
+  height: 3.5vw;
+  transition: 0.5s;
+}
+
+div.mb2 {
+  padding: 2px 16px;
+  background: rgba(0, 0, 0, 0.096);
+  border-radius: 50%;
+  height: 100%;
+  color: rgba(255, 255, 255, 0);
+}
+
+#myModal2 {
+  display: block;
+}
+
+button#start_btn {
+  font-size: 3vw;
+  font-family: h;
+  background-color: #FFAB1B;
+  color: white;
+  box-shadow: 1px 6px 2px #e79b18;
+  padding: 2vw 2vw;
+  border: none;
+  border-radius: 9px;
+  position: relative;
+  top: 36%;
+  left: 21%;
+}
+
+/* Mobile Responsive Styles */
+@media screen and (max-width: 768px) {
+  div.ques_div {
+    top: 12%;
+    left: 2%;
+    width: 96vw;
+    height: 50vh;
+  }
+
+  div.input_div {
+    bottom: 1%;
+    right: 0;
+    width: 100vw;
+    background-color: #dce2f7;
+    align-content: center;
+  }
+
+  div.key_pad {
+    width: 18vw;
+    height: 18vw;
+    padding: 0.5vw 0vw;
+    margin: 1vw 1vw;
+    font-size: 5vw;
+  }
+
+  h1 {
+    left: 15%;
+    font-size: 10vw;
+    width: 50%;
+    text-align: center;
+    padding-top: 10%;
+  }
+
+  div.high_div {
+    right: 5%;
+    font-size: 99vw;
+  }
+
+  #stopMusic img {
+    width: 8vw;
+    height: 4vw;
+  }
+
+  #stopMusic img:hover {
+    width: 8.5vw;
+    height: 4.5vw;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  div.ques_div {
+    top: 14%;
+    left: 1%;
+    width: 98vw;
+    height: 45vh;
+  }
+
+  div.input_div {
+    bottom: 0.5%;
+    width: 100vw;
+  }
+
+  div.key_pad {
+    width: 20vw;
+    height: 20vw;
+    padding: 0.9vw 0vw;
+    margin: 0.8vw 0.8vw;
+    font-size: 8vw;
+  }
+
+  h1 {
+    left: 10%;
+    font-size: 20vw;
+    width: 60%;
+  }
+
+  div.high_div {
+    right: 2%;
+    font-size: 4vw;
+  }
+
+  #stopMusic {
+    top: 15%;
+    right: 8%;
+  }
+
+  #stopMusic img {
+    width: 10vw;
+    height: 8vw;
+  }
+
+  #stopMusic img:hover {
+    width: 10.5vw;
+    height: 5.5vw;
+  }
+
+  button#start_btn {
+    font-size: 5vw;
+    padding: 3vw 3vw;
+    left: 15%;
+  } 
+
+  .modal-content {
+    width: 80%;
+    height: 60%;
+  }
+
+  div.signup {
+    left: 10%;
+  }
+
+  input.userInp {
+    font-size: 4vw;
+  }
+
+  button#signup {
+    font-size: 4vw;
+    left: 8%;
+  }
+}
+
+@font-face {
+    font-family: gamePlay;
+    src: url("../fonts/Gameplay.ttf");
+}
+
+@font-face {
+    font-family: adventure;
+    src: url("../fonts/Adventure.otf");
+}
+
+@font-face {
+    font-family: curs;
+    src: url("../fonts/CHOCD\\ TRIAL___.otf");
+}
+
+@font-face {
+    font-family: DJB;
+    src: url("../fonts/DJB\\ Get\\ Digital.ttf");
+}
+
+@font-face {
+    font-family: air;
+    src: url("../fonts/AirAmerica-Regular.otf");
+}
+
+@keyframes ok_panda {
+    from {
+        width: 128px;
+        height: 128px;
+    }
+
+    to {
+        width: 64px;
+        height: 64px;
+    }
+}
+
+.ok_panda {
+    position: absolute;
+    top: 0;
+    left: 35%;
+    z-index: 1024;
+}
+
+.ansBtn {
+    display: inline-block;
+    padding: 15px 25px;
+    font-size: 24px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    outline: none;
+    color: #fff;
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 9px #999;
+}
+
+.ansBtn:active {
+  background-color: #3e8e41;
+  box-shadow: 0 5px #666;
+  transform: translateY(4px);
+}
+    </style>
+
+    <script>
+console.log('Hello from utils mod');
+
+
+function getElement(selector) {
+    return document.querySelector(selector);
+}
+
+function getElements(selector) {
+    return document.querySelectorAll(selector);
+}
+
+function createElement(_elem, _class="", _id="") {
+    let elem = document.createElement(_elem)
+    if(_class) {
+        elem.className = _class
+    }
+    if(_id) {
+        elem.id = _id
+    }
+    return elem
+}
+
+function applyStyle(elem, style) { 
+    return elem.setAttribute("style", style);
+}
+
+async function playAudio(elem, src) {
+    elem.src = src;
+    await elem.play();
+}
+
+function pandaNews(state=1) { 
+    let bg = createElement("div", "pandaBg", "");
+    bg.style = {
+        width: `${window.innerWidth}px`,
+        height: `${window.innerHeight}px`,
+        background: "rgb(0, 0, 0, 0.9)"
+    }
+    let panda = createElement("img", "ok_panda", "");
+    if(state) panda.src = "assets/win.png";
+    else panda.src = "assets/null.png";
+    panda.animationName = "ok_panda";
+    panda.animationDuration = "2s";
+    return bg.appendChild(panda);
+}
+
+function randInt(min, max) {
+    return Math.floor(min + Math.random() * (max + 1 - min));
+}
+
+function myRandom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+
+HTMLCollection.prototype.clone = function () {
+    let elems = [];
+    for (let i = 0; i < this.length; i++) {
+        elems.push(this[i]);
+    }
+    return elems;
+}
+
+async function celebrateDog() {
+    const img = document.createElement("img");
+    img.src = "./assets/dogd.png";
+    img.setAttribute("style", "position: absolute; left: 42%; top: 35%; z-index: 2000;");
+    document.body.appendChild(img);
+
+    let backDrop = document.createElement("div");
+    backDrop.style.width = `${window.innerWidth}px`;
+    backDrop.style.height = `${window.innerHeight}px`;
+    backDrop.setAttribute("style", `position: absolute; top: 0; left: 0; background-color: #000d; width: ${window.innerWidth}px; height: ${window.innerHeight}px;`)
+    document.body.appendChild(backDrop);
+
+    // audio
+    const audio = new Audio();
+    audio.src = "./assets/win.mp3";
+    await audio.play();
+    setTimeout(()=>{
+        img.remove()
+        backDrop.remove();
+    }, 2000);
+}
+    </script>
+</head>
+
+<body>
+    <audio src="" style="display: none;" id="status"></audio>
+    <audio src="assets/music_mian.ogg" style="display: none;" id="music"></audio>
+    <h1>6 , _ , _ , _ , 10</h1>
+    <div class="lang_select">
+        <select id="langSelect">
+            <option value="ti">ትግርኛ</option>
+            <option value="am">አማርኛ</option>
+            <option value="en">English</option>
+            <option value="om">Afan Oromoo</option>
+            <option value="so">Soomaali</option>
+        </select>
+    </div>
+    <span id="highScore"><span id="scoreLabel">ውፅኢት</span>: <span id="inHS">0</span></span>
+    <div class="ques_div">
+        <div class="lower_div">
+            <div class="qdiv">
+                <div class="subdiv">
+                    <span class="ques" id="first"></span>
+                    <span class="ques inBetween" onclick="currentIndex()"></span>
+                    <span class="ques" id="last"></span>
+                </div>
+
+                <div class="clearAns">
+                    <button class="ansBtn" onclick="answer()">መልስ</button>
+                    <button class="ansBtn x" onclick="clears()">x</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="input_div">
+        <div class="num_pad">
+            <div class="key_pad" id="n1" onclick="keypadWrite(this)">1</div>
+            <div class="key_pad" id="n2" onclick="keypadWrite(this)">2</div>
+            <div class="key_pad" id="n3" onclick="keypadWrite(this)">3</div>
+            <div class="key_pad" id="n4" onclick="keypadWrite(this)">4</div>
+            <div class="key_pad" id="n5" onclick="keypadWrite(this)">5</div>
+            <div class="key_pad" id="n6" onclick="keypadWrite(this)">6</div>
+            <div class="key_pad" id="n7" onclick="keypadWrite(this)">7</div>
+            <div class="key_pad" id="n8" onclick="keypadWrite(this)">8</div>
+            <div class="key_pad" id="n9" onclick="keypadWrite(this)">9</div>
+            <div class="key_pad" id="n0" onclick="keypadWrite(this)">0</div>
+            <div class="key_pad clear" id="nc" onclick="clearActive()">nc</div>
+            <div class="key_pad clear" id="nc" onclick="clears()">c</div>
+            <div class="key_pad equals" id="ne" onclick="switchNum('l')">&lt-</div>
+            <div class="key_pad equals" id="ne" onclick="switchNum('r')">-&gt</div>
+            <div class="key_pad equals" id="ne" onclick="answer()">=</div>
+        </div>
+    </div>
+
+</body>
+
+<script>
+    function storeData(title, ques, ans, status, hint = false) {
+        let data = localStorage.getItem(title);
+        if (!data) {
+            let d = {
+                title,
+                data: [{ ques, status, ans, hint, date: Date.now() }]
+            }
+            localStorage.setItem(title, JSON.stringify(d))
+        } else {
+            let d = JSON.parse(data)
+            let s = { ques, ans, status, hint, date: Date.now() }
+            d.data.push(s)
+            localStorage.setItem(title, JSON.stringify(d))
+        }
+    }
+    let activeInput
+    let activeIndex = 0
+
+    let changeMin = 6;//end-var
+    let changeMax = 10;//end-var
+
+    let sequenceMin = changeMin;
+    let sequenceMax = changeMax;
+    let allPatterns = [];
+    let remainingPatterns = [];
+    let currentBlankPattern = [];
+    let patternsPerRound = 5;
+
+    let languages = {
+        ti: {
+            title: "ዝጎደሉ ቁፅሪታት",
+            heading: "6 , _ , _ , _ , 10",
+            scoreLabel: "ውፅኢት",
+            answerBtn: "መልስ",
+            completionText: "ኩሎም ብትክክል ተመሊሶም።",
+            playAgain: "ደጊሞም ይጫወቱ!"
+        },
+        am: {
+            title: "ቁጥር መሙላት",
+            heading: "6 , _ , _ , _ , 10",
+            scoreLabel: "ውጤት",
+            answerBtn: "መልስ",
+            completionText: "ሁሉም በትክክል ተመልሳል!",
+            playAgain: "ደግመዉ ይጫወቱ"
+        },
+        en: {
+            title: "Fill the Numbers",
+            heading: "6 , _ , _ , _ , 10",
+            scoreLabel: "Score",
+            answerBtn: "Answer",
+            completionText: "Congratulations! You have answered all the possibilities.",
+            playAgain: "Play again"
+        },
+        om: {
+            title: "Lakkofsota Guuti",
+            heading: "6 , _ , _ , _ , 10",
+            scoreLabel: "Bu'aa",
+            answerBtn: "Deebii",
+            completionText: "Galatoomi! Carraawwan hunda taphatteetta.",
+            playAgain: "Irra deebi'i taphadhu"
+        },
+        so: {
+            title: "Buuxi Tirooyinka",
+            heading: "6 , _ , _ , _ , 10",
+            scoreLabel: "Dhibco",
+            answerBtn: "Jawaab",
+            completionText: "Hambalyo! Dhammaan fursadihii ayaad ciyaartay.",
+            playAgain: "Mar kale ciyaar"
+        }
+    };
+
+    let currentLang = 'ti';
+
+    function applyLanguage(lang) {
+        currentLang = languages[lang] ? lang : 'ti';
+        let data = languages[currentLang];
+
+        let title = document.querySelector("title");
+        let heading = document.querySelector("h1");
+        let scoreLabel = document.querySelector("#scoreLabel");
+        let answerBtn = document.querySelector(".clearAns .ansBtn:not(.x)");
+
+        if (title) title.innerText = data.title;
+        if (heading) heading.innerText = data.heading;
+        if (scoreLabel) scoreLabel.innerText = data.scoreLabel;
+        if (answerBtn) answerBtn.innerText = data.answerBtn;
+
+        let langSelect = document.getElementById('langSelect');
+        if (langSelect && langSelect.value !== currentLang) {
+            langSelect.value = currentLang;
+        }
+    }
+
+    function initLanguage() {
+        applyLanguage(currentLang);
+        let langSelect = document.getElementById('langSelect');
+        if (langSelect) {
+            langSelect.addEventListener('change', function () {
+                applyLanguage(this.value);
+            });
+        }
+    }
+
+    initLanguage();
+
+    HTMLCollection.prototype.clone = function () {
+        let elems = [];
+        for (let i = 0; i < this.length; i++) {
+            elems.push(this[i]);
+        }
+        return elems;
+    }
+
+    function generateAllPatterns() {
+        let len = sequenceMax - sequenceMin + 1;
+        let patterns = [];
+        let total = 1 << len;
+        for (let mask = 1; mask < total - 1; mask++) {
+            let pattern = [];
+            for (let i = 0; i < len; i++) {
+                if (mask & (1 << i)) {
+                    pattern.push(i);
+                }
+            }
+            patterns.push(pattern);
+        }
+        return patterns;
+    }
+
+    function resetPatterns() {
+        if (!allPatterns.length) {
+            allPatterns = generateAllPatterns();
+        }
+        let pool = allPatterns.slice();
+        pool.sort(() => Math.random() - 0.5);
+        remainingPatterns = pool.slice(0, Math.min(patternsPerRound, pool.length));
+    }
+
+    function pickNextPattern() {
+        if (!remainingPatterns.length) return null;
+        let idx = randInt(0, remainingPatterns.length - 1);
+        let pattern = remainingPatterns[idx];
+        remainingPatterns.splice(idx, 1);
+        return pattern;
+    }
+
+    resetPatterns();
+    drawQuestion();
+
+    getElement("#music").volume = .3;
+    getElement("#music").play();
+    currentIndex()
+
+
+    function clears() {
+        let inputs = Array.from(getElements(".inputNum"));
+        // find last filled input
+        for (let i = inputs.length - 1; i >= 0; i--) {
+            if (inputs[i].value !== "") {
+                inputs[i].value = "";
+                activeIndex = i;
+                activeInput = inputs[i];
+                activeInput.focus();
+                return;
+            }
+        }
+        // if none filled, keep focus on first input if exists
+        if (inputs.length) {
+            activeIndex = 0;
+            activeInput = inputs[0];
+            activeInput.focus();
+        }
+    }
+
+    function clearActive() {
+        activeInput.value = "";
+    }
+
+
+    function vals(e) {
+        let inputAns = activeInput;
+        if (inputAns) {
+            // append digit up to 2 characters to allow numbers like 10
+            let current = inputAns.value || "";
+            let next = current.length < 2 ? current + e : String(e);
+            inputAns.value = next;
+
+            let inputs = Array.from(getElements(".inputNum"));
+            let idx = inputs.indexOf(inputAns);
+            if (idx > -1 && idx < inputs.length - 1) {
+                activeIndex = idx + 1;
+                activeInput = inputs[activeIndex];
+                activeInput.focus();
+            }
+            playAudio(getElement("#status"), "assets/setactive.mp3");
+        }
+    }
+
+    function currentIndex(){
+        let inputNums = getElements(".inputNum")
+        for (let i = 0; i < inputNums.length; i++) {
+            const currentNum = inputNums[i];
+            if(currentNum.matches(':focus')){
+                activeInput = currentNum
+                activeIndex = i
+            } 
+        }
+        if (!activeInput) {
+            activeIndex = 0 
+            activeInput = inputNums[activeIndex];}
+        activeInput.focus()
+        return activeInput
+    }
+
+    function screenWriteInto(e) {
+        if (+e.key || +e.key === 0) {
+            vals(+e.key);
+        }
+    }
+
+    function keypadWrite(e) {
+        vals(+e.innerText);
+    }
+
+    function checkIncorrect(inps, d) {
+        inps.forEach((item, i)=>{
+            if(d[i] !== 1) {
+                item.classList.add("incorrect");
+            }
+        })
+
+        setTimeout(()=>{
+            inps.forEach(item=>{
+                item.classList.remove("incorrect");
+            })
+        }, 2000);
+    }
+
+    function answer() {
+        let inps = getElements(".inputNum");
+        inps = Array.from(inps);
+        let lenInp = inps.length;
+
+        let d = inps.reduce((newArr, input) => {
+            let idx = +input.dataset.index;
+            let expected = sequenceMin + idx;
+            let diff = +input.value - expected;
+            return newArr.concat(diff === 0 ? 1 : 0);
+        }, []);
+
+        checkIncorrect(inps, d);
+
+        let firstVal = sequenceMin;
+        let lastVal = sequenceMax;
+        let q = `${firstVal} - ${lastVal}`;
+        let a = "";
+        for (let i = 0; i <= (sequenceMax - sequenceMin); i++) {
+            a += (sequenceMin + i) + ' ';
+        }
+
+        let sum = d.reduce((j, i) => j + i, 0);
+
+        if (sum === lenInp) {
+            storeData("math-fillBetween", q, a.trim(), "correct");
+            celebrate();
+        } else {
+            storeData("math-fillBetween", q, a.trim(), "wrong");
+            celebrate(0);
+        }
+    }
+
+    function switchNum(side){
+        activeIndex = side==='r'? activeIndex + 1:activeIndex - 1
+        let inputAns = getElements(".inputNum")[activeIndex];
+        activeInput = inputAns
+        inputAns.focus()
+    }
+    function updateScore(bool = 1) {
+        let elm = getElement("#inHS");
+        if (bool) {
+            elm.innerText = +elm.innerText + 1;
+        }
+        else {
+            if (+elm.innerText > 0) elm.innerText = +elm.innerText - 1;
+        }
+    }
+
+    function getRandQue() {
+        return { x: sequenceMin, b: sequenceMax - sequenceMin - 1, y: sequenceMax };
+    }
+
+    function drawQuestion() {
+        let subdiv = getElement(".subdiv");
+
+        if (!allPatterns.length) {
+            allPatterns = generateAllPatterns();
+        }
+
+        if (!remainingPatterns.length) {
+            showCompletion();
+            return;
+        }
+
+        currentBlankPattern = pickNextPattern();
+        let len = sequenceMax - sequenceMin + 1;
+
+        subdiv.innerHTML = "";
+
+        for (let i = 0; i < len; i++) {
+            if (i > 0) {
+                let commaSpan = createElement("span", "comma", "");
+                commaSpan.innerText = ", ";
+                subdiv.appendChild(commaSpan);
+            }
+
+            if (currentBlankPattern.indexOf(i) !== -1) {
+                let inp = createElement("input", "inputNum", "");
+                inp.setAttribute("type", "text");
+                inp.setAttribute("maxlength", "2");
+                inp.setAttribute("placeholder", "?");
+                inp.dataset.index = i;
+                subdiv.appendChild(inp);
+            } else {
+                let span = createElement("span", "ques", "");
+                span.innerText = sequenceMin + i;
+                subdiv.appendChild(span);
+            }
+        }
+
+        let inputs = getElements(".inputNum");
+        if (inputs.length) {
+            activeIndex = 0;
+            activeInput = inputs[0];
+            activeInput.focus();
+        }
+    }
+
+    function cleanBoard() {
+        let bet = getElement(".subdiv").children.clone();
+        bet.forEach(item => {
+            item.remove();
+        })
+    }
+
+    function showCompletion() {
+        let overlay = createElement("div", "completionOverlay", "");
+        applyStyle(overlay, "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; color: #fff;");
+
+        let msg = createElement("div", "completionMessage", "");
+        msg.innerText = (languages[currentLang] && languages[currentLang].completionText) ? languages[currentLang].completionText : "Congratulations! You have answered all the possibilities.";
+
+        let btn = createElement("button", "ansBtn", "");
+        btn.innerText = (languages[currentLang] && languages[currentLang].playAgain) ? languages[currentLang].playAgain : "Play again";
+        btn.onclick = function () {
+            overlay.remove();
+            resetPatterns();
+            cleanBoard();
+            drawQuestion();
+        };
+
+        overlay.appendChild(msg);
+        overlay.appendChild(btn);
+        document.body.appendChild(overlay);
+    }
+
+    function celebrate(status = 1) {
+        let panda = pandaNews(status);
+        if (status) {
+            celebrateDog();
+            updateScore();
+            setTimeout(() => {
+                cleanBoard();
+                drawQuestion();
+            }, 1000);
+        } else {
+            document.body.appendChild(panda);
+            updateScore(0);
+            playAudio(getElement("#status"), "assets/wrong.wav");
+        }
+        setTimeout(() => {
+            panda.remove();
+        }, 1000)
+    }
+</script>
+
+<style>
+    html, body {
+        background-color: rgb(198, 209, 255);
+        margin: 0;
+        min-height: 100vh;
+        width: 100%;
+    }
+    
+    h1 {
+        font-family: gameplay;
+        width: 40vw;
+    }
+
+    #highScore {
+        font-family: air;
+        font-size: 3em;
+        position: absolute;
+        top: 0;
+        right: 6%;
+        color: #e7b025;
+    }
+
+    .lang_select {
+        position: absolute;
+        top: 0.8rem;
+        right: 22%;
+        font-family: air;
+    }
+
+    .lang_select select {
+        font-size: 1rem;
+        padding: 4px 8px;
+        border-radius: 8px;
+        border: 2px solid #074168;
+        background-color: #ffffffdd;
+        color: #074168;
+        outline: none;
+    }
+
+    /* Mobile Responsive Styles */
+    @media screen and (max-width: 768px) {
+        h1 {
+            font-size: 1.5em;
+            width: 60vw;
+            left: 10%;
+        }
+
+        #highScore {
+            font-size: 1.5em;
+            right: 2%;
+            top: 2%;
+        }
+
+        .lang_select {
+            top: 2%;
+            right: 24%;
+        }
+
+        .ques {
+            font-size: 2em !important;
+        }
+
+        .inputNum {
+            font-size: 2em !important;
+            width: 10vw !important;
+            border-bottom: 3px solid #000e00 !important;
+        }
+
+        .clearAns {
+            top: 20% !important;
+        }
+
+        .clearAns button {
+            margin: 2vw !important;
+        }
+
+        .ansBtn {
+            font-size: 2.5em !important;
+            padding: 10px 20px;
+        }
+
+        .ok_panda {
+            left: 60% !important;
+            top: 30% !important;
+            width: 35vw !important;
+            height: 25vh !important;
+        }
+    }
+
+    @media screen and (max-width: 480px) {
+        h1 {
+            font-size: 3em;
+            width: 90vw;
+            left: 5%;
+        }
+
+        #highScore {
+            font-size: 1.2em;
+            right: 1%;
+            top: 1%;
+        }
+
+        .lang_select {
+            top: 1%;
+            right: 28%;
+        }
+
+        .ques {
+            font-size: 1.5em !important;
+            border-radius: 20px;
+        }
+
+        .inputNum {
+            font-size: 1.5em !important;
+            width: 12vw !important;
+            border-bottom: 2px solid #97c0fd ;
+            left: 5%;
+
+        }
+        div.in_put input {
+            background-color: #7ae79bad;
+            font-size: 9vw;
+            font-family: a;
+            font-weight: bolder;
+            border: 2px solid #98ff98;
+            border-radius: 3px;
+            width: 14.2vw;
+            outline-color: #305223;
+            left: 5%;
+            }
+
+        .comma {
+            font-size: 1.5em;
+        }
+
+        .clearAns {
+            top: 15% !important;
+        }
+
+        .clearAns button {
+            margin: 1.5vw !important;
+        }
+
+        .ansBtn {
+            font-size: 1.8em !important;
+            padding: 8px 16px;
+        }
+
+        .ok_panda {
+            left: 50% !important;
+            top: 25% !important;
+            width: 40vw !important;
+            height: 40vh !important;
+        }
+    }
+
+    .qdiv {
+        
+        text-align: center;
+    }
+
+    .qdiv .subdiv {
+        position: relative;
+        top: 15%;
+        padding-top: 20px;
+    }
+
+    .ques {
+        font-size: 3em;
+    }
+
+    .inputNum {
+        font-size: 3em;
+        text-align: center;
+        width: 5vw;
+        outline: none;
+        border: none;
+        border-bottom: 4px solid #7fc763;
+        background-color: transparent;
+    }
+
+    .incorrect {
+        border: 4px solid rgb(248, 132, 111);
+    }
+
+    .clearAns {
+        position: relative;
+        top: 30%;
+    }
+
+    .clearAns button {
+        margin: 3vw;
+    }
+
+    .ansBtn {
+        font-size: 4em;
+        background-color: #074168;
+    }
+
+    .ansBtn:hover {
+        background-color: #054b7a;
+    }
+
+    .x {
+        background: rgb(248, 22, 41);
+    }
+
+    .x:hover {
+        background-color: rgb(185, 34, 34);
+    }
+
+    .ok_panda {
+        left: 75%;
+        top: 40%;
+        width: 20vw;
+        height: 35vh;
+    }
+
+    input::-webkit-inner-spin-button,
+    input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+</style>
+
+</html>

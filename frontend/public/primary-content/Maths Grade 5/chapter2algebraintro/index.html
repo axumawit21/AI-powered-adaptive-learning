@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="ti">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variables & Expressions - አልጀብራ</title>
+    <!-- Added Fredoka for a more playful English font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* Vibrant "Candy" Palette */
+            --primary: #FF006E;
+            /* Hot Pink */
+            --secondary: #3A86FF;
+            /* Bright Blue */
+            --accent: #FFBE0B;
+            /* Sunshine Yellow */
+            --success: #06D6A0;
+            /* Mint Green */
+            --purple: #8338EC;
+            /* Deep Purple */
+            --text: #2B2D42;
+            /* Dark Navy for text */
+            --card-bg: #FFFFFF;
+            --bg-gradient: linear-gradient(135deg, #FF99C8 0%, #D0F4DE 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            color: var(--text);
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* Animated Background Shapes */
+        .bg-shape {
+            position: fixed;
+            z-index: -1;
+            opacity: 0.4;
+            animation: float 20s infinite linear;
+        }
+
+        .bg-shape.one {
+            top: 10%;
+            left: 10%;
+            width: 100px;
+            height: 100px;
+            background: #FFBE0B;
+            border-radius: 50%;
+            animation-duration: 25s;
+            filter: blur(40px);
+        }
+
+        .bg-shape.two {
+            bottom: 20%;
+            right: 10%;
+            width: 150px;
+            height: 150px;
+            background: #3A86FF;
+            border-radius: 40% 60% 70% 30%;
+            animation-duration: 30s;
+            filter: blur(50px);
+        }
+
+        .bg-shape.three {
+            top: 40%;
+            left: 50%;
+            width: 80px;
+            height: 80px;
+            background: #8338EC;
+            border-radius: 30%;
+            animation-duration: 20s;
+            filter: blur(30px);
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            50% {
+                transform: translate(20px, 40px) rotate(180deg);
+            }
+
+            100% {
+                transform: translate(0, 0) rotate(360deg);
+            }
+        }
+
+        /* --- UI Components --- */
+        .card {
+            background: var(--card-bg);
+            border-radius: 30px;
+            box-shadow: 0 10px 0 rgba(0, 0, 0, 0.1);
+            border: 4px solid white;
+            padding: 2rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn {
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 700;
+            border-radius: 20px;
+            transition: all 0.1s;
+            position: relative;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: none !important;
+        }
+
+        /* --- Header --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 4px solid rgba(255, 255, 255, 0.5);
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .grade-badge {
+            background: var(--purple);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border: 3px solid white;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+            animation: popIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--purple);
+            font-size: 1.8rem;
+            text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Language Switcher */
+        .lang-switch {
+            position: relative;
+        }
+
+        .lang-btn {
+            background: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            border: 2px solid var(--secondary);
+            color: var(--secondary);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #BDD5EA;
+        }
+
+        .lang-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .lang-menu {
+            position: absolute;
+            top: 110%;
+            right: 0;
+            background: white;
+            padding: 10px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            width: 160px;
+            border: 2px solid var(--secondary);
+        }
+
+        .lang-menu.show {
+            display: flex;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        .lang-option {
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.2s;
+        }
+
+        .lang-option:hover {
+            background: #E3F2FD;
+            color: var(--secondary);
+        }
+
+        .lang-option.active {
+            background: var(--secondary);
+            color: white;
+        }
+
+        /* --- Main Content --- */
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* Concept Cards */
+        .concepts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .concept-card {
+            text-align: center;
+            border-color: white;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .concept-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .concept-card.variable {
+            border-bottom: 8px solid var(--primary);
+        }
+
+        .concept-card.constant {
+            border-bottom: 8px solid var(--success);
+        }
+
+        .icon-box {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            position: relative;
+        }
+
+        .var-icon {
+            background: var(--primary);
+            box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.2);
+            animation: pulse 3s infinite;
+        }
+
+        .const-icon {
+            background: var(--success);
+            box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.2);
+            border-radius: 50%;
+        }
+
+        .concept-card h2 {
+            margin: 10px 0;
+            font-size: 1.8rem;
+        }
+
+        .concept-card p {
+            margin: 0;
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        /* Game Section */
+        .game-board {
+            background: white;
+            border-radius: 40px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            /* Soft large shadow */
+            border: 5px solid white;
+            position: relative;
+        }
+
+        .story-bubble {
+            background: #E0F7FA;
+            color: #006064;
+            padding: 30px;
+            border-radius: 30px 30px 30px 0;
+            font-size: 1.6rem;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            position: relative;
+            border-left: 8px solid var(--secondary);
+            box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .story-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 20px solid var(--secondary);
+            border-top: 20px solid transparent;
+            border-bottom: 0 solid transparent;
+        }
+
+        .hl-var {
+            color: var(--primary);
+            background: #FFD6E7;
+            padding: 2px 8px;
+            border-radius: 8px;
+            border-bottom: 3px solid #FF85BB;
+        }
+
+        .hl-const {
+            color: var(--success);
+            background: #C8F7E8;
+            padding: 2px 8px;
+            border-radius: 8px;
+            border-bottom: 3px solid #64EDB8;
+        }
+
+        /* Builder Area */
+        .builder-area {
+            background: #F8F9FA;
+            border-radius: 25px;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            border: 3px dashed #DEE2E6;
+            min-height: 120px;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .slot {
+            width: 80px;
+            height: 80px;
+            border: 3px solid #CED4DA;
+            border-radius: 20px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ADB5BD;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .slot:hover {
+            border-color: var(--secondary);
+            background: #F0F7FF;
+        }
+
+        .slot.filled {
+            border: none;
+            background: var(--accent);
+            color: #5F2F00;
+            box-shadow: 0 6px 0 #D97706;
+            transform: translateY(-6px);
+            animation: rubberBand 0.6s;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .ctrl-btn {
+            width: 70px;
+            height: 70px;
+            font-size: 1.6rem;
+            background: white;
+            border: 2px solid #E9ECEF;
+            border-radius: 18px;
+            color: var(--text);
+            box-shadow: 0 5px 0 #DEE2E6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ctrl-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .ctrl-btn.is-var {
+            color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 5px 0 #FF99C8;
+        }
+
+        .ctrl-btn.is-op {
+            color: var(--secondary);
+            border-color: var(--secondary);
+            box-shadow: 0 5px 0 #A6C8FF;
+        }
+
+        .ctrl-btn.is-num {
+            color: var(--success);
+            border-color: var(--success);
+            box-shadow: 0 5px 0 #9EF0D2;
+        }
+
+        .action-row {
+            text-align: center;
+        }
+
+        .check-btn {
+            background: var(--success);
+            color: white;
+            padding: 15px 60px;
+            font-size: 1.4rem;
+            border-radius: 50px;
+            box-shadow: 0 8px 0 #049F76;
+            transition: transform 0.2s;
+        }
+
+        .check-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Feedback Popups */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            padding: 40px;
+            border-radius: 40px;
+            text-align: center;
+            max-width: 400px;
+            animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            margin: 0 0 10px;
+            color: var(--text);
+        }
+
+        .modal-btn {
+            background: var(--secondary);
+            color: white;
+            padding: 12px 40px;
+            font-size: 1.2rem;
+            margin-top: 20px;
+            border-radius: 30px;
+            box-shadow: 0 5px 0 #1565C0;
+        }
+
+        /* Animations */
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 110, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 20px rgba(255, 0, 110, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 110, 0);
+            }
+        }
+
+        @keyframes rubberBand {
+            0% {
+                transform: scale3d(1, 1, 1);
+            }
+
+            30% {
+                transform: scale3d(1.25, 0.75, 1);
+            }
+
+            40% {
+                transform: scale3d(0.75, 1.25, 1);
+            }
+
+            50% {
+                transform: scale3d(1.15, 0.85, 1);
+            }
+
+            65% {
+                transform: scale3d(0.95, 1.05, 1);
+            }
+
+            75% {
+                transform: scale3d(1.05, 0.95, 1);
+            }
+
+            100% {
+                transform: scale3d(1, 1, 1);
+            }
+        }
+
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-10px);
+            }
+
+            75% {
+                transform: translateX(10px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .concepts-row {
+                grid-template-columns: 1fr;
+            }
+
+            .slot {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+
+            h1 {
+                display: none;
+            }
+
+            /* Hide title on small screens to save space */
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-shape one"></div>
+    <div class="bg-shape two"></div>
+    <div class="bg-shape three"></div>
+
+    <header>
+        <div class="header-brand">
+            <div class="grade-badge">5</div>
+            <h1 id="header-title">Algebra Fun</h1>
+        </div>
+
+        <div class="lang-switch">
+            <button class="btn lang-btn" onclick="toggleLangMenu()">
+                <span id="curr-lang-display">🗺️ ትግርኛ</span>
+                <span style="font-size: 0.8rem">▼</span>
+            </button>
+            <div class="lang-menu" id="lang-menu">
+                <div class="lang-option" onclick="setLang('ti')">ትግርኛ</div>
+                <div class="lang-option" onclick="setLang('am')">አማርኛ</div>
+                <div class="lang-option" onclick="setLang('en')">English</div>
+                <div class="lang-option" onclick="setLang('om')">Afan Oromoo</div>
+                <div class="lang-option" onclick="setLang('so')">Soomaali</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <div class="concepts-row">
+            <div class="card concept-card variable" onclick="playMagic()">
+                <div class="icon-box var-icon"><span id="magic-box">x</span></div>
+                <h2 id="title-var">ተተካኢ</h2>
+                <p id="desc-var">Changes value!</p>
+            </div>
+
+            <div class="card concept-card constant" onclick="playPop()">
+                <div class="icon-box const-icon">5</div>
+                <h2 id="title-const">ቀዋሚ</h2>
+                <p id="desc-const">Always same!</p>
+            </div>
+        </div>
+
+        <div class="game-board" id="game-ui">
+            <h2 id="game-title" style="text-align:center; color: var(--purple); margin-top:0;">Build Expression</h2>
+
+            <div class="story-bubble" id="story-text">
+                Loading story...
+            </div>
+
+            <div class="builder-area" id="slots-area">
+                <!-- Slots inserted here -->
+            </div>
+
+            <div class="controls" id="controls-area">
+                <!-- Buttons inserted here -->
+            </div>
+
+            <div class="action-row">
+                <button class="btn check-btn" onclick="checkAnswer()" id="btn-check">Check</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Correct Modal -->
+    <div class="modal-overlay" id="modal-correct">
+        <div class="modal">
+            <span class="modal-icon">🎉</span>
+            <h2 class="modal-title" id="msg-correct">Correct!</h2>
+            <button class="btn modal-btn" onclick="nextLevel()" id="btn-next">Next Level</button>
+        </div>
+    </div>
+
+    <!-- Wrong Modal (Simpler toast style for wrong) -->
+    <div id="toast-wrong"
+        style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #FF006E; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.2); transition: transform 0.3s;">
+        Try Again!
+    </div>
+
+    <canvas id="confetti-canvas"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999;"></canvas>
+
+    <script>
+        // --- Audio System ---
+        const AudioSys = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+
+            playTone(freq, type, dur, vol = 0.1, delay = 0) {
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.frequency.value = freq;
+                osc.type = type;
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime + delay);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime + delay);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + delay + dur);
+                osc.stop(this.ctx.currentTime + delay + dur);
+            },
+
+            playPop() { this.playTone(600, 'sine', 0.15, 0.2); },
+            playClack() { this.playTone(300, 'triangle', 0.05, 0.1); },
+
+            playWin() {
+                [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+                    this.playTone(f, 'sine', 0.4, 0.2, i * 0.1);
+                });
+            },
+
+            playError() {
+                this.playTone(150, 'sawtooth', 0.3, 0.2);
+                setTimeout(() => this.playTone(100, 'sawtooth', 0.3, 0.2), 150);
+            }
+        };
+
+        function playMagic() {
+            AudioSys.playTone(800, 'sine', 0.1);
+            setTimeout(() => AudioSys.playTone(1200, 'sine', 0.3), 100);
+        }
+        function playPop() { AudioSys.playPop(); }
+
+        // --- Content ---
+        const data = {
+            ti: {
+                title: "አልጀብራ",
+                var: "ተተካኢ", varDesc: "ዋጋኡ ዝቀያየር ምልክት",
+                const: "ቀዋሚ", constDesc: "ዋጋኡ ዘይቀያየር ቁጽሪ",
+                gameTitle: "መግለፂ ስራሕ (Build Expression)",
+                check: "ፈትሽ (Check)", next: "ቀፃሊ (Next)",
+                correct: "ትኽክል! (Correct)", wrong: "ጌጋ (Wrong)",
+                stories: [
+                    { t: "ሃጎስ <span class='hl-var'>n</span> ደብተራት ኣለዎ። <span class='hl-const'>3</span> ደብተራት ወሲኹ ገዚኡ።", ex: ["n", "+", "3"] },
+                    { t: "ለማ <span class='hl-var'>y</span> ብርቱካን ኣለዎ። <span class='hl-const'>2</span> በሊዑ።", ex: ["y", "-", "2"] },
+                    { t: "ሳራ <span class='hl-var'>x</span> ዓመት እዩ ዕድሚኣ። ሓውኣ ብ <span class='highlight-const'>5</span> ዓመት ይምእሳ።", ex: ["x", "-", "5"] }
+                ]
+            },
+            am: {
+                title: "አልጀብራ",
+                var: "ተለዋዋጭ", varDesc: "ዋጋው የሚቀያየር ምልክት",
+                const: "ቋሚ", constDesc: "ዋጋው የማይቀያየር ቁጥር",
+                gameTitle: "መግለጫ ይስሩ",
+                check: "ፈትሽ", next: "ቀጣይ",
+                correct: "ትክክል!", wrong: "ስህተት",
+                stories: [
+                    { t: "ሃጎስ <span class='hl-var'>n</span> ደብተር አለው። <span class='hl-const'>3</span> ተጨማሪ ገዛ።", ex: ["n", "+", "3"] },
+                    { t: "ለማ <span class='hl-var'>y</span> ብርቱካን አለው። <span class='hl-const'>2</span> በላ።", ex: ["y", "-", "2"] },
+                    { t: "ሳራ <span class='hl-var'>x</span> አመቷ ነው። ወንድሟ በ <span class='hl-const'>5</span> አመት ያንሳል።", ex: ["x", "-", "5"] }
+                ]
+            },
+            en: {
+                title: "Algebra Fun",
+                var: "Variable", varDesc: "A symbol that changes value",
+                const: "Constant", constDesc: "A number that stays the same",
+                gameTitle: "Build the Expression",
+                check: "Check", next: "Next",
+                correct: "Awesome!", wrong: "Oops, try again!",
+                stories: [
+                    { t: "Hagos has <span class='hl-var'>n</span> books. He buys <span class='hl-const'>3</span> more.", ex: ["n", "+", "3"] },
+                    { t: "Lemma has <span class='hl-var'>y</span> oranges. He eats <span class='hl-const'>2</span>.", ex: ["y", "-", "2"] },
+                    { t: "Sara is <span class='hl-var'>x</span> years old. Her brother is <span class='hl-const'>5</span> years younger.", ex: ["x", "-", "5"] }
+                ]
+            },
+            om: {
+                title: "Aljibraa",
+                var: "Jijjiiramaa", varDesc: "Mallattoo gatiin isaa jijjiiramu",
+                const: "Dhaabbataa", constDesc: "Lakkoofsa gatiin isaa hin jijjiiramne",
+                gameTitle: "Himannaa Ijaari",
+                check: "Mirkaneessi", next: "Itti Aanu",
+                correct: "Sirrii!", wrong: "Dogoggora",
+                stories: [
+                    { t: "Hagos dabtara <span class='hl-var'>n</span> qaba. <span class='hl-const'>3</span> dabalatee bite.", ex: ["n", "+", "3"] },
+                    { t: "Lemmaan burtukaana <span class='hl-var'>y</span> qaba. <span class='hl-const'>2</span> nyaate.", ex: ["y", "-", "2"] },
+                    { t: "Umriin Saaraa <span class='hl-var'>x</span> dha. Obboleessi ishee waggaa <span class='hl-const'>5</span>n ishee xinnaata.", ex: ["x", "-", "5"] }
+                ]
+            },
+            so: {
+                title: "Aljebra",
+                var: "Doorsoome", varDesc: "Astaanta qiimaheedu isbedelo",
+                const: "Joogto", constDesc: "Tiro aan isbedelin",
+                gameTitle: "Dhis Weedha",
+                check: "Hubi", next: "Xiga",
+                correct: "Sax!", wrong: "Qaldan",
+                stories: [
+                    { t: "Hagos wuxuu haystaa buugaag <span class='hl-var'>n</span> ah. Wuxuu iibsaday <span class='hl-const'>3</span> kale.", ex: ["n", "+", "3"] },
+                    { t: "Lemma wuxuu haystaa liin <span class='hl-var'>y</span> ah. Wuxuu cunay <span class='hl-const'>2</span>.", ex: ["y", "-", "2"] },
+                    { t: "Sara waa <span class='hl-var'>x</span> jir. Walaalkeed wuxuu ka yar yahay <span class='hl-const'>5</span> sano.", ex: ["x", "-", "5"] }
+                ]
+            }
+        };
+
+        let currLang = 'ti';
+        let currLevel = 0;
+        let slots = [null, null, null];
+
+        // --- State Management ---
+        function setLang(lang) {
+            currLang = lang;
+            document.getElementById('lang-menu').classList.remove('show');
+            const langMap = { 'ti': 'ትግርኛ', 'am': 'አማርኛ', 'en': 'English', 'om': 'Afan Oromoo', 'so': 'Soomaali' };
+            document.getElementById('curr-lang-display').textContent = `🗺️ ${langMap[lang]}`;
+            updateUI();
+        }
+
+        function toggleLangMenu() {
+            document.getElementById('lang-menu').classList.toggle('show');
+        }
+
+        function updateUI() {
+            const t = data[currLang];
+            document.getElementById('header-title').textContent = t.title;
+            document.getElementById('title-var').textContent = t.var;
+            document.getElementById('desc-var').textContent = t.varDesc;
+            document.getElementById('title-const').textContent = t.const;
+            document.getElementById('desc-const').textContent = t.constDesc;
+            document.getElementById('game-title').textContent = t.gameTitle;
+            document.getElementById('btn-check').textContent = t.check;
+            document.getElementById('btn-next').textContent = t.next;
+            document.getElementById('msg-correct').textContent = t.correct;
+            loadLevel();
+        }
+
+        // --- Game Logic ---
+        function loadLevel() {
+            slots = [null, null, null];
+            const story = data[currLang].stories[currLevel];
+
+            // Render Story
+            document.getElementById('story-text').innerHTML = story.t;
+
+            // Render Slots
+            const slotsArea = document.getElementById('slots-area');
+            slotsArea.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const el = document.createElement('div');
+                el.className = 'slot';
+                el.id = `slot-${i}`;
+                el.onclick = () => clearSlot(i);
+                slotsArea.appendChild(el);
+            }
+
+            // Render Controls
+            const pool = [...new Set([...story.ex, '+', '-', 'x', 'y', 'n', '5', '3', '2'])];
+            const ctrlArea = document.getElementById('controls-area');
+            ctrlArea.innerHTML = '';
+            pool.forEach(item => {
+                let cls = 'ctrl-btn';
+                if (/[a-z]/.test(item)) cls += ' is-var';
+                else if (/[0-9]/.test(item)) cls += ' is-num';
+                else cls += ' is-op';
+
+                const btn = document.createElement('button');
+                btn.className = cls;
+                btn.textContent = item;
+                btn.onclick = () => fillSlot(item);
+                ctrlArea.appendChild(btn);
+            });
+        }
+
+        function fillSlot(val) {
+            const idx = slots.indexOf(null);
+            if (idx !== -1) {
+                AudioSys.playClack();
+                slots[idx] = val;
+                const el = document.getElementById(`slot-${idx}`);
+                el.textContent = val;
+                el.classList.add('filled');
+            }
+        }
+
+        function clearSlot(idx) {
+            if (slots[idx]) {
+                AudioSys.playPop();
+                slots[idx] = null;
+                const el = document.getElementById(`slot-${idx}`);
+                el.textContent = '';
+                el.classList.remove('filled');
+            }
+        }
+
+        function checkAnswer() {
+            const t = data[currLang];
+            const story = t.stories[currLevel];
+            const userAns = slots.join('');
+            const realAns = story.ex.join('');
+
+            if (userAns === realAns) {
+                AudioSys.playWin();
+                fireConfetti();
+                document.getElementById('modal-correct').style.display = 'flex';
+            } else {
+                AudioSys.playError();
+                const toast = document.getElementById('toast-wrong');
+                toast.textContent = t.wrong;
+                toast.style.transform = 'translateX(-50%) translateY(0)';
+                document.getElementById('game-ui').style.animation = 'shake 0.4s';
+                setTimeout(() => {
+                    toast.style.transform = 'translateX(-50%) translateY(100px)';
+                    document.getElementById('game-ui').style.animation = '';
+                }, 2000);
+            }
+        }
+
+        function nextLevel() {
+            document.getElementById('modal-correct').style.display = 'none';
+            currLevel = (currLevel + 1) % data[currLang].stories.length;
+            loadLevel();
+        }
+
+        // --- Visuals ---
+        function fireConfetti() {
+            const c = document.getElementById('confetti-canvas');
+            const ctx = c.getContext('2d');
+            c.width = window.innerWidth;
+            c.height = window.innerHeight;
+
+            let particles = [];
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: c.width / 2, y: c.height / 2,
+                    vx: (Math.random() - 0.5) * 20,
+                    vy: (Math.random() - 0.5) * 20,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    life: 100
+                });
+            }
+
+            function loop() {
+                ctx.clearRect(0, 0, c.width, c.height);
+                let active = false;
+                particles.forEach(p => {
+                    if (p.life > 0) {
+                        p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life--;
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(p.x, p.y, 8, 8);
+                        active = true;
+                    }
+                });
+                if (active) requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // Variable Magic Animation
+        setInterval(() => {
+            const chars = ['x', 'n', 'y', 'a'];
+            document.getElementById('magic-box').textContent = chars[Math.floor(Math.random() * chars.length)];
+        }, 2000);
+
+        // Init
+        loadLevel();
+
+    </script>
+</body>
+
+</html>

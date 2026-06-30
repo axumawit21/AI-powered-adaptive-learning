@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find the Different One</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top, #fdfbfb 0%, #e8f0ff 40%, #d0e1ff 100%);
+        }
+
+        .game-container {
+            width: 100vw; /* span the full viewport width */
+            max-width: 100%;
+            margin: 0;
+            padding: 24px 40px;
+            background: radial-gradient(circle at top left, #ffffff 0%, #f5f9ff 45%, #eef3ff 100%);
+            border-radius: 0;
+            box-shadow: none;
+            border: none;
+            box-sizing: border-box;
+            /* override older styles that were shrinking the container */
+            transform: none;
+            transform-origin: top center;
+        }
+
+        .header h1 {
+            color: #0f172a;
+            font-size: 1.8rem;
+            margin: 0 0 8px;
+            letter-spacing: 0.03em;
+        }
+
+        .game-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.95rem;
+            color: #0f172a;
+        }
+
+        .score, .level {
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.04);
+        }
+
+        .language-selector select.language-dropdown {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.8);
+            background: #ffffff;
+            font-size: 0.9rem;
+            color: #0f172a;
+        }
+
+        .sound-control .mute-btn {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.8);
+            background: #ffffff;
+            cursor: pointer;
+        }
+
+        .game-board {
+            margin-top: 22px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 28px;
+            justify-items: center;
+        }
+
+        .game-item img {
+            width: 100%;
+            max-width: 260px;
+            height: auto;
+            border-radius: 14px;
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.18);
+            background: #ffffff;
+        }
+
+        .feedback {
+            margin-top: 20px;
+        }
+
+        .feedback .message {
+            font-size: 1rem;
+            color: #0f172a;
+        }
+
+        .button-group {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .quit-btn, .next-btn {
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+        }
+
+        .quit-btn {
+            background: #e11d48;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(190, 24, 93, 0.35);
+        }
+
+        .next-btn {
+            background: #22c55e;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
+        }
+
+        .quit-btn:hover, .next-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                max-width: 100%;
+                margin: 10px;
+                padding: 16px 10px;
+                border-radius: 16px;
+            }
+
+            .header h1 {
+                font-size: 1.3rem;
+            }
+
+            .game-item img {
+                max-width: 160px;
+            }
+        }
+
+        /* Extra-large screens: use 4 columns and larger items */
+        @media (min-width: 1400px) {
+            .game-board {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+            .game-item img {
+                max-width: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="status"></div>
+    <!-- Audio elements -->
+    <audio id="bgMusic" loop>
+        <source src="assets/audios/music_play.ogg" type="audio/ogg">
+        Your browser does not support the audio element.
+    </audio>
+    <audio id="correctSound">
+        <source src="assets/audios/word_good1.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="wrongSound">
+        <source src="assets/audios/wrong.wav" type="audio/wav">
+    </audio>
+    
+    <div class="game-container">
+        <div class="header">
+            <h1 id="gameTitle">Find the Different One</h1>
+            <div class="game-info">
+                <div class="game-stats">
+                    <div class="score"><span id="scoreLabel">Score:</span> <span id="score">0</span></div>
+                    <div class="level"><span id="levelLabel">Level:</span> <span id="level">1</span></div>
+                </div>
+                <div class="language-selector">
+                    <select id="languageSelect" class="language-dropdown">
+                        <option value="en">English</option>
+                        <option value="am">አማርኛ</option>
+                        <option value="ti">ትግርኛ</option>
+                        <option value="om">Afaan Oromoo</option>
+                        <option value="so">Soomaali</option>
+                    </select>
+                </div>
+                <div class="sound-control">
+                    <button id="muteBtn" class="mute-btn" aria-label="Toggle sound">🔊</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-board" id="gameBoard">
+            <!-- Game items will be inserted here by JavaScript -->
+        </div>
+        
+        <div class="feedback">
+            <div class="message" id="message">Click on the different item!</div>
+            <div class="button-group">
+                <button class="quit-btn" id="quitBtn">Quit</button>
+                <button class="next-btn" id="nextBtn" style="display: none;">Next Level</button>
+            </div>
+        </div>
+    </div>
+ </body>
+ <script>
+console.log('Hello from utils mod');
+
+
+function getElement(selector) {
+    return document.querySelector(selector);
+}
+
+function getElements(selector) {
+    return document.querySelectorAll(selector);
+}
+
+function createElement(_elem, _class="", _id="") {
+    let elem = document.createElement(_elem)
+    if(_class) {
+        elem.className = _class
+    }
+    if(_id) {
+        elem.id = _id
+    }
+    return elem
+}
+
+function applyStyle(elem, style) { 
+    return elem.setAttribute("style", style);
+}
+
+async function playAudio(elem, src) {
+    elem.src = src;
+    await elem.play();
+}
+
+function pandaNews(state=1) { 
+    let bg = createElement("div", "pandaBg", "");
+    bg.style = {
+        width: `${window.innerWidth}px`,
+        height: `${window.innerHeight}px`,
+        background: "rgb(0, 0, 0, 0.9)"
+    }
+    let panda = createElement("img", "ok_panda", "");
+    if(state) panda.src = "assets/images/numbers/win.png";
+    else panda.src = "assets/images/numbers/null.png";
+    panda.animationName = "ok_panda";
+    panda.animationDuration = "2s";
+    return bg.appendChild(panda);
+}
+
+function randInt(min, max) {
+    return Math.floor(min + Math.random() * (max + 1 - min));
+}
+
+function myRandom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function arrify(coll) {
+    return Array.prototype.slice.call(coll)
+}
+
+
+HTMLCollection.prototype.clone = function () {
+    let elems = [];
+    for (let i = 0; i < this.length; i++) {
+        elems.push(this[i]);
+    }
+    return elems;
+}
+
+Array.prototype.randomize = function () {
+    let _arr = [].concat(this);
+    _arr.forEach((item, index, __arr) => {
+        let a = Math.floor(Math.random() * __arr.length);
+        let tempA = __arr[a];
+        _arr[index] = tempA;
+        _arr[a] = item
+    })
+    return _arr;
+}
+ </script>
+ <script>
+let images = [];
+let imgs = [];
+ </script>
+ <script>
+    let currentLevel = 1;
+    let score = 0;
+    let correctAnswerIndex = 0;
+    
+    // Translations
+    const translations = {
+        en: {
+            title: 'Find the Different One',
+            score: 'Score',
+            level: 'Level',
+            message: 'Click on the different item!',
+            correct: 'Correct! Well done!',
+            tryAgain: 'Try again!',
+            nextLevel: 'Next Level',
+            quit: 'Quit'
+        },
+        am: {
+            title: 'የተለየውን ይምረጡ',
+            score: 'ውጤት',
+            level: 'ደረጃ',
+            message: 'የተለየውን ንጥል ይምረጡ!',
+            correct: 'ትክክል! ጥሩ አደረግክ!',
+            tryAgain: 'እንደገና ይሞክሩ!',
+            nextLevel: 'ቀጣይ ደረጃ',
+            quit: 'ውጣ'
+        },
+        ti: {
+            title: 'እቲ ፍልይ ዝበለ ምረፅ',
+            score: 'ነጥቢ',
+            level: 'ደረጃ',
+            message: 'እቲ ፍልይ ዝበለ ነገር ጠውቕ!',
+            correct: 'ቅኑዕ! ጽቡቕ ገይርካዮ!',
+            tryAgain: 'ከምኡ ኣይኮነን፣ ክልተ ግዜ ፈትን!',
+            nextLevel: 'ቀጻሊ ደረጃ',
+            quit: 'ውጻእ'
+        },
+        om: {
+            title: 'Kan Addaan Citiin Filadhu',
+            score: 'Qabxii',
+            level: 'Sadaffa',
+            message: 'Wanta addaan citiin taphadhu!',
+            correct: 'Sirrii ture! Gaarii hojjette!',
+            tryAgain: 'Irra deebi ittiin yaali!',
+            nextLevel: 'Sadaffa Ittaanu',
+            quit: 'Ba'
+        },
+        so: {
+            title: 'Dooro Kala Duwanka',
+            score: 'Dhibcaha',
+            level: 'Heerka',
+            message: 'Guji kala duwanka!',
+            correct: 'Sax! Waa hagaag!',
+            tryAgain: 'Dib u isku day!',
+            nextLevel: 'Heerka Xiga',
+            quit: 'Ka Bax'
+        }
+    };
+    
+    // Set language function
+    function setLanguage(lang, skipSave = false) {
+        const languageSelect = document.getElementById('languageSelect');
+        
+        // If language is not in current options, default to first available
+        if (![...languageSelect.options].some(opt => opt.value === lang)) {
+            lang = languageSelect.options[0]?.value || 'en';
+        }
+        
+        // Update UI elements
+        document.getElementById('gameTitle').textContent = translations[lang].title;
+        document.getElementById('scoreLabel').textContent = translations[lang].score + ':';
+        document.getElementById('levelLabel').textContent = translations[lang].level + ':';
+        document.getElementById('message').textContent = translations[lang].message;
+        document.getElementById('nextBtn').textContent = translations[lang].nextLevel;
+        document.getElementById('quitBtn').textContent = translations[lang].quit;
+        
+        // Save language preference if not skipping
+        if (!skipSave) {
+            localStorage.setItem('gameLanguage', lang);
+        }
+        
+        // Update dropdown
+        languageSelect.value = lang;
+    }
+    
+    // Always default to Tigrinya on load
+    function getCurrentLanguage() {
+        return 'ti';
+    }
+    // Audio elements
+    const bgMusic = document.getElementById('bgMusic');
+    const correctSound = document.getElementById('correctSound');
+    const wrongSound = document.getElementById('wrongSound');
+    
+    // Initialize the game when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        // Set up language
+        const currentLang = getCurrentLanguage();
+        setLanguage(currentLang);
+        
+        // Set up language selector
+        const languageSelect = document.getElementById('languageSelect');
+        languageSelect.value = currentLang;
+        languageSelect.addEventListener('change', (e) => {
+            setLanguage(e.target.value);
+        });
+        const muteBtn = document.getElementById('muteBtn');
+        const setMuteIcon = () => { muteBtn.textContent = bgMusic.muted ? '🔇' : '🔊'; };
+        setMuteIcon();
+        muteBtn.addEventListener('click', () => {
+            bgMusic.muted = !bgMusic.muted;
+            setMuteIcon();
+        });
+        
+        // Try to play background music (will be muted until user interacts)
+        const playMusic = () => {
+            bgMusic.volume = 0.3; // Set volume to 30%
+            const playPromise = bgMusic.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    // Auto-play was prevented, wait for user interaction
+                    document.addEventListener('click', function startMusic() {
+                        bgMusic.play().catch(e => console.log('Audio play failed:', e));
+                        document.removeEventListener('click', startMusic);
+                    });
+                });
+            }
+        };
+        
+        // Start music after a short delay
+    setTimeout(playMusic, 1000);
+
+    // Initialize the game when the page loads
+    startGame();
+    document.getElementById('nextBtn').addEventListener('click', nextLevel);
+});
+
+// Available categories and their images
+const categories = [
+    {
+        name: 'Balls',
+        path: 'balls/',
+        files: ['american-football.png', 'base-ball.png', 'basket-ball.png', 'football.png', 'tennis-ball.png', 'volley-ball.png']
+    },
+    {
+        name: 'Beach Balls',
+        path: 'beachballs/',
+        files: ['beach_ball_00.png', 'beach_ball_01.png', 'beach_ball_02.png', 'beach_ball_03.png', 
+               'beach_ball_04.png', 'beach_ball_05.png', 'beach_ball_06.png', 'beach_ball_07.png']
+    },
+    {
+        name: 'Cakes',
+        path: 'cake/',
+        files: ['blue-no-base.png', 'blue-with-base.png', 'choclate-no-base.png', 'chocolate-with-base.png',
+               'green-no-base.png', 'green-with-base.png', 'pink-no-base.png', 'purple-no-base.png']
+    },
+    {
+        name: 'Cars',
+        path: 'cars/',
+        files: ['ambulance.png', 'delivery.png', 'firetruck.png', 'garbageTruck.png', 'hatchbackSports.png', 'police.png', 'race.png', 'sedan.png']
+    },
+    {
+        name: 'Chocolate',
+        path: 'chocolate/',
+        files: ['blue-wrapper.png', 'green-wrapper.png', 'purple-wrapper.png', 'red-wrapper.png', 'yellow-wrapper.png']
+    },
+    {
+        name: 'Donuts',
+        path: 'donuts/',
+        files: ['blue_icing.png', 'chocolate_icing.png', 'chocolate_icing_chocolate_drizzle.png',
+               'green_icing_green_sprinkles.png', 'pink_icing_sprinkles.png', 'pink_icing_white_drizzle.png',
+               'red_icing_white_sprinkles.png', 'white_icing.png']
+    },
+    {
+        name: 'Trees',
+        path: 'trees/',
+        files: ['tree_blocks.png', 'tree_cone.png', 'tree_default.png', 'tree_detailed.png',
+               'tree_fat.png', 'tree_oak.png', 'tree_palm.png', 'tree_pineDefaultA.png']
+    },
+    {
+        name: 'Light Bulbs',
+        path: 'light_bulb/',
+        files: ['light_bulb_01.png', 'light_bulb_02.png', 'light_bulb_03.png', 'light_bulb_04.png', 'light_bulb_05.png']
+    },
+    {
+        name: 'Lines',
+        path: 'lines/',
+        files: ['circle.png', 'hor.png', 'leftCircle.png', 'leftDiagonal.png', 'rightCircle.png', 'rightDiagonal.png', 'ver.png', 'zigZag.png']
+    },
+    {
+        name: 'Lollipops',
+        path: 'lollipop/',
+        files: ['blue-n-white-bordered.png', 'green-n-yellow-bordered.png', 'grey.png', 
+               'orange-n-yellow-bordered.png', 'purple-n-pink-bordered.png', 'red-n-yellow-bordered.png']
+    },
+    {
+        name: 'Numbers',
+        path: 'numbers/',
+        files: ['0.png', '1.png', '2.png', '3.png', '4.png', '5.png', '6.png', '7.png', '8.png', '9.png']
+    },
+    {
+        name: 'Planes',
+        path: 'plane/',
+        files: ['plane_1_blue.png', 'plane_1_pink.png', 'plane_1_red.png', 'plane_1_yellow.png',
+               'plane_2_blue.png', 'plane_2_green.png', 'plane_2_red.png', 'plane_2_yellow.png']
+    },
+    {
+        name: 'Shapes',
+        path: 'shapes/',
+        files: ['0.png', '4_2.png', '4_1.png', '3.png', '4_3.png', '5.png', '6.png']
+    },
+    {
+        name: 'Balloons',
+        path: 'balloons/',
+        files: ['blue.png', 'green.png', 'orange.png', 'pink.png', 'purple.png', 'red.png', 'yellow.png']
+    },
+    {
+        name: 'Cupcakes',
+        path: 'cupcake/',
+        files: ['blue-yellow.png', 'cold-blue.png', 'dark.png', 'green-orange.png', 
+               'orange.png', 'pink.png', 'purple.png', 'strawberry.png', 'yellow-light-purple.png']
+    },
+    {
+        name: 'Drawings',
+        path: 'drawOver/',
+        files: ['thumb001.jpg', 'thumb002.jpg', 'thumb003.jpg', 'thumb004.jpg', 
+               'thumb005.jpg', 'thumb006.jpg', 'thumb007.jpg', 'thumb008.jpg']
+    },
+    {
+        name: 'Feathers',
+        path: 'feather/',
+        files: ['blue_feather.png', 'green_feather.png', 'grey_feather.png', 'pink_feather.png', 
+               'purple_feather.png', 'red_feather.png', 'yellow_feather.png']
+    },
+    {
+        name: 'Houses',
+        path: 'houses/',
+        files: ['house_type01.png', 'house_type02.png', 'house_type03.png', 'house_type04.png',
+               'house_type05.png', 'house_type06.png', 'house_type07.png', 'house_type08.png']
+    }
+    ];
+    
+    // Initialize the game when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        startGame();
+        document.getElementById('nextBtn').addEventListener('click', nextLevel);
+        document.getElementById('quitBtn').addEventListener('click', quitGame);
+    });
+    
+    // Restart the game
+    function quitGame() {
+        currentLevel = 1;
+        score = 0;
+        document.getElementById('score').textContent = '0';
+        document.getElementById('nextBtn').style.display = 'none';
+        startGame();
+    }
+    
+    // Category to language mapping
+    const categoryLanguages = {
+        'Balls': ['en', 'am', 'ti', 'so'],
+        'Beach Balls': ['en', 'am', 'ti', 'so'],
+        'Cakes': ['en', 'am', 'om', 'so'],
+        'Cars': ['en', 'am', 'ti', 'om', 'so'],
+        'Chocolate': ['en', 'am', 'ti', 'so'],
+        'Donuts': ['en', 'am', 'om', 'so'],
+        'Trees': ['en', 'am', 'ti', 'om', 'so'],
+        'Light Bulbs': ['en', 'am', 'ti', 'so'],
+        'Lines': ['en', 'am', 'om', 'so'],
+        'Lollipops': ['en', 'am', 'ti', 'so'],
+        'Numbers': ['en', 'am', 'ti', 'om', 'so'],
+        'Planes': ['en', 'am', 'ti', 'om', 'so'],
+        'Shapes': ['en', 'am', 'ti', 'so'],
+        'Balloons': ['en', 'am', 'om', 'so'],
+        'Cupcakes': ['en', 'am', 'ti', 'om', 'so'],
+        'Drawings': ['en', 'am', 'ti', 'so'],
+        'Feathers': ['en', 'am', 'ti', 'om', 'so'],
+        'Houses': ['en', 'am', 'ti', 'om', 'so']
+    };
+    
+    // Language names in their native scripts
+    const languageNames = {
+        'en': 'English',
+        'am': 'አማርኛ',
+        'ti': 'ትግርኛ',
+        'om': 'Afaan Oromoo',
+        'so': 'Soomaali'
+    };
+    
+    // Update language selector based on current category
+    function updateLanguageSelector(categoryName) {
+        const languageSelect = document.getElementById('languageSelect');
+        const currentLang = getCurrentLanguage();
+        const availableLangs = categoryLanguages[categoryName] || ['en'];
+        
+        // Clear existing options
+        languageSelect.innerHTML = '';
+        
+        // Add available languages
+        availableLangs.forEach(lang => {
+            const option = document.createElement('option');
+            option.value = lang;
+            option.textContent = languageNames[lang] || lang;
+            languageSelect.appendChild(option);
+        });
+        
+        // Set the selected language (use current if available, otherwise first available)
+        const selectedLang = availableLangs.includes(currentLang) ? currentLang : availableLangs[0];
+        setLanguage(selectedLang, true);
+    }
+    
+    // Start a new game level
+    async function startGame() {
+        const gameBoard = document.getElementById('gameBoard');
+        gameBoard.innerHTML = '';
+        
+        // Select a random category
+        const category = categories[Math.floor(Math.random() * categories.length)];
+        
+        // Update available languages based on category
+        updateLanguageSelector(category.name);
+        
+        // Select two different images from the category
+        let commonIndex, differentIndex;
+        do {
+            commonIndex = Math.floor(Math.random() * category.files.length);
+            differentIndex = Math.floor(Math.random() * category.files.length);
+        } while (commonIndex === differentIndex);
+        
+        const commonImage = `assets/images/${category.path}${category.files[commonIndex]}`;
+        const differentImage = `assets/images/${category.path}${category.files[differentIndex]}`;
+        
+        // Randomly select position for the different image (0-8)
+        correctAnswerIndex = Math.floor(Math.random() * 9);
+        
+        // Create the game board
+        for (let i = 0; i < 9; i++) {
+            const item = document.createElement('div');
+            item.className = 'game-item';
+            
+            const img = document.createElement('img');
+            const isDifferent = i === correctAnswerIndex;
+            img.src = isDifferent ? differentImage : commonImage;
+            img.alt = isDifferent ? 'Different item' : 'Common item';
+            img.loading = 'lazy';
+            
+            item.appendChild(img);
+            item.addEventListener('click', function() {
+                checkAnswer(i === correctAnswerIndex, this);
+            });
+            gameBoard.appendChild(item);
+        }
+        
+        // Update level display
+        document.getElementById('level').textContent = currentLevel;
+    }
+    
+    // Check if the selected answer is correct
+    function checkAnswer(isCorrect, clickedItem) {
+        const message = document.getElementById('message');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        if (isCorrect) {
+            // Play correct sound
+            correctSound.currentTime = 0;
+            correctSound.play().catch(e => console.log('Could not play correct sound:', e));
+            
+            // Update UI for correct answer
+            score += 10;
+            document.getElementById('score').textContent = score;
+            const lang = getCurrentLanguage();
+            message.textContent = translations[lang].correct;
+            message.style.color = '#4CAF50';
+            nextBtn.style.display = 'inline-block';
+            
+            // Highlight the correct answer in green
+            clickedItem.classList.add('correct');
+            
+            // Disable all items
+            const items = document.querySelectorAll('.game-item');
+            items.forEach(item => {
+                item.style.pointerEvents = 'none';
+                if (item !== clickedItem) {
+                    item.style.opacity = '0.6';
+                }
+            });
+            
+        } else {
+            // Play wrong sound
+            wrongSound.currentTime = 0;
+            wrongSound.play().catch(e => console.log('Could not play wrong sound:', e));
+            
+            // Update UI for wrong answer
+            const lang = getCurrentLanguage();
+            message.textContent = translations[lang].tryAgain;
+            message.style.color = '#f44336';
+            
+            // Highlight the wrong answer in red
+            clickedItem.classList.add('wrong');
+            
+            // Allow another try after a short delay
+            setTimeout(() => {
+                clickedItem.classList.remove('wrong');
+                const lang = getCurrentLanguage();
+                message.textContent = translations[lang].message;
+                message.style.color = '#4a5568';
+            }, 1000);
+        }
+    }
+    
+    // Move to the next level
+    function nextLevel() {
+        currentLevel++;
+        const nextBtn = document.getElementById('nextBtn');
+        nextBtn.style.display = 'none';
+        startGame();
+    }
+</script>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 0;
+        display: block;
+        background: radial-gradient(circle at top, #fdfbfb 0%, #e8f0ff 40%, #d0e1ff 100%);
+    }
+    
+    .game-container {
+        width: 100vw;
+        max-width: 100%;
+        margin: 0;
+        padding: 24px 40px;
+        background: radial-gradient(circle at top left, #ffffff 0%, #f5f9ff 45%, #eef3ff 100%);
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
+        box-sizing: border-box;
+        transform: none;
+        transform-origin: top center;
+    }
+    
+    .header {
+        text-align: center;
+        margin-bottom: 10px;
+        position: relative;
+    }
+    
+    .language-selector {
+        margin-left: auto;
+    }
+    
+    .language-dropdown {
+        padding: 5px 10px;
+        border-radius: 15px;
+        border: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.8rem;
+        cursor: pointer;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+    
+    .language-dropdown:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+    }
+    
+    .language-dropdown:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+    }
+    
+    .sound-control {
+        margin-left: 0;
+    }
+    
+    .mute-btn {
+        background: #f0f4f8;
+        color: #1f2937;
+        border: 1px solid #e2e8f0;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .mute-btn:hover {
+        background: #e9eef5;
+    }
+    
+    h1 {
+        color: #2c3e50;
+        font-size: 1.5rem;
+        margin-bottom: 6px;
+    }
+    
+    .game-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 8px;
+        padding: 0 10px;
+    }
+    
+    .game-stats {
+        display: flex;
+        gap: 15px;
+    }
+    
+    .score, .level {
+        background: #f0f4f8;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+        color: #4a5568;
+    }
+    
+    .game-board {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 28px;
+        margin: 22px 0 6px;
+        justify-items: center;
+    }
+    
+    .game-item {
+        background: white;
+        border-radius: 4px;
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        position: relative;
+        padding: 0;
+    }
+    
+    .game-item::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 8px;
+        box-shadow: 0 0 0 0 rgba(0,0,0,0);
+        transition: all 0.3s ease;
+    }
+    
+    .game-item.correct {
+        background-color: #08cf37 !important;  /* Light green background */
+        border: 2px solid #0abd34 !important;  /* Darker green border */
+    }
+    
+    .game-item.wrong {
+        background-color: #dd1829 !important;  /* Light red background */
+        border: 2px solid #dc3545 !important;  /* Darker red border */
+    }
+    
+    .game-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .game-item img {
+        width: 85%;
+        height: 85%;
+        object-fit: contain;
+        padding: 4px;
+        transition: transform 0.15s ease;
+    }
+    
+    .game-item:hover img {
+        transform: scale(1.05);
+    }
+    
+    .game-item.correct img {
+        animation: pulse 0.5s ease;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .feedback {
+        text-align: center;
+    }
+    
+    .message {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        color: #4a5568;
+        min-height: 30px;
+    }
+    
+    .button-group {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .next-btn, .quit-btn {
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .next-btn {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+    }
+    
+    .quit-btn {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+    
+    .next-btn:hover, .quit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .next-btn:active, .quit-btn:active {
+        transform: translateY(0);
+    }
+    
+    .next-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+    }
+    
+    /* Responsive design */
+    @media (max-width: 600px) {
+        .game-container {
+            width: 100%;
+            max-width: 100%;
+            margin: 10px;
+            padding: 16px 10px;
+            border-radius: 16px;
+            transform: none;
+        }
+        h1 {
+            font-size: 1.4rem;
+        }
+        .game-info {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .language-selector {
+            margin-left: 0;
+        }
+        .sound-control {
+            margin-left: 0;
+        }
+        .mute-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+        .game-board {
+            gap: 10px;
+        }
+        .message {
+            font-size: 1rem;
+            min-height: 32px;
+        }
+        .next-btn, .quit-btn {
+            padding: 10px 24px;
+            font-size: 1rem;
+        }
+    }
+
+    @media (min-width: 1400px) {
+        .game-board {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+    @media (max-width: 360px) {
+        h1 {
+            font-size: 1.25rem;
+        }
+        .next-btn, .quit-btn {
+            padding: 10px 20px;
+            font-size: 0.95rem;
+        }
+    }
+</style>
+</html>

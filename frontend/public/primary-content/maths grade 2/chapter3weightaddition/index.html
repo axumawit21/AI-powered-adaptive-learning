@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Weight Wizard | ኪኢላ ክብደት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #f59e0b;
+            --secondary: #10b981;
+            --accent: #ef4444;
+            --sky: #0ea5e9;
+            --glass: rgba(255, 255, 255, 0.9);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: linear-gradient(-45deg, #fef3c7, #ecfdf5, #fff7ed, #e0f2fe);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden;
+            color: #1e293b;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2000; }
+
+        header {
+            width: 100%; max-width: 1200px; padding: 20px;
+            display: grid; grid-template-columns: auto 1fr auto; align-items: center; z-index: 100;
+            gap: 15px;
+        }
+
+        .main-title {
+            text-align: center; font-size: 1.8rem; font-weight: 600;
+            background: linear-gradient(to right, #f59e0b, #ef4444, #10b981);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 0 rgba(83, 13, 196, 0.8);
+            text-transform: uppercase; letter-spacing: 1px;
+            grid-column: 1 / span 3;
+            margin-bottom: 10px;
+        }
+
+        .score-pill {
+            background: white; padding: 8px 15px; border-radius: 50px; 
+            font-weight: 800; font-size: 1.2rem; color: #f59e0b;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px solid #fde68a;
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        .lang-select {
+            padding: 8px 15px; border-radius: 20px; border: none; font: inherit; font-weight: 800; cursor: pointer;
+            background: linear-gradient(135deg, #f59e0b, #fb923c); color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); transition: 0.2s;
+            font-size: 0.9rem;
+        }
+        .lang-select:active { transform: scale(0.95); }
+
+        .container {
+            flex: 1; width: 100%; max-width: 1100px; display: flex; flex-direction: column; 
+            justify-content: flex-start; align-items: center; padding: 10px 15px; gap: 20px;
+        }
+
+        /* Scale Visual */
+        .scale-area {
+            width: 100%; max-width: 500px; height: 250px; position: relative;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+        }
+
+        .scale-body {
+            width: 250px; height: 180px; background: #e2e8f0; border-radius: 20px 20px 10px 10px;
+            border: 8px solid #cbd5e1; position: relative;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .scale-display {
+            width: 180px; height: 80px; background: #1e293b; border-radius: 12px;
+            border: 4px solid #475569; display: flex; align-items: center; justify-content: center;
+            color: #10b981; font-family: monospace; font-size: 3rem; font-weight: bold;
+            box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.2);
+            text-shadow: 0 0 10px #10b981;
+        }
+
+        .scale-plate {
+            width: 320px; height: 15px; background: #94a3b8; border-radius: 20px;
+            position: absolute; top: -15px; border: 3px solid #64748b;
+            transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .item-on-scale {
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 80px; height: 60px; background: #fbbf24; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; color: #92400e; border: 3px solid #d97706;
+            transition: all 0.5s;
+        }
+
+        /* Problem Card */
+        .problem-card {
+            width: 100%; max-width: 700px; background: var(--glass); backdrop-filter: blur(30px);
+            border-radius: 35px; padding: 25px 20px; border: 6px solid #fff;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            display: flex; flex-direction: column; gap: 20px; text-align: center; color: #1e293b;
+            position: relative;
+        }
+
+        .story-text { font-size: 1.2rem; font-weight: 700; color: #334155; line-height: 1.4; }
+        
+        .equation { font-size: 2.2rem; font-weight: 900; color: #f59e0b; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+
+        .num-pill {
+            background: #fff; padding: 5px 15px; border-radius: 15px;
+            border: 3px solid #fde68a; color: #1e293b;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-width: 50px;
+        }
+
+        .ans-box {
+            min-width: 100px; height: 75px; background: #fff; border: 4px dashed #cbd5e1;
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            color: #f59e0b; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 2.5rem;
+        }
+        .ans-box.active { 
+            border-style: solid; border-color: #f59e0b; 
+            background: #fffdf2; box-shadow: 0 0 20px rgba(245, 158, 11, 0.2); transform: scale(1.05);
+        }
+
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; max-width: 500px; margin: 0 auto; }
+        .key {
+            height: 60px; background: white; border: none; border-radius: 15px;
+            font-size: 1.5rem; font-weight: 800; color: #475569; cursor: pointer;
+            box-shadow: 0 5px 0 #e2e8f0; transition: all 0.1s; display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(3px); box-shadow: 0 2px 0 #e2e8f0; }
+        .key.del { background: #fff1f2; color: #f43f5e; box-shadow: 0 5px 0 #fecdd3; }
+        .key.check { 
+            grid-column: span 4; background: linear-gradient(135deg, #10b981, #059669); 
+            color: #fff; box-shadow: 0 6px 0 #064e3b; 
+            text-transform: uppercase; letter-spacing: 1px; height: 70px; margin-top: 5px; font-size: 1.6rem;
+        }
+
+        @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-10px);} 75%{transform:translateX(10px);} }
+        .shake { animation: shake 0.4s; }
+
+        #success-msg {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 4rem; font-weight: 900; color: #10b981; opacity: 0; pointer-events: none; z-index: 50;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+        }
+        .show-success { animation: popSuccess 1.5s forwards; }
+        @keyframes popSuccess {
+            0%{opacity:0; transform: translate(-50%, -50%) scale(0.5);}
+            30%{opacity:1; transform: translate(-50%, -50%) scale(1.2);}
+            100%{opacity:0; transform: translate(-50%, -100%) scale(1);}
+        }
+
+        @media (min-width: 850px) {
+            .main-title { grid-column: 2; grid-row: 1; font-size: 2.2rem; margin-bottom: 0; }
+            header { grid-template-columns: 1fr 2.5fr 1fr; padding: 25px; }
+            .container { gap: 30px; justify-content: center; }
+            .problem-card { padding: 40px; border-radius: 45px; }
+            .story-text { font-size: 1.6rem; }
+            .equation { font-size: 3.5rem; gap: 10px; }
+            .ans-box { min-width: 140px; height: 100px; font-size: 3.5rem; }
+            .key { height: 70px; font-size: 1.8rem; border-radius: 20px; box-shadow: 0 8px 0 #e2e8f0; }
+            .key.check { height: 85px; font-size: 2rem; letter-spacing: 2px; }
+            .scale-body { width: 300px; height: 220px; }
+            .scale-display { width: 220px; height: 100px; font-size: 4rem; }
+            .scale-plate { width: 400px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <header>
+        <button class="lang-select" id="langBtn" onclick="toggleLang()">ትግርኛ</button>
+        <h1 class="main-title" id="mainTitle">ምድማርን ምጉዳልን ዓቐናት ክብደት</h1>
+        <div class="score-pill">⚖️ <span id="scoreVal">0</span></div>
+    </header>
+
+    <div class="container">
+        <div class="scale-area">
+            <div class="scale-plate" id="scalePlate">
+                <div class="item-on-scale" id="weightBlock">0 ኪ.ግ</div>
+            </div>
+            <div class="scale-body">
+                <div class="scale-display" id="digitalDisplay">00</div>
+            </div>
+        </div>
+
+        <div class="problem-card" id="gameCard">
+            <div id="success-msg">ንፉዕ!</div>
+            <p class="story-text" id="storyText">...</p>
+            <div class="equation">
+                <span class="num-pill" id="n1">0</span>
+                <span id="unit1" style="color: #64748b; font-size: 0.6em; margin-right: 5px;">ኪ.ግ</span>
+                <span id="op" style="color: #ef4444">+</span>
+                <span class="num-pill" id="n2">0</span>
+                <span id="unit2" style="color: #64748b; font-size: 0.6em; margin-left: 5px;">ኪ.ግ</span>
+                <span style="margin: 0 5px;">=</span>
+                <div class="ans-box active" id="ansBox">?</div>
+            </div>
+
+            <div class="keypad">
+                <button class="key" onclick="press(1)">1</button>
+                <button class="key" onclick="press(2)">2</button>
+                <button class="key" onclick="press(3)">3</button>
+                <button class="key del" onclick="press('bk')">⌫</button>
+                <button class="key" onclick="press(4)">4</button>
+                <button class="key" onclick="press(5)">5</button>
+                <button class="key" onclick="press(6)">6</button>
+                <button class="key" onclick="press(0)">0</button>
+                <button class="key" onclick="press(7)">7</button>
+                <button class="key" onclick="press(8)">8</button>
+                <button class="key" onclick="press(9)">9</button>
+                <button class="key check" id="btnCheck" onclick="check()">ፈትሽ (Check)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { title: "ምድማርን ምጉዳልን ዓቐናት ክብደት", check: "ፈትሽ", win: "ንፉዕ!", unit: "ኪ.ግ", add: "ሓደ ሰብሳቢ {a} ኪ.ግ ድኹዒ ነይርዎ። {b} ኪ.ግ ምስ ተወሰኾ ብሓፈሻ ክንደይ ኪ.ግ ኮይኑ?", sub: "ሓደ ፌስታል {a} ኪ.ግ ሽኮር ሒዙ ነይሩ። {b} ኪ.ግ ምስ ተወሰደ ክንደይ ይተርፍ?" },
+            am: { title: "የክብደት መለኪያዎችን መደመርና መቀነስ", check: "አረጋግጥ", win: "ድንቅ!", unit: "ኪ.ግ", add: "አንድ ሰብሳቢ {a} ኪ.ግ ማዳበሪያ ነበረው። {b} ኪ.ግ ሲጨመርበት በጥቅሉ ስንት ኪ.ግ ሆነ?", sub: "አንድ ፌስታል {a} ኪ.ግ ስኳር ይዞ ነበር። {b} ኪ.ግ ሲወሰድ ስንት ተረፈ?" },
+            en: { title: "Add/Subtract Weight Units", check: "Check", win: "Correct!", unit: "kg", add: "A farmer had {a} kg of fertilizer. After adding {b} kg, what is the total weight?", sub: "A bag had {a} kg of sugar. After removing {b} kg, how much is left?" },
+            om: { title: "Ida'uu fi Hir'isuu Safartuu Ulfaatinaa", check: "Mirkaneessi", win: "Sirrii!", unit: "ki.g", add: "Qonnaan bulaan tokko xaa'oo ki.g {a} qaba ture. Ki.g {b} yoo itti dabalame waliigala meeqa ta'a?", sub: "Boorsaan tokko sukkaara ki.g {a} qaba ture. Ki.g {b} yoo irraa hir'ate meeqa hafa?" },
+            so: { title: "Isku-darka iyo Kala-goynta Cabirka Miisaanka", check: "Hubi", win: "Sax!", unit: "kg", add: "Beeraley wuxuu haystay {a} kg oo digada ah. Markii lagu daray {b} kg waa imisa miisaanka guud?", sub: "Boorso waxay haystay {a} kg oo sonkor ah. Markii laga saaray {b} kg imisa ayaa haray?" }
+        };
+
+        let score = 0, currentProb = {}, userAns = "", lang = 'ti', particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(400, n); o.frequency.exponentialRampToValueAtTime(800, n + 0.1);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.08));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.6);
+                o.start(); o.stop(n + 0.6);
+            } else {
+                o.type = 'sawtooth'; o.frequency.value = 120;
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.3);
+                o.start(); o.stop(n + 0.3);
+            }
+        }
+
+        function generate() {
+            const mode = Math.random() > 0.5 ? 'add' : 'sub';
+            let a, b, ans;
+
+            if (mode === 'add') {
+                a = Math.floor(Math.random() * 50) + 10;
+                b = Math.floor(Math.random() * 40) + 5;
+                ans = a + b;
+            } else {
+                a = Math.floor(Math.random() * 80) + 30;
+                b = Math.floor(Math.random() * 25) + 5;
+                ans = a - b;
+            }
+
+            currentProb = { a, b, ans, mode };
+            userAns = "";
+
+            document.getElementById('n1').innerText = a;
+            document.getElementById('n2').innerText = b;
+            document.getElementById('op').innerText = mode === 'add' ? '+' : '-';
+            document.getElementById('unit1').innerText = i18n[lang].unit;
+            document.getElementById('unit2').innerText = i18n[lang].unit;
+            document.getElementById('ansBox').innerText = "?";
+            document.getElementById('btnCheck').innerText = i18n[lang].check;
+            document.getElementById('success-msg').classList.remove('show-success');
+            document.getElementById('mainTitle').innerText = i18n[lang].title;
+
+            const story = i18n[lang][mode].replace('{a}', a).replace('{b}', b);
+            document.getElementById('storyText').innerHTML = story;
+
+            updateScale(a);
+        }
+
+        function updateScale(val) {
+            const display = document.getElementById('digitalDisplay');
+            const weightBlock = document.getElementById('weightBlock');
+            const scalePlate = document.getElementById('scalePlate');
+            
+            // needle and plate react to weight
+            display.innerText = val.toString().padStart(2, '0');
+            weightBlock.innerText = `${val} ${i18n[lang].unit}`;
+            
+            // Dip scale slightly based on weight percentage of max (100)
+            const dip = Math.min(val / 100 * 20, 20); 
+            scalePlate.style.transform = `translateY(${dip}px)`;
+        }
+
+        function press(k) {
+            sfx('tap');
+            if(k === 'bk') userAns = userAns.slice(0, -1);
+            else if(userAns.length < 3) userAns += k;
+            document.getElementById('ansBox').innerText = userAns || "?";
+        }
+
+        function check() {
+            if(userAns === "") return;
+            if(parseInt(userAns) === currentProb.ans) {
+                score += 10;
+                document.getElementById('scoreVal').innerText = score;
+                sfx('win'); burst(700);
+
+                updateScale(currentProb.ans);
+                
+                const msg = document.getElementById('success-msg');
+                msg.innerText = i18n[lang].win;
+                msg.classList.add('show-success');
+
+                setTimeout(generate, 2500);
+            } else {
+                sfx('err');
+                document.getElementById('gameCard').classList.add('shake');
+                setTimeout(() => document.getElementById('gameCard').classList.remove('shake'), 500);
+            }
+        }
+
+        function toggleLang() {
+            const ks = Object.keys(i18n);
+            lang = ks[(ks.indexOf(lang) + 1) % ks.length];
+            document.getElementById('langBtn').innerText = lang === 'ti' ? 'ትግርኛ' : lang.toUpperCase();
+            generate();
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#f59e0b', '#ef4444', '#10b981', '#0ea5e9', '#ffffff'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random() * c.width, y: c.height + 20, 
+                vx: (Math.random()-0.5)*40, vy: (Math.random()-0.8)*60,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)],
+                l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*25
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.95; p.vx *= 0.98; p.l-=0.008; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1);
+                        x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = generate;
+    </script>
+</body>
+</html>

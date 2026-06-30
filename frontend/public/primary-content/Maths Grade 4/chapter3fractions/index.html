@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fraction Architect | ጉዚታት ክፋላት ሙሉእ ነገር</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --theme-primary: #3b82f6;
+            --theme-secondary: #ec4899;
+            --theme-bg: #ffffff;
+            --theme-border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --amber: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        @keyframes bgRotate {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            /* Unique Child-Friendly Background: Animated Rainbow Galaxy */
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: bgRotate 15s ease infinite;
+            min-height: 100vh;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            transition: background 0.3s;
+        }
+
+        /* Floating Bubble Decoration */
+        .bubble-decor {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatBubble 20s infinite linear;
+        }
+        @keyframes floatBubble {
+            from { transform: translateY(110vh) scale(1); }
+            to { transform: translateY(-20vh) scale(1.5); opacity: 0; }
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+        /* Very Noticeable Error Flash */
+        #error-flash-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--danger);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9500;
+            transition: opacity 0.1s;
+        }
+        body.error-state #error-flash-overlay { opacity: 0.6; }
+
+        header {
+            width: 100%; max-width: 1000px; padding: 15px 25px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            flex-wrap: wrap; gap: 10px;
+        }
+
+        .stats-group { 
+            display: flex; 
+            gap: 10px; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            width: 100%;
+            justify-content: center;
+        }
+
+        .pill {
+            background: white; border: 2px solid var(--theme-border);
+            padding: 10px 20px; border-radius: 50px; font-weight: 800; font-size: 1.1rem;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .pill-score { border-color: var(--theme-primary); color: var(--theme-primary); }
+        .pill-high { border-color: var(--amber); color: #d97706; }
+        .pill-lvl { border-color: var(--theme-secondary); color: var(--theme-secondary); }
+
+        .header-controls { 
+            display: flex; 
+            gap: 15px; 
+            align-items: center; 
+            width: 100%; 
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .btn-mute {
+            width: 50px; height: 50px; border-radius: 50%; border: none;
+            background: white; color: #64748b; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .lang-select {
+            padding: 10px 20px; border-radius: 20px; border: 2px solid #fff;
+            background: white; color: #1e293b; font: inherit; font-weight: 700;
+            cursor: pointer; outline: none; box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 800px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 20px; gap: 20px; z-index: 10;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);
+            border-radius: 60px; padding: 40px 30px; width: 100%;
+            border: 10px solid #fff;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            text-align: center; position: relative;
+            transition: transform 0.3s;
+        }
+        
+        .shake { animation: shakeAnim 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shakeAnim {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .quest-text { font-size: 1.8rem; color: #334155; font-weight: 800; margin-bottom: 25px; }
+
+        /* Fraction Visualization */
+        .visual-container {
+            width: 100%; height: 220px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 25px; position: relative;
+        }
+        .shape-svg { 
+            width: 220px; height: 220px; cursor: pointer; 
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.15));
+        }
+        .shape-svg path, .shape-svg rect {
+            fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .shape-svg .active-segment { fill: var(--theme-primary); stroke: #1d4ed8; }
+
+        /* Fraction Notation */
+        .fraction-ui {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            font-size: 3rem; font-weight: 900; color: #1e293b;
+        }
+        .fraction-line { width: 100px; height: 8px; background: #334155; border-radius: 4px; }
+        .input-slot {
+            width: 110px; height: 90px; border-radius: 25px; border: 5px dashed #e2e8f0;
+            background: #f8fafc; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s; font-size: 3.5rem;
+        }
+        .input-slot.active { border-style: solid; border-color: var(--theme-primary); background: #fff; box-shadow: 0 0 30px rgba(59, 130, 246, 0.25); transform: scale(1.1); }
+        .input-slot.wrong { border-color: var(--danger); background: #fee2e2; }
+
+        /* Keypad */
+        .keypad-section { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 12px; }
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .key {
+            height: 75px; background: #ffffff; border: 2px solid #eee; border-radius: 20px;
+            font-size: 2rem; font-weight: 800; color: #1e293b;
+            cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 0 #ddd;
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 2px 0 #ddd; background: #f8fafc; }
+        .key.del { color: var(--danger); }
+        .key.check { 
+            grid-column: span 4; background: linear-gradient(to right, var(--success), var(--theme-primary));
+            height: 90px; font-size: 2.2rem; text-transform: uppercase; letter-spacing: 3px;
+            border-radius: 25px; font-weight: 900; border: none; color: #fff;
+            box-shadow: 0 10px 0 #064e3b; margin-top: 10px;
+        }
+
+        #success-overlay {
+            position: fixed; inset: 0; background: rgba(255, 255, 255, 0.98);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 9990; text-align: center;
+            backdrop-filter: blur(15px);
+        }
+        .success-icon { font-size: 10rem; margin-bottom: 20px; animation: bounceIn 0.8s; }
+
+        #wrong-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9600; pointer-events: none;
+        }
+        #wrong-overlay span { font-size: clamp(15rem, 45vw, 30rem); color: #fff; text-shadow: 0 0 50px rgba(0,0,0,0.5); font-weight: 900; animation: popX 0.4s forwards; }
+        @keyframes popX { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1.1); opacity: 1; } }
+
+        @keyframes bounceIn { from { transform: scale(0.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* Responsive Mobile Tweak */
+        @media (max-width: 600px) {
+            header { padding: 10px; position: sticky; top: 0; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); }
+            .stats-group { order: 1; margin-bottom: 5px; }
+            .header-controls { order: 2; margin-top: 5px; }
+            .pill { padding: 8px 12px; font-size: 0.9rem; flex: 1; justify-content: center; }
+            .key { height: 60px; font-size: 1.5rem; }
+            .game-card { padding: 30px 15px; border-radius: 40px; margin-top: 10px; }
+            .input-slot { width: 90px; height: 80px; font-size: 2.5rem; }
+            .quest-text { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="error-flash-overlay"></div>
+    <div id="wrong-overlay"><span>❌</span></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <header>
+        <div class="stats-group">
+            <div class="pill pill-high">👑 <span id="lblHigh">High</span>: <span id="valHigh">0</span></div>
+            <div class="pill pill-score">⭐ <span id="lblScore">Score</span>: <span id="valScore">0</span></div>
+            <div class="pill pill-lvl">🆙 <span id="lblLvl">ደረጃ</span>: <span id="valLvl">1</span></div>
+        </div>
+        <div class="header-controls">
+            <button class="btn-mute" id="btnMute" onclick="toggleMute()">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="game-card" id="gameCard">
+            <div class="quest-text" id="txtQuest">ነቲ ጉዚ ዝውክል ክፋል ቀብኦ</div>
+            
+            <div class="visual-container" id="visualArea">
+                <!-- SVG generated here -->
+            </div>
+
+            <div class="fraction-ui" id="fractionUi">
+                <div id="numField" class="input-slot">?</div>
+                <div class="fraction-line"></div>
+                <div id="denField" class="input-slot">?</div>
+            </div>
+        </div>
+
+        <div class="keypad-section">
+            <div class="keypad" id="keypad">
+                <!-- Keys injected by JS -->
+            </div>
+            <button class="key check" id="btnCheck" onclick="checkAnswer()">ኣረጋግፅ (Check)</button>
+        </div>
+    </div>
+
+    <div id="success-overlay">
+        <div class="success-icon" id="successEmoji">🏆</div>
+        <h2 id="successTitle" style="font-size: 3.5rem; color: var(--success); text-shadow: 0 4px 10px rgba(0,0,0,0.1);">ብጣዕሚ ጎበዝ!</h2>
+        <p id="successSub" style="font-size: 2rem; color: #64748b; margin-top: 15px;">ብትኽክል ተመሊሱ!</p>
+    </div>
+
+    <script>
+        // Bubble generator
+        function createBubbles() {
+            for(let i=0; i<15; i++) {
+                const b = document.createElement('div');
+                b.className = 'bubble-decor';
+                const size = Math.random() * 80 + 20;
+                b.style.width = size + 'px';
+                b.style.height = size + 'px';
+                b.style.left = Math.random() * 100 + 'vw';
+                b.style.bottom = '-100px';
+                b.style.animationDelay = Math.random() * 15 + 's';
+                b.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                document.body.appendChild(b);
+            }
+        }
+        createBubbles();
+
+        const i18n = {
+            ti: { shade: "ነቲ ጉዚ {f} ዝውክል ክፋል ቅባኣዮ", write: "እዚ ቅርፂ ዝውክሎ ጉዚ ፅሓፍ", check: "ኣረጋግፅ", win: "ብጣዕሚ ጎበዝ!", winsub: "ብትኽክል ተመሊሱ!", score: "ነጥቢ", high: "ዝለዓለ", level: "ደረጃ" },
+            am: { shade: "የክፍልፋዩን {f} ያህል ቀባ", write: "ቅርጹ የሚወክለውን ክፍልፋይ ጻፍ", check: "አረጋግጥ", win: "ድንቅ ስራ!", winsub: "በትክክል መልሰዋል!", score: "ነጥብ", high: "ከፍተኛ", level: "ደረጃ" },
+            en: { shade: "Shade {f} of the shape", write: "What fraction does this represent?", check: "Check", win: "Great Job!", winsub: "You answered correctly!", score: "Score", high: "Highest", level: "Level" },
+            om: { shade: "Firaakshinii {f} dhibi", write: "Firaakshinii bocni kun bakka bu'u barreessi", check: "Mirkaneessi", win: "Guddina!", winsub: "Sirriitti deebisteetta!", score: "Qabxii", high: "Olaanaa", level: "Sadarkaa" },
+            so: { shade: "Rinjeey jajabka {f}", write: "Waa maxay jajabka uu qaabkani u taagan yahay?", check: "Hubi", win: "Shaqo Fiican!", winsub: "Si sax ah ayaad u jawaabtay!", score: "Dhibco", high: "Sare", level: "Heerka" }
+        };
+
+        const themes = [
+            { primary: '#3b82f6', secondary: '#93c5fd' },
+            { primary: '#10b981', secondary: '#6ee7b7' },
+            { primary: '#f59e0b', secondary: '#fcd34d' },
+            { primary: '#8b5cf6', secondary: '#c4b5fd' },
+            { primary: '#ec4899', secondary: '#f9a8d4' }
+        ];
+
+        let state = {
+            lang: 'ti', 
+            score: 0, 
+            level: 1,
+            highScore: parseInt(localStorage.getItem('fraction_whole_high')) || 0,
+            mode: 'shade', 
+            targetNum: 0, 
+            targetDen: 0,
+            userNum: "", 
+            userDen: "",
+            userShaded: new Set(),
+            focus: 'num', 
+            busy: false, 
+            muted: false,
+            particles: [], 
+            themeIdx: 0
+        };
+
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSfx(type) {
+            if (state.muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(600, n); o.frequency.exponentialRampToValueAtTime(300, n + 0.1);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.6);
+                o.start(); o.stop(n + 0.6);
+            } else {
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.3);
+                o.start(); o.stop(n + 0.3);
+            }
+        }
+
+        function generate() {
+            state.busy = false;
+            state.mode = Math.random() > 0.5 ? 'shade' : 'write';
+            state.themeIdx = (state.themeIdx + 1) % themes.length;
+            applyTheme();
+
+            const denPool = [2, 3, 4, 5, 6, 8, 10, 12];
+            state.targetDen = denPool[Math.floor(Math.random() * Math.min(state.level + 2, denPool.length))];
+            state.targetNum = Math.floor(Math.random() * (state.targetDen - 1)) + 1;
+            
+            state.userNum = ""; state.userDen = ""; state.userShaded.clear();
+            state.focus = 'num';
+
+            if (state.mode === 'write') {
+                const indices = Array.from({length: state.targetDen}, (_, i) => i).sort(() => Math.random() - 0.5);
+                for (let i = 0; i < state.targetNum; i++) state.userShaded.add(indices[i]);
+            }
+
+            renderShape();
+            updateUI();
+        }
+
+        function applyTheme() {
+            const theme = themes[state.themeIdx];
+            document.documentElement.style.setProperty('--theme-primary', theme.primary);
+        }
+
+        function renderShape() {
+            const area = document.getElementById('visualArea');
+            const d = state.targetDen;
+            const isCircle = Math.random() > 0.5;
+            let html = `<svg viewBox="0 0 100 100" class="shape-svg">`;
+
+            if (isCircle) {
+                for (let i = 0; i < d; i++) {
+                    const start = (i * 360) / d - 90;
+                    const end = ((i + 1) * 360) / d - 90;
+                    const x1 = 50 + 45 * Math.cos(Math.PI * start / 180);
+                    const y1 = 50 + 45 * Math.sin(Math.PI * start / 180);
+                    const x2 = 50 + 45 * Math.cos(Math.PI * end / 180);
+                    const y2 = 50 + 45 * Math.sin(Math.PI * end / 180);
+                    const active = state.userShaded.has(i) ? 'active-segment' : '';
+                    html += `<path d="M 50 50 L ${x1} ${y1} A 45 45 0 0 1 ${x2} ${y2} Z" class="${active}" onclick="toggleSegment(${i})"/>`;
+                }
+            } else {
+                const w = 90 / d;
+                for (let i = 0; i < d; i++) {
+                    const active = state.userShaded.has(i) ? 'active-segment' : '';
+                    html += `<rect x="${5 + i * w}" y="25" width="${w}" height="50" rx="2" class="${active}" onclick="toggleSegment(${i})"/>`;
+                }
+            }
+            html += `</svg>`;
+            area.innerHTML = html;
+        }
+
+        function toggleSegment(i) {
+            if (state.mode !== 'shade' || state.busy) return;
+            playSfx('tap');
+            if (state.userShaded.has(i)) state.userShaded.delete(i);
+            else state.userShaded.add(i);
+            renderShape();
+        }
+
+        function updateUI() {
+            const t = i18n[state.lang];
+            const fracStr = `${state.targetNum}/${state.targetDen}`;
+            
+            document.getElementById('txtQuest').innerText = state.mode === 'shade' 
+                ? t.shade.replace('{f}', fracStr) 
+                : t.write;
+
+            document.getElementById('numField').innerText = state.mode === 'shade' ? state.targetNum : (state.userNum || "?");
+            document.getElementById('denField').innerText = state.mode === 'shade' ? state.targetDen : (state.userDen || "?");
+            
+            document.getElementById('numField').className = `input-slot ${state.mode === 'write' && state.focus === 'num' ? 'active' : ''}`;
+            document.getElementById('denField').className = `input-slot ${state.mode === 'write' && state.focus === 'den' ? 'active' : ''}`;
+            
+            document.getElementById('valScore').innerText = state.score;
+            document.getElementById('valHigh').innerText = state.highScore;
+            document.getElementById('valLvl').innerText = state.level;
+            
+            document.getElementById('lblScore').innerText = t.score;
+            document.getElementById('lblHigh').innerText = t.high;
+            document.getElementById('lblLvl').innerText = t.level;
+            document.getElementById('btnCheck').innerText = t.check;
+        }
+
+        function pressKey(k) {
+            if (state.mode === 'shade' || state.busy) return;
+            playSfx('tap');
+            if (k === 'bk') {
+                if (state.focus === 'num') state.userNum = state.userNum.slice(0, -1);
+                else state.userDen = state.userDen.slice(0, -1);
+            } else {
+                if (state.focus === 'num') {
+                    if (state.userNum.length < 2) state.userNum += k;
+                    if (state.userNum.length === state.targetNum.toString().length) state.focus = 'den';
+                } else {
+                    if (state.userDen.length < 2) state.userDen += k;
+                }
+            }
+            updateUI();
+        }
+
+        function checkAnswer() {
+            if (state.busy) return;
+            let correct = false;
+            if (state.mode === 'shade') {
+                correct = state.userShaded.size === state.targetNum;
+            } else {
+                correct = parseInt(state.userNum) === state.targetNum && parseInt(state.userDen) === state.targetDen;
+            }
+
+            if (correct) handleSuccess();
+            else handleError();
+        }
+
+        function handleSuccess() {
+            state.busy = true;
+            state.score += 10;
+            if (state.score > state.highScore) {
+                state.highScore = state.score;
+                localStorage.setItem('fraction_whole_high', state.highScore);
+            }
+            state.level = Math.floor(state.score / 50) + 1;
+            
+            playSfx('win');
+            burst(300);
+            const loop = setInterval(() => burst(50), 300);
+
+            document.getElementById('success-overlay').style.display = 'flex';
+            document.getElementById('successTitle').innerText = i18n[state.lang].win;
+            document.getElementById('successSub').innerText = i18n[state.lang].winsub;
+
+            setTimeout(() => {
+                clearInterval(loop);
+                document.getElementById('success-overlay').style.display = 'none';
+                generate();
+            }, 3000);
+        }
+
+        function handleError() {
+            playSfx('err');
+            document.body.classList.add('error-state');
+            document.getElementById('gameCard').classList.add('shake');
+            document.getElementById('wrong-overlay').style.display = 'flex';
+
+            if (state.mode === 'write') {
+                document.getElementById('numField').classList.add('wrong');
+                document.getElementById('denField').classList.add('wrong');
+            }
+            setTimeout(() => {
+                document.body.classList.remove('error-state');
+                document.getElementById('gameCard').classList.remove('shake');
+                document.getElementById('wrong-overlay').style.display = 'none';
+                if (state.mode === 'write') {
+                    document.getElementById('numField').classList.remove('wrong');
+                    document.getElementById('denField').classList.remove('wrong');
+                    state.userNum = ""; state.userDen = ""; state.focus = 'num';
+                } else {
+                    state.userShaded.clear();
+                    renderShape();
+                }
+                updateUI();
+            }, 800);
+        }
+
+        function burst(count) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            if (c.width !== window.innerWidth) { c.width = window.innerWidth; c.height = window.innerHeight; }
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ffffff'];
+            for(let i=0; i<count; i++) state.particles.push({
+                x: Math.random() * c.width, y: c.height + 20, vx: (Math.random()-0.5)*40, vy: (Math.random()-0.8)*60,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*25
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=state.particles.length-1; i>=0; i--){
+                    const p=state.particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.vx *= 0.985; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else state.particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        function toggleMute() {
+            state.muted = !state.muted;
+            document.getElementById('btnMute').innerText = state.muted ? '🔇' : '🔊';
+        }
+
+        function changeLang(l) {
+            state.lang = l;
+            updateUI();
+        }
+
+        window.onload = () => {
+            const kp = document.getElementById('keypad');
+            [1,2,3,4,5,6,7,8,9,0].forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key'; b.innerText = k; b.onclick = () => pressKey(k); kp.appendChild(b);
+            });
+            const del = document.createElement('button');
+            del.className = 'key del'; del.innerText = '⌫'; del.onclick = () => pressKey('bk'); 
+            kp.appendChild(del);
+
+            generate();
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') pressKey(e.key);
+            if (e.key === 'Backspace') pressKey('bk');
+            if (e.key === 'Enter') checkAnswer();
+        });
+    </script>
+</body>
+</html>

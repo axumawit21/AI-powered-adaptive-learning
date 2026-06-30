@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Magic Liquid Lab | ላቦራቶሪ ፈሳሲ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f2fe;
+            --neon-purple: #a855f7;
+            --neon-pink: #ec4899;
+            --neon-green: #10b981;
+            --deep-space: #0f172a;
+            --glass-white: rgba(255, 255, 255, 0.95);
+            --water-grad: linear-gradient(180deg, #00d2ff 0%, #3a7bd5 100%);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--deep-space);
+            /* Ultra-colorful Animated Mesh Background */
+            background-image: 
+                radial-gradient(at 0% 0%, #4338ca 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #7e22ce 0px, transparent 50%),
+                radial-gradient(at 100% 100%, #be185d 0px, transparent 50%),
+                radial-gradient(at 0% 100%, #115e59 0px, transparent 50%),
+                radial-gradient(at 50% 50%, #1e1b4b 0px, transparent 50%);
+            background-size: 200% 200%;
+            animation: moveBg 12s infinite alternate ease-in-out;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            color: #fff;
+        }
+
+        @keyframes moveBg {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2000; }
+
+        header {
+            width: 100%; max-width: 1200px; padding: 30px;
+            display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; z-index: 100;
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(to right, #00f2fe, #7e22ce, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.5));
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .score-pill {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 12px 30px; border-radius: 50px;
+            font-weight: 800; font-size: 1.8rem; color: #00f2fe;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.3); border: 2px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; gap: 10px;
+            justify-self: end;
+        }
+
+        .lang-select {
+            padding: 12px 25px; border-radius: 25px; border: none; font: inherit; font-weight: 800; cursor: pointer;
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink)); color: white; 
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+            justify-self: start;
+            transition: 0.2s;
+        }
+        .lang-select:active { transform: scale(0.9); }
+
+        .container {
+            flex: 1; width: 100%; max-width: 1200px; display: flex; justify-content: center; align-items: center; padding: 20px; gap: 50px;
+            margin-bottom: 20px;
+        }
+
+        /* Lab Equipment */
+        .lab-station {
+            flex: 0.8; display: flex; flex-direction: column; align-items: center; gap: 20px;
+        }
+
+        .tank-frame {
+            width: 260px; height: 500px; 
+            background: rgba(0, 0, 0, 0.3);
+            border: 8px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px 40px 15px 15px;
+            position: relative; overflow: hidden; display: flex; align-items: flex-end;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(0, 242, 254, 0.1);
+            outline: 2px solid rgba(0, 242, 254, 0.3);
+        }
+
+        .water {
+            width: 100%; height: 0%; 
+            background: var(--water-grad);
+            transition: height 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.6);
+        }
+        
+        /* Sparkle & Shine in water */
+        .water::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: skewX(-20deg);
+            animation: sweep 3s infinite linear;
+        }
+        @keyframes sweep { from { transform: translateX(-150%) skewX(-20deg); } to { transform: translateX(150%) skewX(-20deg); } }
+
+        .water-surface {
+            position: absolute; top: -5px; left: 0; width: 100%; height: 10px;
+            background: #fff; filter: blur(4px); opacity: 0.8;
+            box-shadow: 0 0 15px #fff;
+        }
+
+        .tank-scale {
+            position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column-reverse; justify-content: space-between;
+            padding: 30px 0; z-index: 10;
+        }
+        .mark { 
+            width: 100%; display: flex; align-items: center; padding-left: 20px;
+            font-weight: 900; color: rgba(255, 255, 255, 0.5); font-size: 1.3rem;
+        }
+        .mark::before { content: ''; width: 35px; height: 4px; background: rgba(255,255,255,0.3); margin-right: 15px; border-radius: 2px; }
+
+        /* Problem Card */
+        .problem-card {
+            flex: 1.2; background: var(--glass-white); backdrop-filter: blur(40px);
+            border-radius: 60px; padding: 50px; 
+            border: 12px solid #fff;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column; gap: 35px; text-align: center;
+            position: relative;
+            color: var(--deep-space);
+        }
+
+        .story-text { font-size: 2rem; font-weight: 700; color: #1e293b; line-height: 1.4; }
+        
+        .equation { font-size: 4.5rem; font-weight: 900; color: var(--neon-purple); display: flex; align-items: center; justify-content: center; gap: 20px; }
+
+        .ans-box {
+            min-width: 150px; height: 110px; background: #f8fafc; border: 8px dashed #e2e8f0;
+            border-radius: 30px; display: flex; align-items: center; justify-content: center;
+            color: var(--neon-purple); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .ans-box.active { 
+            border-style: solid; border-color: var(--neon-blue); 
+            background: white; 
+            box-shadow: 0 0 50px rgba(0, 242, 254, 0.4);
+            transform: scale(1.1);
+        }
+
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; max-width: 550px; margin: 0 auto; width: 100%; }
+        .key {
+            height: 85px; background: white; border: none; border-radius: 25px;
+            font-size: 2.4rem; font-weight: 800; color: #475569; cursor: pointer;
+            box-shadow: 0 10px 0 #e2e8f0; transition: all 0.1s; display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 6px 0 #e2e8f0; }
+        
+        /* Key Colors */
+        .key:nth-child(4n+1) { color: var(--neon-purple); }
+        .key:nth-child(4n+2) { color: var(--neon-green); }
+        .key:nth-child(4n+3) { color: var(--neon-pink); }
+
+        .key.del { background: #fff1f2; color: #f43f5e; box-shadow: 0 10px 0 #fecdd3; }
+        .key.check { 
+            grid-column: span 4; 
+            background: linear-gradient(135deg, var(--neon-green), #059669); 
+            color: white; box-shadow: 0 10px 0 #065F46; 
+            text-transform: uppercase; letter-spacing: 3px;
+            height: 100px; margin-top: 10px; font-size: 2.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .key.check:active { transform: translateY(6px); box-shadow: 0 4px 0 #065F46; }
+
+        @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-15px);} 75%{transform:translateX(15px);} }
+        .shake { animation: shake 0.4s; }
+
+        #success-msg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 6rem; font-weight: 900; color: var(--neon-green); opacity: 0; pointer-events: none; z-index: 50;
+            text-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
+        }
+        .show-success { animation: popSuccess 1.5s forwards; }
+        @keyframes popSuccess {
+            0%{opacity:0; transform: translate(-50%, -50%) scale(0.5);}
+            30%{opacity:1; transform: translate(-50%, -50%) scale(1.2);}
+            100%{opacity:0; transform: translate(-50%, -120%) scale(1);}
+        }
+
+        @media (max-width: 1000px) {
+            header { grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
+            .main-title { grid-row: 1; grid-column: 1 / span 2; font-size: 1.8rem; order: -1; margin-bottom: 10px; }
+            .container { flex-direction: column; overflow-y: auto; padding-top: 10px; gap: 30px; }
+            .tank-frame { height: 380px; width: 200px; }
+            .problem-card { padding: 40px 20px; border-radius: 40px; width: 100%; border-width: 8px; }
+            .equation { font-size: 3rem; }
+            .story-text { font-size: 1.5rem; }
+            .key { height: 70px; font-size: 1.8rem; }
+            .key.check { height: 80px; font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <header>
+        <button class="lang-select" id="langBtn" onclick="toggleLang()">ትግርኛ</button>
+        <h1 class="main-title" id="mainTitle">ምድማርን ምጉዳልን ትሕዝቶ ፈሳሲ</h1>
+        <div class="score-pill">💧 <span id="scoreVal">0</span></div>
+    </header>
+
+    <div class="container">
+        <div class="lab-station">
+            <div class="tank-frame">
+                <div class="tank-scale" id="scale"></div>
+                <div class="water" id="waterLevel">
+                    <div class="water-surface"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="problem-card" id="gameCard">
+            <div id="success-msg">ንፉዕ!</div>
+            <p class="story-text" id="storyText">...</p>
+            <div class="equation">
+                <span id="n1">0</span>
+                <span id="op" style="color: var(--neon-pink)">+</span>
+                <span id="n2">0</span>
+                <span>=</span>
+                <div class="ans-box active" id="ansBox">?</div>
+            </div>
+
+            <div class="keypad">
+                <button class="key" onclick="press(1)">1</button>
+                <button class="key" onclick="press(2)">2</button>
+                <button class="key" onclick="press(3)">3</button>
+                <button class="key del" onclick="press('bk')">⌫</button>
+                <button class="key" onclick="press(4)">4</button>
+                <button class="key" onclick="press(5)">5</button>
+                <button class="key" onclick="press(6)">6</button>
+                <button class="key" onclick="press(0)">0</button>
+                <button class="key" onclick="press(7)">7</button>
+                <button class="key" onclick="press(8)">8</button>
+                <button class="key" onclick="press(9)">9</button>
+                <button class="key check" id="btnCheck" onclick="check()">ፈትሽ (Check)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { title: "ምድማርን ምጉዳልን ትሕዝቶ ፈሳሲ", check: "ፈትሽ", win: "ንፉዕ!", add: "ኣይተ ተስፋይ {a} ሊትሮ ማይ ኣብቲ ታንኪ ነይርዎም። {b} ሊትሮ ምስ ወሰኹሉ ብሓፈሻ ክንደይ ሊትሮ ኮይኑ?", sub: "ሓደ ታንኪ {a} ሊትሮ ሒዙ ነይሩ። {b} ሊትሮ ምስ ተቐነሰ ክንደይ ተረፈ?" },
+            am: { title: "የፈሳሽ ይዘት መደመርና መቀነስ", check: "አረጋግጥ", win: "ድንቅ!", add: "አይተ ተስፋይ {a} ሊትር ውሃ በታንኪው ውስጥ ነበራቸው። {b} ሊትር ሲጨምሩበት በጥቅሉ ስንት ሊትር ሆነ?", sub: "አንድ ታንኪ {a} ሊትር ይዞ ነበር። {b} ሊትር ሲቀነስ ስንት ተረፈ?" },
+            en: { title: "Liquid Addition & Subtraction", check: "Check", win: "Correct!", add: "Mr. Tesfay had {a}L of water. He added {b}L more. What is the total volume?", sub: "A tank had {a}L of water. After {b}L was removed, how much remains?" },
+            om: { title: "Ida'uu fi Hir'isuu Qabiyyee Dhangala'oo", check: "Mirkaneessi", win: "Sirrii!", add: "Obbo Tasfaay bishaan litira {a} qabu turan. Litira {b} yoo itti dabalan waliigala meeqa ta'a?", sub: "Tankiin tokko bishaan litira {a} qaba ture. Litira {b} yoo irraa hir'ate meeqa hafa?" },
+            so: { title: "Isku-darka iyo Kala-goynta Qadarka Dareeraha", check: "Hubi", win: "Sax!", add: "Mr. Tesfay wuxuu haystaa {a}L oo biyo ah. Wuxuu ku daray {b}L kale. Waa imisa wadarta guud?", sub: "Taangi wuxuu hayey {a}L oo biyo ah. Markii laga saaray {b}L imisa ayaa haray?" }
+        };
+
+        let score = 0, currentProb = {}, userAns = "", lang = 'ti', particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(400, n); o.frequency.exponentialRampToValueAtTime(800, n + 0.1);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046, 1318].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.08));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.7);
+                o.start(); o.stop(n + 0.7);
+            } else {
+                o.type = 'sawtooth'; o.frequency.value = 120;
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.3);
+                o.start(); o.stop(n + 0.3);
+            }
+        }
+
+        function generate() {
+            const mode = Math.random() > 0.5 ? 'add' : 'sub';
+            let a, b, ans;
+            
+            if (mode === 'add') {
+                a = Math.floor(Math.random() * 40) + 10;
+                b = Math.floor(Math.random() * 30) + 5;
+                ans = a + b;
+            } else {
+                a = Math.floor(Math.random() * 60) + 30;
+                b = Math.floor(Math.random() * 20) + 5;
+                ans = a - b;
+            }
+
+            currentProb = { a, b, ans, mode };
+            userAns = "";
+            
+            document.getElementById('n1').innerText = a;
+            document.getElementById('n2').innerText = b;
+            document.getElementById('op').innerText = mode === 'add' ? '+' : '-';
+            document.getElementById('ansBox').innerText = "?";
+            document.getElementById('btnCheck').innerText = i18n[lang].check;
+            document.getElementById('success-msg').classList.remove('show-success');
+            document.getElementById('mainTitle').innerText = i18n[lang].title;
+
+            const story = i18n[lang][mode].replace('{a}', a).replace('{b}', b);
+            document.getElementById('storyText').innerText = story;
+
+            updateVisual(a, 0); 
+            setupScale(Math.max(100, ans + 20));
+        }
+
+        function setupScale(max) {
+            const scale = document.getElementById('scale');
+            scale.innerHTML = '';
+            const step = Math.ceil(max / 10);
+            for(let i=0; i<=10; i++) {
+                const mark = document.createElement('div');
+                mark.className = 'mark';
+                mark.innerText = (i * step) + 'L';
+                scale.appendChild(mark);
+            }
+            currentProb.max = step * 10;
+        }
+
+        function updateVisual(val, delay=0) {
+            setTimeout(() => {
+                const pct = (val / currentProb.max) * 100;
+                document.getElementById('waterLevel').style.height = pct + '%';
+            }, delay);
+        }
+
+        function press(k) {
+            sfx('tap');
+            if(k === 'bk') userAns = userAns.slice(0, -1);
+            else if(userAns.length < 3) userAns += k;
+            document.getElementById('ansBox').innerText = userAns || "?";
+        }
+
+        function check() {
+            if(userAns === "") return;
+            if(parseInt(userAns) === currentProb.ans) {
+                score += 10;
+                document.getElementById('scoreVal').innerText = score;
+                sfx('win'); 
+                burst(700); // MASSIVE RAINBOW CONFETTI
+                updateVisual(currentProb.ans);
+                
+                const msg = document.getElementById('success-msg');
+                msg.innerText = i18n[lang].win;
+                msg.classList.add('show-success');
+
+                setTimeout(generate, 2500);
+            } else {
+                sfx('err');
+                document.getElementById('gameCard').classList.add('shake');
+                setTimeout(() => document.getElementById('gameCard').classList.remove('shake'), 500);
+            }
+        }
+
+        function toggleLang() {
+            const ks = Object.keys(i18n);
+            lang = ks[(ks.indexOf(lang) + 1) % ks.length];
+            document.getElementById('langBtn').innerText = lang === 'ti' ? 'ትግርኛ' : lang.toUpperCase();
+            generate();
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#00f2fe', '#a855f7', '#ec4899', '#10b981', '#facc15', '#ffffff', '#3b82f6'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random() * c.width, 
+                y: c.height + 20, 
+                vx: (Math.random()-0.5)*45, 
+                vy: (Math.random()-0.8)*60,
+                s: Math.random()*14+4, 
+                c: colors[Math.floor(Math.random()*colors.length)],
+                l: 1.8, 
+                r: Math.random()*360, 
+                rv: (Math.random()-0.5)*30
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.95; p.vx *= 0.985; p.l-=0.008; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1);
+                        x.shadowBlur = 10; x.shadowColor = p.c;
+                        x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = generate;
+    </script>
+</body>
+</html>

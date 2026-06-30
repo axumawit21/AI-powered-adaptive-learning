@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>መዘናግዒ ቅርጽታት! 🎨 Shape Fun!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --secondary: #facc15; /* Sunny Yellow */
+      --success: #22c55e;
+      --danger: #ef4444;
+      --sky: #38bdf8;
+      --pink: #f472b6;
+      --purple: #a855f7;
+      --orange: #fb923c;
+      --card-bg: #ffffff;
+      --box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #a1c4fd 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #334155;
+      overflow-x: hidden;
+    }
+
+    /* Floating Decorations */
+    .decor {
+      position: fixed;
+      pointer-events: none;
+      z-index: -1;
+      animation: float 15s infinite linear;
+      opacity: 0.7;
+    }
+    @keyframes float {
+      0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.7; }
+      90% { opacity: 0.7; }
+      100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Header & Navigation */
+    header {
+      width: 100%;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border-bottom: 4px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .nav-group {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .btn-nav {
+      background: white;
+      border: none;
+      border-radius: 15px;
+      padding: 10px 20px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 0 #cbd5e1;
+      transition: all 0.1s;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .btn-nav:active { transform: translateY(4px); box-shadow: 0 2px 0 #cbd5e1; }
+
+    .lang-select {
+      background: white;
+      border: 3px solid var(--primary);
+      border-radius: 20px;
+      padding: 8px 15px;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      color: var(--primary);
+      font-size: 0.9rem;
+    }
+
+    /* Main Container - Decreased size */
+    #main-container {
+      width: 100%;
+      max-width: 900px; /* Reduced from 1250px */
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .game-card {
+      background: rgba(255, 255, 255, 0.95);
+      width: 100%;
+      border-radius: 40px; /* Reduced from 60px */
+      padding: 50px 30px; /* Reduced from 80px 40px */
+      box-shadow: var(--box-shadow);
+      text-align: center;
+      border: 10px solid white;
+      animation: bounceIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+      position: relative;
+    }
+
+    @keyframes bounceIn {
+      from { transform: scale(0.5); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    /* Progress Bar */
+    .progress-wrapper {
+      width: 100%;
+      max-width: 600px;
+      height: 24px;
+      background: #f1f5f9;
+      border-radius: 15px;
+      overflow: hidden;
+      border: 4px solid white;
+      box-shadow: inset 0 3px 6px rgba(0,0,0,0.1);
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #f472b6, #a855f7, #6366f1);
+      width: 0%;
+      transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Screen Specifics */
+    .screen { display: none; width: 100%; flex-direction: column; align-items: center; gap: 30px; }
+    .screen.active { display: flex; }
+
+    .title {
+      font-size: 3.5rem; /* Reduced from 5rem */
+      font-weight: 900;
+      background: linear-gradient(to right, #3d60be);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 4px 4px 0 rgb(151, 230, 132);
+      line-height: 1.1;
+      padding-bottom: 5px;
+    }
+
+    /* Shape Display */
+    .shape-display-area {
+      height: 250px; /* Reduced from 350px */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 1000px;
+      width: 100%;
+    }
+
+    .shape-icon {
+      font-size: 12rem; /* Reduced from 18rem */
+      filter: drop-shadow(0 15px 30px rgba(0,0,0,0.2));
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: floatShape 3s infinite ease-in-out;
+      user-select: none;
+    }
+    @keyframes floatShape {
+      0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+      50% { transform: translateY(-20px) rotate(5deg) scale(1.05); }
+    }
+
+    /* Choices Grid */
+    .choices-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .choice-btn {
+      background: white;
+      border: 4px solid #f1f5f9;
+      border-radius: 25px;
+      padding: 20px;
+      font-size: 1.5rem; /* Reduced from 2.2rem */
+      font-weight: 900;
+      color: #334155;
+      cursor: pointer;
+      box-shadow: 0 8px 0 #e2e8f0;
+      transition: all 0.1s;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .choice-btn:hover { border-color: var(--sky); color: var(--sky); transform: translateY(-3px); }
+    .choice-btn:active { transform: translateY(6px); box-shadow: 0 2px 0 #e2e8f0; }
+    
+    .choice-btn.correct { 
+      background: var(--success); 
+      color: white; 
+      border-color: #16a34a; 
+      box-shadow: 0 8px 0 #166534; 
+    }
+    .choice-btn.wrong { 
+      background: var(--danger); 
+      color: white; 
+      border-color: #dc2626; 
+      box-shadow: 0 8px 0 #991b1b; 
+      animation: shake 0.5s; 
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-12px); }
+      75% { transform: translateX(12px); }
+    }
+
+    /* Stats & Score */
+    .stat-badge {
+      background: var(--orange);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: 900;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 5px 0 #c2410c;
+    }
+
+    /* Feedback & Modals */
+    .feedback-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.95);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.4s;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .feedback-icon { font-size: 8rem; margin-bottom: 15px; }
+    .feedback-text { font-size: 3.5rem; font-weight: 900; margin-bottom: 30px; }
+
+    /* Buttons */
+    .btn-action {
+      background: linear-gradient(to bottom, #4f46e5, #4338ca);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 20px 60px;
+      font-size: 2rem; /* Reduced from 3rem */
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 0 #1e1b4b;
+      transition: all 0.1s;
+      font-family: inherit;
+    }
+    .btn-action:active { transform: translateY(8px); box-shadow: 0 2px 0 #1e1b4b; }
+
+    /* Results */
+    .result-score {
+      font-size: 6rem; /* Reduced from 10rem */
+      font-weight: 900;
+      color: var(--primary);
+      margin: 20px 0;
+      text-shadow: 4px 4px 0 white;
+    }
+
+    canvas#confetti {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2000;
+    }
+
+    /* Responsive */
+    @media (max-width: 850px) {
+      .game-card { padding: 40px 20px; border-radius: 35px; border-width: 8px; }
+      .title { font-size: 2.5rem; }
+      .shape-icon { font-size: 10rem; }
+      .shape-display-area { height: 200px; }
+      .choice-btn { font-size: 1.3rem; padding: 15px; border-width: 3px; box-shadow: 0 6px 0 #e2e8f0; }
+      .result-score { font-size: 5rem; }
+      header { padding: 15px 20px; }
+      .btn-action { font-size: 1.6rem; padding: 15px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="confetti"></canvas>
+
+  <header>
+    <div class="nav-group">
+      <a href="index.html" class="btn-nav">🏠 <span id="txt-home">መነሻ</span></a>
+    </div>
+    <div class="nav-group">
+      <div class="stat-badge">⭐ <span id="streak-val">0</span></div>
+      <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+        <option value="ti" selected>ትግርኛ</option>
+        <option value="am">አማርኛ</option>
+        <option value="en">English</option>
+        <option value="om">Afaan Oromoo</option>
+        <option value="so">Soomaali</option>
+      </select>
+    </div>
+  </header>
+
+  <main id="main-container">
+    <div class="game-card">
+      
+      <!-- Home Screen -->
+      <section id="screen-home" class="screen active">
+        <h1 class="title" id="txt-welcome">ናይ ቅርጽታት ጨዋታ! 🎨</h1>
+        <p style="font-size: 1.5rem; color: #64748b; font-weight: 700;" id="txt-subtitle">ነቶም ቅርጽታት ንለልዮም!</p>
+        <div class="shape-display-area">
+          <div class="shape-icon" style="color: var(--secondary)">★</div>
+        </div>
+        <button class="btn-action" onclick="startGame()" id="txt-start">ጀምር!</button>
+      </section>
+
+      <!-- Quiz Screen -->
+      <section id="screen-quiz" class="screen">
+        <div class="progress-wrapper">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <h2 style="font-size: 2rem; color: var(--primary); font-weight: 900; text-transform: uppercase;" id="txt-question">እዚ እንታይ ቅርጺ እዩ?</h2>
+        <div class="shape-display-area">
+          <div id="target-shape" class="shape-icon">?</div>
+        </div>
+        <div class="choices-grid" id="choices-grid">
+          <!-- Injected by JS -->
+        </div>
+      </section>
+
+      <!-- Results Screen -->
+      <section id="screen-results" class="screen">
+        <h1 class="title" id="txt-results">ንኡድ ስራሕ! 🎉</h1>
+        <div class="result-score" id="final-score">0 / 10</div>
+        <p style="font-size: 1.6rem; font-weight: 800; color: #64748b;" id="txt-msg">ኩሎም ቅርጽታት ፈሊጥካዮም ኢኻ!</p>
+        <button class="btn-action" onclick="goHome()" id="txt-replay">ደጊምካ ጻወት</button>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Feedback Overlay -->
+  <div class="feedback-overlay" id="feedback-overlay">
+    <div class="feedback-icon" id="fb-icon">🌟</div>
+    <div class="feedback-text" id="fb-text">ንፉዕ!</div>
+  </div>
+
+  <script>
+    const SHAPES = [
+      { id: 'circle', icon: '●', color: '#f43f5e', names: { ti: 'ክቢ', en: 'Circle', am: 'ክብ', om: 'Geengoo', so: 'Goobo' } },
+      { id: 'square', icon: '■', color: '#0ea5e9', names: { ti: 'ርቡዕ ኩርናዕ', en: 'Square', am: 'አራት ማዕዘን', om: 'Iskweerii', so: 'Labajibaarane' } },
+      { id: 'triangle', icon: '▲', color: '#f59e0b', names: { ti: 'ስሉስ ኩርናዕ', en: 'Triangle', am: 'ሦስት ማዕዘን', om: 'Sadi-mirmiraa', so: 'Saddexagal' } },
+      { id: 'star', icon: '★', color: '#facc15', names: { ti: 'ኮኸብ', en: 'Star', am: 'ኮከብ', om: 'Urjii', so: 'Xiddig' } },
+      { id: 'heart', icon: '♥', color: '#ec4899', names: { ti: 'ልቢ', en: 'Heart', am: 'ልብ', om: 'Onnee', so: 'Wadne' } },
+      { id: 'diamond', icon: '◆', color: '#f97316', names: { ti: 'አልማዝ', en: 'Diamond', am: 'አልማዝ', om: 'Dayimandii', so: 'Dheeman' } },
+      { id: 'pentagon', icon: '⬠', color: '#22c55e', names: { ti: 'ሓሙሽተ ኩርናዕ', en: 'Pentagon', am: 'አምስት ማዕዘን', om: 'Pentagoonii', so: 'Shanagal' } },
+      { id: 'hexagon', icon: '⬡', color: '#6366f1', names: { ti: 'ሽዱሽተ ኩርናዕ', en: 'Hexagon', am: 'ስድስት ማዕዘን', om: 'Heksagoonii', so: 'Lixagal' } },
+      { id: 'oval', icon: '⬯', color: '#14b8a6', names: { ti: 'ቅርጺ እንቋቑሖ', en: 'Oval', am: 'እንቁላል ቅርጽ', om: 'Ovaalii', so: 'Ubeedo' } },
+      { id: 'rectangle', icon: '█', color: '#4338ca', names: { ti: 'ሬክታንግል', en: 'Rectangle', am: 'ሬክታንግል', om: 'Rektangilii', so: 'Laydi' } }
+    ];
+
+    const UI = {
+      ti: { home: 'መነሻ', welcome: 'ናይ ቅርጽታት ጨዋታ! 🎨', subtitle: 'ነቶም ቅርጽታት ንለልዮም!', start: 'ጀምር!', question: 'እዚ እንታይ ቅርጺ እዩ?', results: 'ንኡድ ስራሕ! 🎉', msg: 'ኩሎም ቅርጽታት ፈሊጥካዮም ኢኻ!', replay: 'ደጊምካ ተጻወት', correct: 'ንፉዕ!', wrong: 'ደጊምካ ፈትን!' },
+      am: { home: 'መነሻ', welcome: 'የቅርጾች ጨዋታ! 🎨', subtitle: 'ቅርጾችን እንወቅ!', start: 'ጀምር!', question: 'ይህ ምን ዓይነት ቅርጽ ነው?', results: 'ድንቅ ስራ! 🎉', msg: 'ሁሉንም ቅርጾች አውቀሃል!', replay: 'ደግመህ ተጫወት', correct: 'ጎበዝ!', wrong: 'እንደገና ሞክር!' },
+      en: { home: 'Home', welcome: 'Shape Fun! 🎨', subtitle: 'Let\'s identify the shapes!', start: 'Start!', question: 'What shape is this?', results: 'Great Job! 🎉', msg: 'You identified all shapes!', replay: 'Play Again', correct: 'Correct!', wrong: 'Try Again!' },
+      om: { home: 'Mana', welcome: 'Bocoota Tapha! 🎨', subtitle: 'Bocoota haa barannu!', start: 'Jalqabi!', question: 'Bocni kun maali?', results: 'Hojii Gaarii! 🎉', msg: 'Bocoota hunda adda baasteetta!', replay: 'Irra deebi’i taphadhu', correct: 'Sirrii!', wrong: 'Irra deebi’i yaali!' },
+      so: { home: 'Hoyga', welcome: 'Ciyaarta Qaababka! 🎨', subtitle: 'Aynu baranno qaababka!', start: 'Bilow!', question: 'Waa maxay qaabkani?', results: 'Shaqo Fiican! 🎉', msg: 'Dhammaan qaababka waad garatay!', replay: 'Mar kale ciyaar', correct: 'Waa sax!', wrong: 'Iska day mar kale!' }
+    };
+
+    let curLang = 'ti';
+    let currentIdx = 0;
+    let score = 0;
+    let streak = 0;
+    let busy = false;
+    let quizPool = [];
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const confetti = {
+      canvas: document.getElementById('confetti'),
+      ctx: document.getElementById('confetti').getContext('2d'),
+      particles: [],
+      active: false
+    };
+
+    function init() {
+      const symbols = ['★', '●', '▲', '■', '♥', '◆', '☀', '☁'];
+      const colors = ['#f472b6', '#fb923c', '#facc15', '#4ade80', '#60a5fa', '#a78bfa'];
+      for (let i = 0; i < 30; i++) {
+        const d = document.createElement('div');
+        d.className = 'decor';
+        d.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+        d.style.left = Math.random() * 100 + 'vw';
+        d.style.fontSize = (Math.random() * 2 + 0.8) + 'rem';
+        d.style.color = colors[Math.floor(Math.random() * colors.length)];
+        d.style.animationDelay = Math.random() * 15 + 's';
+        d.style.animationDuration = (Math.random() * 10 + 10) + 's';
+        document.body.appendChild(d);
+      }
+      updateUI();
+    }
+
+    function changeLang(val) {
+      curLang = val;
+      updateUI();
+      if (document.getElementById('screen-quiz').classList.contains('active')) {
+        renderQuestion();
+      }
+    }
+
+    function updateUI() {
+      const t = UI[curLang];
+      document.getElementById('txt-home').innerText = t.home;
+      document.getElementById('txt-welcome').innerText = t.welcome;
+      document.getElementById('txt-subtitle').innerText = t.subtitle;
+      document.getElementById('txt-start').innerText = t.start;
+      document.getElementById('txt-question').innerText = t.question;
+      document.getElementById('txt-results').innerText = t.results;
+      document.getElementById('txt-msg').innerText = t.msg;
+      document.getElementById('txt-replay').innerText = t.replay;
+    }
+
+    function startGame() {
+      score = 0;
+      currentIdx = 0;
+      quizPool = [...SHAPES].sort(() => Math.random() - 0.5);
+      
+      document.getElementById('screen-home').classList.remove('active');
+      document.getElementById('screen-results').classList.remove('active');
+      document.getElementById('screen-quiz').classList.add('active');
+      
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      busy = false;
+      const shape = quizPool[currentIdx];
+      const targetEl = document.getElementById('target-shape');
+      
+      const progress = (currentIdx / quizPool.length) * 100;
+      document.getElementById('progress-bar').style.width = progress + '%';
+
+      targetEl.innerText = shape.icon;
+      targetEl.style.color = shape.color;
+      
+      const others = SHAPES.filter(s => s.id !== shape.id).sort(() => Math.random() - 0.5).slice(0, 3);
+      const choices = [shape, ...others].sort(() => Math.random() - 0.5);
+      
+      const grid = document.getElementById('choices-grid');
+      grid.innerHTML = '';
+      
+      choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.innerText = choice.names[curLang];
+        btn.onclick = () => handleChoice(choice, btn);
+        grid.appendChild(btn);
+      });
+    }
+
+    function handleChoice(choice, btn) {
+      if (busy) return;
+      busy = true;
+      
+      const target = quizPool[currentIdx];
+      if (choice.id === target.id) {
+        score++;
+        streak++;
+        btn.classList.add('correct');
+        showFeedback(true);
+        playSound('correct');
+        fireConfetti(150);
+        
+        setTimeout(() => {
+          hideFeedback();
+          currentIdx++;
+          if (currentIdx < quizPool.length) {
+            renderQuestion();
+          } else {
+            showResults();
+          }
+        }, 1500);
+      } else {
+        streak = 0;
+        btn.classList.add('wrong');
+        showFeedback(false);
+        playSound('wrong');
+        
+        setTimeout(() => {
+          hideFeedback();
+          busy = false;
+          btn.classList.remove('wrong');
+        }, 1200);
+      }
+      document.getElementById('streak-val').innerText = streak;
+    }
+
+    function showFeedback(isCorrect) {
+      const overlay = document.getElementById('feedback-overlay');
+      const icon = document.getElementById('fb-icon');
+      const text = document.getElementById('fb-text');
+      const t = UI[curLang];
+      
+      icon.innerText = isCorrect ? '🌟' : '🤔';
+      text.innerText = isCorrect ? t.correct : t.wrong;
+      text.style.color = isCorrect ? 'var(--success)' : 'var(--danger)';
+      
+      overlay.style.display = 'flex';
+    }
+
+    function hideFeedback() {
+      document.getElementById('feedback-overlay').style.display = 'none';
+    }
+
+    function showResults() {
+      document.getElementById('screen-quiz').classList.remove('active');
+      document.getElementById('screen-results').classList.add('active');
+      document.getElementById('final-score').innerText = `${score} / ${quizPool.length}`;
+      document.getElementById('progress-bar').style.width = '100%';
+      fireConfetti(400);
+      playSound('correct');
+    }
+
+    function goHome() {
+      document.getElementById('screen-results').classList.remove('active');
+      document.getElementById('screen-home').classList.add('active');
+      streak = 0;
+      document.getElementById('streak-val').innerText = '0';
+    }
+
+    function playSound(type) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const now = audioCtx.currentTime;
+      
+      if (type === 'correct') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.3);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.5);
+        osc.start(now); osc.stop(now + 0.5);
+      } else {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.4);
+        osc.start(now); osc.stop(now + 0.4);
+      }
+      osc.connect(gain); gain.connect(audioCtx.destination);
+    }
+
+    function fireConfetti(count) {
+      const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
+      confetti.canvas.width = window.innerWidth;
+      confetti.canvas.height = window.innerHeight;
+      
+      for(let i=0; i<count; i++) {
+        confetti.particles.push({
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
+          vx: (Math.random() - 0.5) * 30,
+          vy: (Math.random() - 0.5) * 30,
+          size: Math.random() * 12 + 5,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 1.0,
+          rot: Math.random() * 360,
+          rv: (Math.random() - 0.5) * 20
+        });
+      }
+      if(!confetti.active) {
+        confetti.active = true;
+        animateConfetti();
+      }
+    }
+
+    function animateConfetti() {
+      confetti.ctx.clearRect(0, 0, confetti.canvas.width, confetti.canvas.height);
+      let alive = false;
+      for (let i = confetti.particles.length - 1; i >= 0; i--) {
+        const p = confetti.particles[i];
+        if (p.life > 0) {
+          alive = true;
+          p.x += p.vx; p.y += p.vy;
+          p.vy += 0.5;
+          p.vx *= 0.98;
+          p.life -= 0.01;
+          p.rot += p.rv;
+          
+          confetti.ctx.save();
+          confetti.ctx.translate(p.x, p.y);
+          confetti.ctx.rotate(p.rot * Math.PI / 180);
+          confetti.ctx.fillStyle = p.color;
+          confetti.ctx.globalAlpha = p.life;
+          confetti.ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+          confetti.ctx.restore();
+        } else {
+          confetti.particles.splice(i, 1);
+        }
+      }
+      if(alive) requestAnimationFrame(animateConfetti);
+      else confetti.active = false;
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

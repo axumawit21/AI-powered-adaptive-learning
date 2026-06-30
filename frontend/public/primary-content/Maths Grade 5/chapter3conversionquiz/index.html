@@ -1,0 +1,1004 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Conversion Quiz - ምልምማድ ምቅያር</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700;900&family=Noto+Sans+Ethiopic:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8338EC;   /* Purple */
+            --secondary: #3A86FF; /* Blue */
+            --pink: #FF006E;      /* Pink */
+            --yellow: #FFBE0B;    /* Yellow */
+            --green: #06D6A0;     /* Green */
+            --bg-gradient: linear-gradient(135deg, #FF99C8 0%, #FCF6BD 100%);
+            --glass: rgba(255, 255, 255, 0.95);
+            --text: #2B2D42;
+        }
+
+        * { box-sizing: border-box; transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); user-select: none; }
+
+        body {
+            font-family: 'Comic Neue', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: -140px;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.95;
+        }
+
+        body::before {
+            background:
+                radial-gradient(circle at 10% 15%, rgba(131, 56, 236, 0.26) 0 120px, transparent 121px),
+                radial-gradient(circle at 86% 18%, rgba(58, 134, 255, 0.24) 0 140px, transparent 141px),
+                radial-gradient(circle at 18% 86%, rgba(255, 0, 110, 0.22) 0 160px, transparent 161px),
+                radial-gradient(circle at 84% 84%, rgba(255, 190, 11, 0.20) 0 160px, transparent 161px),
+                radial-gradient(circle at 52% 52%, rgba(6, 214, 160, 0.14) 0 220px, transparent 221px),
+                linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.00) 35%, rgba(255,255,255,0.10));
+            animation: floatBg 10s ease-in-out infinite;
+        }
+
+        body::after {
+            background:
+                radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.22) 0 190px, transparent 191px),
+                radial-gradient(circle at 65% 65%, rgba(255, 255, 255, 0.18) 0 240px, transparent 241px);
+            animation: floatBg 14s ease-in-out infinite reverse;
+        }
+
+        /* --- Header --- */
+        header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        .header-left { width: 150px; display: flex; align-items: center; }
+        .header-right { width: 150px; display: flex; justify-content: flex-end; }
+        
+        .header-center { 
+            flex-grow: 1; 
+            text-align: center; 
+            display: flex; 
+            justify-content: center;
+        }
+
+        .grade-badge {
+            background: var(--primary);
+            color: white;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.3rem;
+            border: 3px solid white;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.12), 0 18px 26px rgba(0,0,0,0.12);
+            transform: rotate(-6deg);
+        }
+
+        h1 {
+            color: var(--text);
+            font-size: 1.6rem;
+            font-weight: 900;
+            margin: 0;
+        }
+
+        /* --- Custom Dropdown --- */
+        .custom-select-wrapper { position: relative; z-index: 200; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            position: relative;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px;
+            font-size: 1rem; font-weight: bold;
+            color: var(--primary);
+            height: 45px;
+            background: #ffffff;
+            cursor: pointer;
+            border: 3px solid var(--primary);
+            border-radius: 25px;
+            box-shadow: 0 4px 0 rgba(131, 56, 236, 0.2);
+            width: 150px;
+            transition: transform 0.2s;
+        }
+        .custom-select__trigger:hover { transform: translateY(-2px); }
+        .custom-select__trigger:active { transform: translateY(4px); box-shadow: none; }
+        
+        .custom-options {
+            position: absolute;
+            top: 120%; left: 0; right: 0;
+            background: #fff;
+            border: 3px solid #e9ecef;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            opacity: 0; visibility: hidden;
+            transform: translateY(-15px);
+            padding: 10px;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; transform: translateY(0); }
+        .custom-option {
+            padding: 10px 15px; font-weight: 700; font-size: 0.9rem;
+            border-radius: 12px; cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .custom-option:hover { background-color: var(--primary); color: white; transform: scale(1.02); }
+        .custom-option.selected { background-color: #f3e8ff; color: var(--primary); border-color: var(--primary); }
+
+        .arrow { width: 10px; height: 10px; border-left: 2px solid var(--primary); border-bottom: 2px solid var(--primary); transform: rotate(-45deg); transition: 0.3s; margin-top: -5px; }
+        .custom-select.open .arrow { transform: rotate(135deg); margin-top: 5px; }
+
+        /* --- Main Content --- */
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Score Board */
+        .score-board {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .score-pill {
+            background: white;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 150px;
+            justify-content: center;
+        }
+
+        .score-pill {
+            background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.86));
+            box-shadow: 0 10px 0 rgba(0,0,0,0.09), 0 18px 28px rgba(0,0,0,0.10);
+            backdrop-filter: blur(10px);
+        }
+        
+        .score-pill.current { color: var(--secondary); border: 3px solid var(--secondary); }
+        .score-pill.high { color: #F59E0B; border: 3px solid #F59E0B; }
+
+        /* Quiz Card */
+        .quiz-card {
+            background: var(--glass);
+            width: 100%;
+            border-radius: 40px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            border: 6px solid white;
+            position: relative;
+            overflow: visible;
+            text-align: center;
+        }
+
+        .quiz-card::before {
+            content: "";
+            position: absolute;
+            inset: -6px;
+            border-radius: 46px;
+            background: linear-gradient(135deg, rgba(131,56,236,0.30), rgba(58,134,255,0.24), rgba(255,0,110,0.20), rgba(255,190,11,0.18), rgba(6,214,160,0.16));
+            filter: blur(18px);
+            opacity: 0.75;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .quiz-card > * { position: relative; z-index: 1; }
+
+        .question-label {
+            font-size: 1.4rem;
+            color: #64748b;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        /* The Fraction Display */
+        .fraction-display {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 5rem;
+            font-weight: 900;
+            color: var(--primary);
+            background: #f3e8ff;
+            padding: 20px 40px;
+            border-radius: 30px;
+            border: 4px dashed var(--primary);
+            margin-bottom: 40px;
+            line-height: 1;
+        }
+
+        .fraction-display {
+            box-shadow: 0 14px 0 rgba(131, 56, 236, 0.18), 0 26px 36px rgba(0,0,0,0.10);
+            text-shadow: 2px 2px 0 rgba(255,255,255,0.9);
+        }
+        
+        .frac-line {
+            width: 100%;
+            height: 6px;
+            background: var(--primary);
+            margin: 5px 0;
+            border-radius: 3px;
+        }
+
+        /* Input Grid */
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-label {
+            font-size: 1.2rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .label-percent { color: var(--pink); }
+        .label-decimal { color: var(--yellow); text-shadow: 1px 1px 0 rgba(0,0,0,0.1); }
+
+        .answer-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 2rem;
+            text-align: center;
+            border: 4px solid #e2e8f0;
+            border-radius: 20px;
+            outline: none;
+            font-weight: bold;
+            color: var(--text);
+            background: white;
+        }
+
+        .answer-input {
+            box-shadow: 0 10px 0 rgba(0,0,0,0.06);
+        }
+
+        .answer-input:focus {
+            transform: scale(1.05);
+        }
+        
+        .input-percent:focus { border-color: var(--pink); box-shadow: 0 0 0 5px rgba(255, 0, 110, 0.2); }
+        .input-decimal:focus { border-color: var(--yellow); box-shadow: 0 0 0 5px rgba(255, 190, 11, 0.2); }
+
+        /* Check Button */
+        .btn-check {
+            background: var(--green);
+            color: white;
+            border: none;
+            padding: 20px 60px;
+            border-radius: 50px;
+            font-size: 1.8rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #04a77d;
+            transition: transform 0.1s;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, #06D6A0, #3A86FF);
+            box-shadow: 0 10px 0 rgba(4, 167, 125, 0.95), 0 20px 30px rgba(0,0,0,0.14);
+            letter-spacing: 0.4px;
+        }
+
+        .btn-check:hover {
+            transform: translateY(-2px) scale(1.02);
+            filter: brightness(1.02);
+        }
+
+        .btn-check:active { transform: translateY(6px); box-shadow: none; }
+        .btn-check:disabled { background: #cbd5e0; box-shadow: none; cursor: not-allowed; }
+
+        /* Feedback Overlay */
+        .feedback-area {
+            margin-top: 20px;
+            min-height: 80px;
+            display: none;
+            animation: slideUp 0.4s ease;
+        }
+        .feedback-area.show { display: block; }
+
+        .fb-title { font-size: 2rem; font-weight: 900; margin-bottom: 5px; }
+        .fb-correct { color: var(--green); }
+        .fb-wrong { color: var(--pink); }
+        
+        .fb-detail { font-size: 1.2rem; color: #475569; }
+
+        .btn-next {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 40px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #2563eb;
+            margin-top: 20px;
+        }
+        .btn-next {
+            background: linear-gradient(135deg, #3A86FF, #8338EC);
+            box-shadow: 0 8px 0 rgba(37, 99, 235, 0.95), 0 16px 26px rgba(0,0,0,0.12);
+        }
+        .btn-next:hover { transform: translateY(-2px); filter: brightness(1.02); }
+        .btn-next:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Modal Popups (Reward / Game Over) */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 500;
+            background: rgba(10, 12, 22, 0.35);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .modal-box {
+            width: min(520px, 100%);
+            border-radius: 34px;
+            padding: 26px 24px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.90));
+            border: 6px solid rgba(255,255,255,0.95);
+            box-shadow: 0 24px 60px rgba(0,0,0,0.30);
+            text-align: center;
+            animation: popIn 0.22s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-box::before {
+            content: "";
+            position: absolute;
+            inset: -40px;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(131,56,236,0.22) 0 140px, transparent 141px),
+                radial-gradient(circle at 85% 25%, rgba(58,134,255,0.18) 0 160px, transparent 161px),
+                radial-gradient(circle at 25% 90%, rgba(255,0,110,0.16) 0 170px, transparent 171px),
+                radial-gradient(circle at 85% 85%, rgba(255,190,11,0.16) 0 180px, transparent 181px);
+            filter: blur(10px);
+            opacity: 0.75;
+            pointer-events: none;
+        }
+
+        .modal-box > * { position: relative; z-index: 1; }
+
+        .modal-icon {
+            width: 92px;
+            height: 92px;
+            margin: 0 auto 12px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 2.4rem;
+            border: 5px solid rgba(255,255,255,0.95);
+            box-shadow: 0 12px 0 rgba(0,0,0,0.10), 0 18px 26px rgba(0,0,0,0.12);
+        }
+
+        .modal-icon.reward { background: linear-gradient(135deg, #FFD166, #06D6A0); }
+        .modal-icon.gameover { background: linear-gradient(135deg, #FF006E, #8338EC); }
+
+        .modal-title {
+            font-size: 2.1rem;
+            font-weight: 900;
+            margin: 4px 0 6px;
+        }
+
+        .modal-sub {
+            font-size: 1.15rem;
+            color: #334155;
+            font-weight: 800;
+            margin: 0 0 10px;
+        }
+
+        .modal-score {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.85);
+            border: 3px solid rgba(58,134,255,0.20);
+            font-size: 1.2rem;
+            font-weight: 900;
+            margin: 10px 0 12px;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.08);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .btn-modal {
+            border: none;
+            border-radius: 999px;
+            padding: 14px 22px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            color: white;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.14);
+            transition: transform 0.12s;
+        }
+
+        .btn-modal:active { transform: translateY(6px); box-shadow: none; }
+
+        .btn-modal.next { background: linear-gradient(135deg, #06D6A0, #3A86FF); }
+        .btn-modal.retry { background: linear-gradient(135deg, #FF006E, #8338EC); }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+        @keyframes floatBg { 0%, 100% { transform: translate3d(0,0,0); } 50% { transform: translate3d(0,-14px,0); } }
+
+        /* Confetti */
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 200; }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            header { padding: 1rem; flex-wrap: wrap; justify-content: center; gap: 15px; }
+            .header-left { width: auto; order: 1; }
+            .header-center { width: 100%; order: 3; margin-top: 5px; }
+            .header-right { width: auto; order: 2; }
+            h1 { font-size: 1.3rem; }
+            
+            .input-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .input-label { font-size: 1rem; gap: 6px; }
+            .fraction-display { font-size: 4rem; padding: 15px 30px; }
+            .quiz-card { padding: 20px; }
+            .answer-input { padding: 14px; font-size: 1.5rem; }
+            .btn-check { font-size: 1.5rem; padding: 15px; }
+            .score-board { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+            .score-pill { flex: 1; min-width: 120px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <div class="grade-badge">5</div>
+    </div>
+    <div class="header-center">
+        <h1 id="app-title">Conversion Quiz</h1>
+    </div>
+    <div class="header-right">
+        <!-- Custom Dropdown -->
+        <div class="custom-select-wrapper">
+            <div class="custom-select">
+                <div class="custom-select__trigger">
+                    <span id="current-lang-label">🗺️ ትግርኛ</span>
+                    <div class="arrow"></div>
+                </div>
+                <div class="custom-options">
+                    <span class="custom-option selected" data-value="ti">ትግርኛ</span>
+                    <span class="custom-option" data-value="am">አማርኛ</span>
+                    <span class="custom-option" data-value="en">English</span>
+                    <span class="custom-option" data-value="om">Afan Oromoo</span>
+                    <span class="custom-option" data-value="so">Soomaali</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    
+    <div class="score-board">
+        <div class="score-pill high">
+            <span>🏆</span> <span id="lbl-record">Record</span>: <span id="high-score-val">0</span>
+        </div>
+        <div class="score-pill current">
+            <span>⭐</span> <span id="lbl-score">Score</span>: <span id="score-val">0</span>
+        </div>
+    </div>
+
+    <div class="quiz-card" id="quiz-card">
+        <p class="question-label" id="q-label">Convert this fraction:</p>
+        
+        <div class="fraction-display">
+            <span id="q-num">1</span>
+            <div class="frac-line"></div>
+            <span id="q-den">2</span>
+        </div>
+
+        <div class="input-grid">
+            <div class="input-group">
+                <label class="input-label label-percent">
+                    <span>🔋</span> <span id="lbl-perc">Percentage (%)</span>
+                </label>
+                <input type="number" class="answer-input input-percent" id="in-perc" placeholder="50" step="any">
+            </div>
+            <div class="input-group">
+                <label class="input-label label-decimal">
+                    <span>💠</span> <span id="lbl-dec">Decimal (0.xx)</span>
+                </label>
+                <input type="number" class="answer-input input-decimal" id="in-dec" placeholder="0.5" step="any">
+            </div>
+        </div>
+
+        <button class="btn-check" onclick="checkAnswer()" id="btn-check">Check Answer ✔️</button>
+
+        <div class="feedback-area" id="feedback">
+            <div id="fb-title" class="fb-title"></div>
+            <div id="fb-detail" class="fb-detail"></div>
+            <button class="btn-next" onclick="nextQuestion()" id="btn-next">Next Question ➡</button>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal-overlay" id="reward-overlay" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true">
+        <div class="modal-icon reward">🏅</div>
+        <div class="modal-title" id="reward-title">Great job!</div>
+        <div class="modal-sub" id="reward-sub">You got it right!</div>
+        <div class="modal-score"><span>⭐</span> <span id="reward-score-label">Score</span>: <span id="reward-score">0</span></div>
+        <div class="modal-actions">
+            <button class="btn-modal next" id="reward-next" onclick="nextFromReward()">Next ➡</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="gameover-overlay" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true">
+        <div class="modal-icon gameover">💥</div>
+        <div class="modal-title" id="gameover-title">Game Over</div>
+        <div class="modal-sub" id="gameover-sub">Try again!</div>
+        <div class="modal-score"><span>🎯</span> <span id="gameover-score-label">Your score</span>: <span id="gameover-score">0</span></div>
+        <div class="modal-actions">
+            <button class="btn-modal retry" id="gameover-retry" onclick="restartFromGameOver()">Play Again 🔁</button>
+        </div>
+    </div>
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+    // --- Audio Engine ---
+    const AudioEngine = {
+        ctx: null,
+        init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+        playTone(freq, type, duration, startTime=0) {
+            this.init();
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(this.ctx.currentTime + startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + startTime + duration);
+            osc.stop(this.ctx.currentTime + startTime + duration);
+        },
+        playSuccess() { 
+            this.playTone(600, 'sine', 0.1); 
+            setTimeout(() => this.playTone(800, 'sine', 0.1), 100);
+            setTimeout(() => this.playTone(1200, 'triangle', 0.3), 200);
+        },
+        playWrong() { 
+            this.playTone(150, 'sawtooth', 0.2); 
+            setTimeout(() => this.playTone(100, 'sawtooth', 0.3), 150);
+        }
+    };
+
+    // --- Translations ---
+    const translations = {
+        ti: {
+            title: "ምልምማድ ምቅያር",
+            qLabel: "ነዚ ጉዚ ቀይርዎ፡",
+            lblPerc: "ሚኢታዊ (%)",
+            lblDec: "ደሲማል (0.xx)",
+            btnCheck: "ፈትሽ ✔️",
+            btnNext: "ቀፃሊ ➡",
+            correct: "ትኽክል!",
+            wrong: "ተጋግዩ!",
+            expCorrect: "ጽቡቕ ስራሕ!",
+            expWrong: "ትኽክል መልሲ: {p}% ን {d} እዩ።",
+            rewardTitle: "ብጣዕሚ ጎበዝ!",
+            rewardSub: "ትኽክል መልሲ መሊስኩም!",
+            gameOverTitle: "ጨዋታ ተወዲኡ",
+            gameOverSub: "እንደገና ፈትን!",
+            yourScore: "ነጥቢ",
+            playAgain: "ድጋሜ ጀምር 🔁",
+            next: "ቀፃሊ ➡",
+            lblScore: "ነጥቢ",
+            lblRecord: "ክብረ ወሰን"
+        },
+        am: {
+            title: "የመቀየር ልምምድ",
+            qLabel: "ይህንን ክፍልፋይ ይቀይሩ፡",
+            lblPerc: "ፐርሰንት (%)",
+            lblDec: "አስርዮሽ (0.xx)",
+            btnCheck: "ፈትሽ ✔️",
+            btnNext: "ቀጣይ ➡",
+            correct: "ትክክል!",
+            wrong: "ስህተት!",
+            expCorrect: "ድንቅ ስራ!",
+            expWrong: "ትክክለኛው መልስ: {p}% እና {d} ነው።",
+            rewardTitle: "ብሩህ ነህ!",
+            rewardSub: "ትክክል መልስ ሰጥተሃል!",
+            gameOverTitle: "ጨዋታ አለቀ",
+            gameOverSub: "እንደገና ሞክር!",
+            yourScore: "ውጤት",
+            playAgain: "እንደገና ተጫወት 🔁",
+            next: "ቀጣይ ➡",
+            lblScore: "ውጤት",
+            lblRecord: "ከፍተኛ"
+        },
+        en: {
+            title: "Conversion Quiz",
+            qLabel: "Convert this fraction:",
+            lblPerc: "Percentage (%)",
+            lblDec: "Decimal (0.xx)",
+            btnCheck: "Check Answer ✔️",
+            btnNext: "Next Question ➡",
+            correct: "Correct!",
+            wrong: "Incorrect!",
+            expCorrect: "Great job!",
+            expWrong: "The answer is {p}% and {d}.",
+            rewardTitle: "You did it!",
+            rewardSub: "Correct answer!",
+            gameOverTitle: "Game Over",
+            gameOverSub: "Try again!",
+            yourScore: "Your score",
+            playAgain: "Play Again 🔁",
+            next: "Next ➡",
+            lblScore: "Score",
+            lblRecord: "Record"
+        },
+        om: {
+            title: "Shaakala Jijjiirraa",
+            qLabel: "Firakshinii kana jijjiiri:",
+            lblPerc: "Dhibbeentaa (%)",
+            lblDec: "Desimaalii (0.xx)",
+            btnCheck: "Mirkaneessi ✔️",
+            btnNext: "Itti Aanu ➡",
+            correct: "Sirrii!",
+            wrong: "Dogoggora!",
+            expCorrect: "Hojii gaarii!",
+            expWrong: "Deebiin sirrii {p}% fi {d} dha.",
+            rewardTitle: "Cimdaa!",
+            rewardSub: "Deebii sirrii kennite!",
+            gameOverTitle: "Xumura Taphaa",
+            gameOverSub: "Irra deebi'ii yaali!",
+            yourScore: "Qabxii",
+            playAgain: "Deebi'ee Taphadhu 🔁",
+            next: "Itti Aanu ➡",
+            lblScore: "Qabxii",
+            lblRecord: "Rikardii"
+        },
+        so: {
+            title: "Tababarka Beddelka",
+            qLabel: "Beddel jajabkan:",
+            lblPerc: "Boqolley (%)",
+            lblDec: "Tobanle (0.xx)",
+            btnCheck: "Hubi ✔️",
+            btnNext: "Xiga ➡",
+            correct: "Sax!",
+            wrong: "Qaldan!",
+            expCorrect: "Shaqo fiican!",
+            expWrong: "Jawaabtu waa {p}% iyo {d}.",
+            rewardTitle: "Aad u fiican!",
+            rewardSub: "Jawaab sax ah!",
+            gameOverTitle: "Ciyaartu Dhamaatay",
+            gameOverSub: "Mar kale isku day!",
+            yourScore: "Dhibcahaaga",
+            playAgain: "Mar Kale Ciyaar 🔁",
+            next: "Xiga ➡",
+            lblScore: "Dhibco",
+            lblRecord: "Rikoodh"
+        }
+    };
+
+    // --- Logic ---
+    let currentLang = 'ti';
+    let score = 0;
+    let highScore = localStorage.getItem('conversionQuizHighScore') || 0;
+    let currentFraction = { num: 1, den: 2 };
+    let isQuestionActive = true;
+
+    // Easy fractions for Grade 5
+    const problemSet = [
+        {n:1, d:2}, {n:1, d:4}, {n:3, d:4}, 
+        {n:1, d:5}, {n:2, d:5}, {n:3, d:5}, {n:4, d:5},
+        {n:1, d:10}, {n:3, d:10}, {n:7, d:10}, {n:9, d:10},
+        {n:1, d:20}, {n:1, d:25}, {n:1, d:50}, {n:1, d:100}
+    ];
+
+    function nextQuestion() {
+        // Reset UI
+        document.getElementById('feedback').classList.remove('show');
+        hideReward();
+        hideGameOver();
+        document.getElementById('in-perc').value = '';
+        document.getElementById('in-dec').value = '';
+        document.getElementById('in-perc').disabled = false;
+        document.getElementById('in-dec').disabled = false;
+        document.getElementById('btn-check').style.display = 'inline-block';
+        document.getElementById('btn-check').disabled = false;
+        document.getElementById('quiz-card').style.animation = 'none';
+        
+        // Pick Random Fraction
+        const problem = problemSet[Math.floor(Math.random() * problemSet.length)];
+        currentFraction = { num: problem.n, den: problem.d };
+
+        // Render
+        document.getElementById('q-num').textContent = currentFraction.num;
+        document.getElementById('q-den').textContent = currentFraction.den;
+        
+        isQuestionActive = true;
+    }
+
+    function checkAnswer() {
+        if(!isQuestionActive) return;
+
+        const userPerc = parseFloat(document.getElementById('in-perc').value);
+        const userDec = parseFloat(document.getElementById('in-dec').value);
+
+        if(isNaN(userPerc) || isNaN(userDec)) {
+            // Simple shake if empty
+            const card = document.getElementById('quiz-card');
+            card.style.animation = 'shake 0.4s';
+            setTimeout(() => card.style.animation = 'none', 400);
+            return;
+        }
+
+        const actualDec = currentFraction.num / currentFraction.den;
+        const actualPerc = actualDec * 100;
+
+        // Tolerance for floating point
+        const isDecCorrect = Math.abs(userDec - actualDec) < 0.001;
+        const isPercCorrect = Math.abs(userPerc - actualPerc) < 0.1;
+
+        const t = translations[currentLang];
+
+        isQuestionActive = false;
+        document.getElementById('btn-check').style.display = 'none';
+        document.getElementById('in-perc').disabled = true;
+        document.getElementById('in-dec').disabled = true;
+
+        if (isDecCorrect && isPercCorrect) {
+            // Correct
+            score += 10;
+            if(score > highScore) {
+                highScore = score;
+                localStorage.setItem('conversionQuizHighScore', highScore);
+            }
+            
+            AudioEngine.playSuccess();
+            triggerConfetti();
+
+            updateScoreBoard();
+            showReward(t);
+            return;
+        } else {
+            // Wrong - Game Over
+            AudioEngine.playWrong();
+
+            updateScoreBoard();
+            showGameOver(t);
+            return;
+        }
+    }
+
+    function showReward(t) {
+        const overlay = document.getElementById('reward-overlay');
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+
+        document.getElementById('reward-title').textContent = t.rewardTitle;
+        document.getElementById('reward-sub').textContent = t.expCorrect || t.rewardSub;
+        document.getElementById('reward-score-label').textContent = t.lblScore;
+        document.getElementById('reward-score').textContent = score;
+        document.getElementById('reward-next').textContent = t.next;
+    }
+
+    function hideReward() {
+        const overlay = document.getElementById('reward-overlay');
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function nextFromReward() {
+        hideReward();
+        nextQuestion();
+    }
+
+    function showGameOver(t) {
+        const overlay = document.getElementById('gameover-overlay');
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+
+        document.getElementById('gameover-title').textContent = t.gameOverTitle;
+        document.getElementById('gameover-sub').textContent = t.gameOverSub;
+        document.getElementById('gameover-score-label').textContent = t.yourScore;
+        document.getElementById('gameover-score').textContent = score;
+        document.getElementById('gameover-retry').textContent = t.playAgain;
+    }
+
+    function hideGameOver() {
+        const overlay = document.getElementById('gameover-overlay');
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function restartFromGameOver() {
+        hideGameOver();
+        score = 0;
+        updateScoreBoard();
+        nextQuestion();
+    }
+
+    function updateScoreBoard() {
+        document.getElementById('score-val').textContent = score;
+        document.getElementById('high-score-val').textContent = highScore;
+    }
+
+    // --- Language Change (Dropdown) ---
+    const selectWrapper = document.querySelector('.custom-select-wrapper');
+    const selectCustom = document.querySelector('.custom-select');
+    const options = document.querySelectorAll('.custom-option');
+
+    selectWrapper.addEventListener('click', function(e) {
+        selectCustom.classList.toggle('open');
+        e.stopPropagation();
+    });
+
+    options.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!this.classList.contains('selected')) {
+                const prev = this.parentNode.querySelector('.custom-option.selected');
+                if(prev) prev.classList.remove('selected');
+                this.classList.add('selected');
+                
+                const label = this.textContent;
+                const value = this.getAttribute('data-value');
+                document.getElementById('current-lang-label').textContent = "🗺️ " + label;
+                
+                selectCustom.classList.remove('open');
+                
+                currentLang = value;
+                changeLanguage();
+            }
+        });
+    });
+
+    window.addEventListener('click', function(e) {
+        if (!selectCustom.contains(e.target)) {
+            selectCustom.classList.remove('open');
+        }
+    });
+
+    function changeLanguage() {
+        const t = translations[currentLang];
+
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('q-label').textContent = t.qLabel;
+        document.getElementById('lbl-perc').textContent = t.lblPerc;
+        document.getElementById('lbl-dec').textContent = t.lblDec;
+        document.getElementById('btn-check').textContent = t.btnCheck;
+        document.getElementById('btn-next').textContent = t.btnNext;
+        document.getElementById('lbl-score').textContent = t.lblScore;
+        document.getElementById('lbl-record').textContent = t.lblRecord;
+
+        if (document.getElementById('reward-overlay').classList.contains('show')) {
+            document.getElementById('reward-title').textContent = t.rewardTitle;
+            document.getElementById('reward-sub').textContent = t.expCorrect || t.rewardSub;
+            document.getElementById('reward-score-label').textContent = t.lblScore;
+            document.getElementById('reward-next').textContent = t.next;
+        }
+
+        if (document.getElementById('gameover-overlay').classList.contains('show')) {
+            document.getElementById('gameover-title').textContent = t.gameOverTitle;
+            document.getElementById('gameover-sub').textContent = t.gameOverSub;
+            document.getElementById('gameover-score-label').textContent = t.yourScore;
+            document.getElementById('gameover-retry').textContent = t.playAgain;
+        }
+    }
+
+    // --- Confetti ---
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const pieces = [];
+        for(let i=0; i<100; i++) {
+            pieces.push({
+                x: canvas.width/2, y: canvas.height/2,
+                vx: (Math.random() - 0.5) * 20,
+                vy: (Math.random() - 0.5) * 20 - 10,
+                c: `hsl(${Math.random()*360}, 100%, 50%)`,
+                r: Math.random() * 8 + 4
+            });
+        }
+        function anim() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            let active = false;
+            pieces.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.5;
+                if(p.y < canvas.height) active = true;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                ctx.fillStyle = p.c;
+                ctx.fill();
+            });
+            if(active) requestAnimationFrame(anim);
+        }
+        anim();
+    }
+
+    // Init
+    window.onload = function() {
+        updateScoreBoard();
+        changeLanguage();
+        nextQuestion();
+    }
+
+</script>
+</body>
+</html>

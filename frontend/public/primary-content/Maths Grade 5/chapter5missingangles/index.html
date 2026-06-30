@@ -1,0 +1,1051 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Angle Detective - ፈተሻ ኩርናዕ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700;900&family=Noto+Sans+Ethiopic:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Bright & Happy Palette */
+            --bg-color: #F0F9FF; /* Light Blue Sky */
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --primary: #FF006E;   /* Pink */
+            --secondary: #3A86FF; /* Blue */
+            --accent: #FFBE0B;    /* Yellow */
+            --success: #06D6A0;   /* Green */
+            --purple: #8338EC;    /* Purple */
+            --border-color: #CBD5E0;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s ease; user-select: none; }
+
+        body {
+            font-family: 'Comic Neue', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--bg-color);
+            /* Playful Pattern */
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 190, 11, 0.2) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(58, 134, 255, 0.2) 0%, transparent 20%),
+                linear-gradient(135deg, #E0F7FA 0%, #E0E7FF 100%);
+            background-attachment: fixed;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 12% 18%, rgba(255, 0, 110, 0.18), transparent 42%),
+                radial-gradient(circle at 88% 16%, rgba(58, 134, 255, 0.16), transparent 42%),
+                radial-gradient(circle at 18% 88%, rgba(6, 214, 160, 0.14), transparent 48%),
+                radial-gradient(circle at 90% 86%, rgba(255, 190, 11, 0.18), transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* --- Header --- */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-bottom: 5px solid var(--secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-radius: 0 0 25px 25px;
+            background-image: linear-gradient(90deg, rgba(255, 0, 110, 0.10), rgba(58, 134, 255, 0.10), rgba(6, 214, 160, 0.10));
+        }
+
+        .header-left { display: flex; align-items: center; gap: 10px; }
+
+        .grade-badge {
+            background: var(--secondary);
+            color: white;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.5rem;
+            border: 3px solid white;
+            box-shadow: 0 4px 8px rgba(58, 134, 255, 0.3);
+        }
+
+        h1 {
+            color: var(--text-color);
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin: 0;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: min(520px, 64vw);
+            pointer-events: none;
+        }
+
+        /* Language Select */
+        .custom-select-wrapper { position: relative; z-index: 200; }
+        .custom-select { position: relative; }
+        .custom-select__trigger {
+            background: white; border: 2px solid var(--purple);
+            color: var(--purple); padding: 8px 15px; border-radius: 20px;
+            font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 3px 0 rgba(131, 56, 236, 0.2);
+        }
+        .custom-select__trigger:active { transform: translateY(2px); box-shadow: none; }
+        
+        .custom-options {
+            position: absolute; top: 125%; right: 0;
+            background: white; border: 2px solid var(--purple);
+            border-radius: 15px; overflow: hidden; display: none;
+            flex-direction: column; min-width: 140px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .custom-select.open .custom-options { display: flex; }
+        .custom-option { padding: 12px; cursor: pointer; color: var(--text-color); font-weight: bold; border-bottom: 1px solid #f0f0f0; }
+        .custom-option:hover { background: #F3E8FF; color: var(--purple); }
+
+        /* --- Container --- */
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+
+        /* Score Board */
+        .score-board {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+        .score-pill {
+            background: white;
+            border: 3px solid #E2E8F0;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: 900;
+            font-size: 1.1rem;
+            display: flex; gap: 8px;
+            box-shadow: 0 4px 0 #E2E8F0;
+        }
+        .score-pill.high { color: #D97706; border-color: var(--accent); }
+        .score-pill.curr { color: #059669; border-color: var(--success); }
+
+        /* Mode Switcher */
+        .mode-switch {
+            display: flex;
+            background: white;
+            padding: 8px;
+            border-radius: 40px;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .mode-btn {
+            padding: 12px 30px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-weight: 900;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .mode-btn:hover { transform: translateY(-2px); }
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 0 #BE0052;
+            transform: translateY(-2px);
+        }
+        .mode-btn.active:active { transform: translateY(0); box-shadow: none; }
+
+        /* --- Visual Area --- */
+        .graph-area {
+            width: 100%;
+            height: 450px;
+            background: white;
+            border-radius: 40px;
+            border: 5px solid white;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            overflow: visible;
+            /* Graph Paper Pattern */
+            background-image: 
+                linear-gradient(#f0f0f0 1px, transparent 1px),
+                linear-gradient(90deg, #f0f0f0 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .graph-area::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 40px;
+            background:
+                radial-gradient(circle at 20% 18%, rgba(58, 134, 255, 0.12), transparent 45%),
+                radial-gradient(circle at 82% 70%, rgba(255, 0, 110, 0.10), transparent 45%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .graph-area > * { position: relative; z-index: 1; }
+
+        /* SVG Styles */
+        .geo-line {
+            stroke: #334155; /* Dark gray for lines */
+            stroke-width: 6;
+            stroke-linecap: round;
+        }
+        .geo-ray {
+            stroke: var(--secondary);
+            stroke-width: 6;
+            stroke-linecap: round;
+        }
+        .geo-point {
+            fill: white;
+            stroke: var(--text-color);
+            stroke-width: 4;
+            r: 8;
+        }
+        .geo-label {
+            fill: var(--text-color);
+            font-size: 20px;
+            font-weight: 900;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            font-family: 'Comic Neue', sans-serif;
+        }
+        .angle-arc {
+            fill: rgba(255, 190, 11, 0.2); /* Light yellow fill */
+            stroke: var(--accent);
+            stroke-width: 3;
+        }
+        .angle-text {
+            fill: var(--text-color);
+            font-size: 22px;
+            font-weight: 800;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            text-shadow: 2px 2px 0 white;
+        }
+        .angle-text.question {
+            fill: var(--primary);
+            font-size: 32px;
+            font-weight: 900;
+            animation: pulse 1s infinite;
+        }
+
+        /* Keypad & Input */
+        .control-panel {
+            background: white;
+            padding: 30px;
+            border-radius: 40px;
+            width: 100%;
+            border: 2px solid #F1F5F9;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .control-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 190, 11, 0.10), rgba(131, 56, 236, 0.10), rgba(58, 134, 255, 0.10));
+            opacity: 0.55;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .control-panel::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 18% 16%, rgba(255,255,255,0.92), transparent 38%);
+            opacity: 0.45;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .control-panel > * { position: relative; z-index: 1; }
+
+        .question-text {
+            font-size: 1.4rem;
+            text-align: center;
+            color: var(--purple);
+            font-weight: 900;
+            background: #F3E8FF;
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .input-display {
+            background: #F8FAFC;
+            border: 3px solid #E2E8F0;
+            color: var(--text-color);
+            font-size: 3rem;
+            padding: 10px 50px;
+            border-radius: 20px;
+            min-width: 180px;
+            text-align: center;
+            font-family: monospace;
+            font-weight: bold;
+            box-shadow: inset 0 3px 6px rgba(0,0,0,0.05);
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 550px;
+        }
+
+        .key {
+            background: white;
+            color: var(--text-color);
+            border: 2px solid #E2E8F0;
+            border-radius: 15px;
+            padding: 18px 0;
+            font-size: 1.5rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 0 4px 0 #CBD5E0;
+        }
+        .key:active { transform: translateY(4px); box-shadow: none; }
+        .key:hover { background: #F1F5F9; transform: translateY(-2px); filter: brightness(1.02); }
+        
+        .key.clear { border-color: var(--primary); color: var(--primary); }
+        .key.clear:hover { background: #FFF0F5; }
+        
+        .key.check { 
+            grid-column: span 3;
+            background: var(--success); 
+            color: white; 
+            border-color: var(--success);
+            box-shadow: 0 6px 0 #047857;
+        }
+        .key.check:hover { background: #059669; }
+        
+        /* Disabled Keypad State */
+        .key:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Feedback Overlay */
+        .feedback-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            border-radius: 30px;
+        }
+        .feedback-overlay.show { display: flex; animation: fadeIn 0.3s; }
+        
+        .fb-icon { font-size: 6rem; margin-bottom: 20px; }
+        .fb-text { font-size: 2.5rem; font-weight: 900; margin-bottom: 20px; text-align: center; color: var(--text-color); }
+        .fb-btn {
+            background: var(--secondary);
+            color: white;
+            padding: 15px 50px;
+            border-radius: 40px;
+            font-size: 1.6rem;
+            font-weight: 900;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #1D4ED8;
+            transition: all 0.2s;
+        }
+        .fb-btn:hover { transform: scale(1.05); }
+        .fb-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        #confetti-canvas.show { opacity: 1; }
+
+        /* Desktop Layout */
+        @media (min-width: 1000px) {
+            .container {
+                display: grid;
+                grid-template-columns: 1.5fr 1fr;
+                grid-template-rows: auto auto 1fr;
+                gap: 30px;
+                max-width: 1200px;
+                padding: 0 40px;
+                align-items: start;
+            }
+            
+            .score-board {
+                grid-column: 1 / -1;
+                grid-row: 1;
+            }
+            
+            .mode-switch {
+                grid-column: 1 / -1;
+                grid-row: 2;
+                justify-self: center;
+                margin-bottom: 20px;
+            }
+
+            .graph-area {
+                grid-column: 1;
+                grid-row: 3;
+                height: 550px; /* Bigger on desktop */
+            }
+
+            .control-panel {
+                grid-column: 2;
+                grid-row: 3;
+                height: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            .graph-area { height: 350px; }
+            .keypad { gap: 8px; }
+            .key { padding: 15px 0; font-size: 1.2rem; }
+            h1 { font-size: 1.2rem; }
+            .score-board { gap: 10px; }
+            .score-pill { padding: 5px 15px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <div class="grade-badge">5</div>
+    </div>
+
+    <h1 id="app-title">Angle Detective</h1>
+    
+    <div class="custom-select-wrapper">
+        <div class="custom-select" id="lang-select">
+            <div class="custom-select__trigger">
+                <span id="current-lang">🗺️ ትግርኛ</span>
+                <span>▼</span>
+            </div>
+            <div class="custom-options">
+                <div class="custom-option" data-value="ti">ትግርኛ</div>
+                <div class="custom-option" data-value="am">አማርኛ</div>
+                <div class="custom-option" data-value="en">English</div>
+                <div class="custom-option" data-value="om">Afan Oromoo</div>
+                <div class="custom-option" data-value="so">Soomaali</div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    
+    <div class="score-board">
+        <div class="score-pill high">🏆 <span id="lbl-high">High:</span> <span id="val-high" style="margin-left:5px">0</span></div>
+        <div class="score-pill curr">⭐ <span id="lbl-score">Score:</span> <span id="val-score" style="margin-left:5px">0</span></div>
+    </div>
+
+    <div class="mode-switch">
+        <button class="mode-btn active" id="mode-line" onclick="setMode('line')">Straight Line (180°)</button>
+        <button class="mode-btn" id="mode-circle" onclick="setMode('circle')">Full Circle (360°)</button>
+    </div>
+
+    <div class="graph-area">
+        <svg id="geo-svg" width="100%" height="100%" viewBox="0 0 400 450">
+            <!-- Graphics Injected Here -->
+        </svg>
+        
+        <!-- Feedback / Game Over Overlay -->
+        <div class="feedback-overlay" id="feedback-ui">
+            <div class="fb-icon" id="fb-icon">🎉</div>
+            <div class="fb-text" id="fb-text">Correct!</div>
+            <button class="fb-btn" id="btn-feedback-action">Next ➡</button>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <div class="question-text" id="q-text">Find the missing angle (?):</div>
+        <div class="input-display" id="user-input">?</div>
+        
+        <div class="keypad" id="keypad">
+            <button class="key" onclick="pressKey(1)">1</button>
+            <button class="key" onclick="pressKey(2)">2</button>
+            <button class="key" onclick="pressKey(3)">3</button>
+            <button class="key" onclick="pressKey(4)">4</button>
+            <button class="key" onclick="pressKey(5)">5</button>
+            <button class="key" onclick="pressKey(6)">6</button>
+            <button class="key" onclick="pressKey(7)">7</button>
+            <button class="key" onclick="pressKey(8)">8</button>
+            <button class="key" onclick="pressKey(9)">9</button>
+            <button class="key" onclick="pressKey(0)">0</button>
+            <button class="key clear" onclick="clearInput()">DEL</button>
+            <button class="key check" onclick="checkAnswer()" id="btn-check">CHECK ✔️</button>
+        </div>
+    </div>
+
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+    // --- Translations ---
+    const translations = {
+        ti: {
+            title: "ፈተሻ ኩርናዕ",
+            modeLine: "ቅኑዕ መስመር (180°)",
+            modeCircle: "ክቢ (360°)",
+            qText: "ዝቀረየ ኩርናዕ ድለዩ (?)",
+            lblScore: "ነጥቢ:",
+            lblHigh: "ዝለዓለ:",
+            correct: "ትኽክል! ጀግና!",
+            wrong: "ተጋግዩ! ጸወታ ተወዲኡ።",
+            gameover: "ጸወታ ተወዲኡ!",
+            finalScore: "ውፅኢትኩም: ",
+            btnNext: "ቀፃሊ ➡",
+            btnCheck: "ፈትሽ ✔️",
+            btnRestart: "እንደገና ጀምር 🔄"
+        },
+        am: {
+            title: "የአንግል መርማሪ",
+            modeLine: "ቀጥታ መስመር (180°)",
+            modeCircle: "ክብ (360°)",
+            qText: "የቀረዉን አንግል ያግኙ (?)",
+            lblScore: "ውጤት:",
+            lblHigh: "ከፍተኛ:",
+            correct: "ትክክል! ጎበዝ!",
+            wrong: "ስህተት! ጨዋታው አብቅቷል።",
+            gameover: "ጨዋታው አብቅቷል!",
+            finalScore: "የእርስዎ ውጤት: ",
+            btnNext: "ቀጣይ ➡",
+            btnCheck: "ፈትሽ ✔️",
+            btnRestart: "እንደገና ጀምር 🔄"
+        },
+        en: {
+            title: "Angle Detective",
+            modeLine: "Straight Line (180°)",
+            modeCircle: "Full Circle (360°)",
+            qText: "Find the missing angle (?):",
+            lblScore: "Score:",
+            lblHigh: "High:",
+            correct: "Correct! Awesome!",
+            wrong: "Incorrect! Game Over.",
+            gameover: "Game Over!",
+            finalScore: "Your Score: ",
+            btnNext: "Next ➡",
+            btnCheck: "CHECK ✔️",
+            btnRestart: "Play Again 🔄"
+        },
+        om: {
+            title: "Qorataa Kofoo",
+            modeLine: "Sarara Diriiraa (180°)",
+            modeCircle: "Geengoo Guutuu (360°)",
+            qText: "Kofoo bade barbaadi (?)",
+            lblScore: "Qabxii:",
+            lblHigh: "Olaanaa:",
+            correct: "Sirrii! Cimina!",
+            wrong: "Dogoggora! Tapha Dhumate.",
+            gameover: "Tapha Dhumate!",
+            finalScore: "Qabxii Keessan: ",
+            btnNext: "Itti Aanu ➡",
+            btnCheck: "Mirkaneessi ✔️",
+            btnRestart: "Irra Deebi'ii 🔄"
+        },
+        so: {
+            title: "Baaraha Xaglaha",
+            modeLine: "Xariiq Toosan (180°)",
+            modeCircle: "Goobo Buuxda (360°)",
+            qText: "Raadi xagasha maqan (?)",
+            lblScore: "Dhibco:",
+            lblHigh: "Ugu Sareeya:",
+            correct: "Sax! Waa hagaag!",
+            wrong: "Qaldan! Ciyaartu way dhamaatay.",
+            gameover: "Ciyaartu way dhamaatay!",
+            finalScore: "Dhibcahaaga: ",
+            btnNext: "Xiga ➡",
+            btnCheck: "Hubi ✔️",
+            btnRestart: "Dib u billow 🔄"
+        }
+    };
+
+    let currentLang = 'ti';
+    let currentMode = 'line'; // 'line' or 'circle'
+    let score = 0;
+    let highScore = localStorage.getItem('angleDetHighScore') || 0;
+    let currentProblem = null;
+    let inputVal = "";
+
+    // --- Core Logic ---
+
+    function init() {
+        document.getElementById('val-high').textContent = highScore;
+        updateLanguage();
+        generateProblem();
+    }
+
+    function setMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(mode === 'line' ? 'mode-line' : 'mode-circle').classList.add('active');
+        score = 0; // Reset score on mode switch
+        updateScoreBoard();
+        nextQuestion();
+    }
+
+    function nextQuestion() {
+        stopConfetti();
+        document.getElementById('feedback-ui').classList.remove('show');
+        enableKeypad();
+        generateProblem();
+        inputVal = "";
+        updateInputDisplay();
+    }
+
+    function generateProblem() {
+        const svg = document.getElementById('geo-svg');
+        svg.innerHTML = ''; // Clear
+
+        const cx = 200, cy = 250; // Adjusted Center Y due to increased height
+        let angles = [];
+        let total = 0;
+
+        if (currentMode === 'line') {
+            // 180 Degrees
+            total = 180;
+            // Draw Base Line
+            createLine(svg, 50, cy, 350, cy, true); // Base line
+            createPoint(svg, cx, cy, "O"); // Center O
+            createLabel(svg, 40, cy + 25, "A");
+            createLabel(svg, 360, cy + 25, "B");
+
+            // Split into 2 or 3 parts
+            const parts = Math.random() > 0.5 ? 2 : 3;
+            
+            let remaining = 180;
+            
+            for(let i=0; i<parts-1; i++) {
+                // Random angle between 20 and remaining - 20
+                let max = remaining - (20 * (parts - 1 - i));
+                let val = Math.floor(Math.random() * (max - 20)) + 20;
+                angles.push(val);
+                remaining -= val;
+            }
+            angles.push(remaining);
+
+            // Shuffle angles
+            let accumulatedAngle = Math.PI; // Start from left (180 deg)
+            
+            // Randomly select one index to be the question
+            const qIndex = Math.floor(Math.random() * parts);
+            currentProblem = angles[qIndex];
+
+            const letters = ['C', 'D', 'E'];
+
+            angles.forEach((deg, idx) => {
+                const rad = (deg * Math.PI) / 180;
+                // End angle for this segment
+                const endAngle = accumulatedAngle - rad; 
+                
+                // Draw Ray (if not last segment which ends at 0/Right)
+                if (idx < parts - 1) {
+                    const rayLen = 140; // Increased length
+                    const rx = cx + rayLen * Math.cos(endAngle);
+                    const ry = cy - rayLen * Math.sin(endAngle); // SVG Y flip
+                    createLine(svg, cx, cy, rx, ry, false, true);
+                    createPoint(svg, rx, ry);
+                    
+                    // Label
+                    const lx = cx + (rayLen + 20) * Math.cos(endAngle);
+                    const ly = cy - (rayLen + 20) * Math.sin(endAngle);
+                    createLabel(svg, lx, ly, letters[idx]);
+                }
+
+                // Draw Arc
+                drawAngleArc(svg, cx, cy, accumulatedAngle, endAngle, idx === qIndex ? "?" : deg + "°", idx === qIndex);
+
+                accumulatedAngle = endAngle;
+            });
+
+        } else {
+            // 360 Degrees
+            total = 360;
+            createPoint(svg, cx, cy, "O");
+            
+            // 3 to 4 angles
+            const parts = Math.floor(Math.random() * 2) + 3; 
+            let remaining = 360;
+
+            for(let i=0; i<parts-1; i++) {
+                let max = remaining - (40 * (parts - 1 - i));
+                let val = Math.floor(Math.random() * (max - 40)) + 40;
+                angles.push(val);
+                remaining -= val;
+            }
+            angles.push(remaining);
+
+            const qIndex = Math.floor(Math.random() * parts);
+            currentProblem = angles[qIndex];
+            const letters = ['A', 'B', 'C', 'D', 'E'];
+
+            let accRad = 0;
+            angles.forEach((deg, idx) => {
+                const rad = (deg * Math.PI) / 180;
+                const endRad = accRad + rad; 
+                
+                // Draw Ray at END of angle
+                const rayLen = 130;
+                const r1x = cx + rayLen * Math.cos(-accRad); // Negative for CCW visual
+                const r1y = cy + rayLen * Math.sin(-accRad);
+                createLine(svg, cx, cy, r1x, r1y, false, true);
+                
+                const lx = cx + (rayLen + 20) * Math.cos(-accRad);
+                const ly = cy + (rayLen + 20) * Math.sin(-accRad);
+                createLabel(svg, lx, ly, letters[idx]);
+
+                // Arc
+                drawAngleArc(svg, cx, cy, -accRad, -endRad, idx === qIndex ? "?" : deg + "°", idx === qIndex);
+
+                accRad = endRad;
+            });
+        }
+    }
+
+    // --- Drawing Helpers ---
+    function createLine(svg, x1, y1, x2, y2, isBase=false, isRay=false) {
+        const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        l.setAttribute("x1", x1); l.setAttribute("y1", y1);
+        l.setAttribute("x2", x2); l.setAttribute("y2", y2);
+        l.setAttribute("class", isRay ? "geo-ray" : "geo-line");
+        if(isBase) l.setAttribute("stroke", "#475569");
+        svg.appendChild(l);
+    }
+
+    function createPoint(svg, x, y, label) {
+        const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        c.setAttribute("cx", x); c.setAttribute("cy", y);
+        c.setAttribute("class", "geo-point");
+        svg.appendChild(c);
+        
+        if (label) {
+            createLabel(svg, x, y + 25, label); // Offset label below
+        }
+    }
+
+    function createLabel(svg, x, y, text) {
+        const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        t.setAttribute("x", x); t.setAttribute("y", y);
+        t.setAttribute("class", "geo-label");
+        t.textContent = text;
+        svg.appendChild(t);
+    }
+
+    function drawAngleArc(svg, cx, cy, startRad, endRad, text, isQuestion) {
+        const r = 60 + Math.random() * 20; // Increased radius variation
+        
+        const x1 = cx + r * Math.cos(startRad);
+        const y1 = cy - r * Math.sin(startRad);
+        
+        const x2 = cx + r * Math.cos(endRad);
+        const y2 = cy - r * Math.sin(endRad);
+
+        // SVG Arc logic
+        let diff = startRad - endRad; 
+        while(diff < 0) diff += 2*Math.PI;
+        
+        // Arc Logic for 180 deg
+        const d = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z`; 
+        
+        const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        p.setAttribute("d", d);
+        p.setAttribute("class", "angle-arc");
+        if(isQuestion) p.style.fill = "rgba(76, 201, 240, 0.4)"; // Bright Blue for question
+        svg.appendChild(p);
+
+        // Text Position (Mid angle)
+        const midRad = (startRad + endRad) / 2;
+        const tx = cx + (r + 35) * Math.cos(midRad);
+        const ty = cy - (r + 35) * Math.sin(midRad);
+        
+        const tEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        tEl.setAttribute("x", tx); tEl.setAttribute("y", ty);
+        tEl.setAttribute("class", isQuestion ? "angle-text question" : "angle-text");
+        tEl.textContent = text;
+        svg.appendChild(tEl);
+    }
+
+    // --- Keypad Logic ---
+    function pressKey(num) {
+        if(inputVal.length < 3) {
+            inputVal += num;
+            updateInputDisplay();
+        }
+    }
+
+    function clearInput() {
+        inputVal = "";
+        updateInputDisplay();
+    }
+
+    function updateInputDisplay() {
+        document.getElementById('user-input').textContent = inputVal === "" ? "?" : inputVal + "°";
+    }
+
+    function disableKeypad() {
+        document.querySelectorAll('.key').forEach(k => k.disabled = true);
+    }
+
+    function enableKeypad() {
+        document.querySelectorAll('.key').forEach(k => k.disabled = false);
+    }
+
+    function checkAnswer() {
+        const userNum = parseInt(inputVal);
+        if(isNaN(userNum)) return;
+
+        const t = translations[currentLang];
+        const ui = document.getElementById('feedback-ui');
+        const icon = document.getElementById('fb-icon');
+        const text = document.getElementById('fb-text');
+        const btn = document.getElementById('btn-feedback-action');
+
+        if(userNum === currentProblem) {
+            // Correct
+            score += 10;
+            if(score > highScore) {
+                highScore = score;
+                localStorage.setItem('angleDetHighScore', highScore);
+            }
+            updateScoreBoard();
+            
+            AudioEngine.playSuccess();
+            triggerConfetti();
+            
+            icon.textContent = "🎉";
+            text.innerHTML = t.correct;
+            text.style.color = "var(--success)";
+            
+            btn.textContent = t.btnNext;
+            btn.onclick = () => {
+                stopConfetti();
+                nextQuestion();
+            };
+            
+            ui.classList.add('show');
+        } else {
+            // Wrong -> Game Over
+            AudioEngine.playError();
+            
+            icon.textContent = "❌";
+            text.innerHTML = `${t.gameover}<br><span style='font-size:1.5rem; color:#718096'>${t.finalScore} ${score}</span>`;
+            text.style.color = "var(--primary)";
+            
+            btn.textContent = t.btnRestart;
+            btn.onclick = () => {
+                stopConfetti();
+                restartGame();
+            };
+            
+            disableKeypad();
+            ui.classList.add('show');
+        }
+    }
+
+    function restartGame() {
+        stopConfetti();
+        score = 0;
+        updateScoreBoard();
+        nextQuestion();
+    }
+
+    function updateScoreBoard() {
+        document.getElementById('val-score').textContent = score;
+        document.getElementById('val-high').textContent = highScore;
+    }
+
+    // --- Language Change ---
+    const selectWrapper = document.querySelector('#lang-select');
+    const selectTrigger = selectWrapper.querySelector('.custom-select__trigger');
+    const selectOptions = selectWrapper.querySelector('.custom-options');
+
+    selectTrigger.addEventListener('click', () => {
+        selectWrapper.classList.toggle('open');
+    });
+
+    document.querySelectorAll('.custom-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            currentLang = opt.getAttribute('data-value');
+            document.getElementById('current-lang').textContent = "🗺️ " + opt.textContent;
+            selectWrapper.classList.remove('open');
+            updateLanguage();
+        });
+    });
+
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('mode-line').textContent = t.modeLine;
+        document.getElementById('mode-circle').textContent = t.modeCircle;
+        document.getElementById('q-text').textContent = t.qText;
+        document.getElementById('lbl-score').textContent = t.lblScore;
+        document.getElementById('lbl-high').textContent = t.lblHigh;
+        document.getElementById('btn-check').textContent = t.btnCheck;
+    }
+
+    // --- Audio ---
+    const AudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioEngine = {
+        playSuccess() {
+            if(AudioCtx.state === 'suspended') AudioCtx.resume();
+            const osc = AudioCtx.createOscillator();
+            const gain = AudioCtx.createGain();
+            osc.connect(gain); gain.connect(AudioCtx.destination);
+            osc.frequency.setValueAtTime(600, AudioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, AudioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, AudioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, AudioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(AudioCtx.currentTime + 0.3);
+        },
+        playError() {
+            if(AudioCtx.state === 'suspended') AudioCtx.resume();
+            const osc = AudioCtx.createOscillator();
+            const gain = AudioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.connect(gain); gain.connect(AudioCtx.destination);
+            osc.frequency.setValueAtTime(150, AudioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, AudioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, AudioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(AudioCtx.currentTime + 0.3);
+        }
+    };
+
+    // --- Confetti ---
+    let confettiAnimId = null;
+    let confettiRunning = false;
+    let confettiPieces = null;
+    let confettiFrame = 0;
+
+    function stopConfetti() {
+        confettiRunning = false;
+        if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+        confettiAnimId = null;
+        confettiPieces = null;
+        const canvas = document.getElementById('confetti-canvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.classList.remove('show');
+        }
+    }
+
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.classList.add('show');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        confettiRunning = true;
+        confettiFrame = 0;
+
+        if (!confettiPieces) {
+            confettiPieces = [];
+            const count = 200;
+            for (let i = 0; i < count; i++) {
+                confettiPieces.push({
+                    x: Math.random() * canvas.width,
+                    y: -20 - Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 1.2,
+                    vy: 2.6 + Math.random() * 4.4,
+                    w: 6 + Math.random() * 10,
+                    h: 8 + Math.random() * 14,
+                    rot: (Math.random() - 0.5) * 0.35,
+                    ang: Math.random() * Math.PI * 2,
+                    wobble: 0.8 + Math.random() * 1.8,
+                    hue: Math.random() * 360
+                });
+            }
+        }
+
+        function draw() {
+            if (!confettiRunning) return;
+            confettiFrame++;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.globalAlpha = 1;
+
+            confettiPieces.forEach(p => {
+                p.ang += p.rot;
+                p.y += p.vy;
+                p.x += p.vx + Math.sin(confettiFrame * 0.04 + p.ang) * p.wobble;
+
+                if (p.y > canvas.height + 40) {
+                    p.y = -20 - Math.random() * 220;
+                    p.x = Math.random() * canvas.width;
+                    p.hue = Math.random() * 360;
+                }
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.ang);
+                ctx.fillStyle = `hsl(${p.hue}, 95%, 55%)`;
+                ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                ctx.restore();
+            });
+
+            confettiAnimId = requestAnimationFrame(draw);
+        }
+
+        if (!confettiAnimId) confettiAnimId = requestAnimationFrame(draw);
+    }
+
+    // Init
+    window.onload = init;
+
+</script>
+</body>
+</html>

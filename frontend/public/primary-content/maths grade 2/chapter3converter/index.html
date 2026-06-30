@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Unit Master | ዓቀን ኪኢላ</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at 0% 0%, #60a5fa, transparent 50%),
+                        radial-gradient(circle at 100% 0%, #a855f7, transparent 50%),
+                        radial-gradient(circle at 100% 100%, #ec4899, transparent 50%),
+                        #6ecbf5;
+            position: relative;
+            overscroll-behavior-y: none;
+            overflow: hidden;
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2000;
+        }
+
+        .app-shell {
+            width: 100%;
+            max-width: 850px; /* Increased for desktop presence */
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 40px;
+            box-shadow: 0 25px 60px rgba(15, 23, 42, 0.4);
+            overflow: hidden;
+            border-bottom: 12px solid rgba(2, 119, 171, 0.25);
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .card-header {
+            background: #059ee3;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 2;
+        }
+
+        .lang-menu-wrapper {
+            position: relative;
+        }
+
+        .lang-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            border-radius: 999px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+
+        .lang-button:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        .lang-flag {
+            font-size: 22px;
+        }
+
+        .chevron {
+            width: 10px;
+            height: 10px;
+            border-left: 3px solid currentColor;
+            border-bottom: 3px solid currentColor;
+            transform: rotate(-45deg);
+            transition: transform 0.2s ease;
+        }
+
+        .chevron.open {
+            transform: rotate(135deg);
+        }
+
+        .lang-menu {
+            position: absolute;
+            top: 110%;
+            left: 0;
+            width: 220px;
+            background: #ffffff;
+            border-radius: 25px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            border: 3px solid rgba(5, 158, 227, 0.2);
+            overflow: hidden;
+            z-index: 50;
+        }
+
+        .lang-option {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            font-weight: 700;
+            font-size: 16px;
+            border: none;
+            background: #ffffff;
+            color: #4b5563;
+            cursor: pointer;
+        }
+
+        .lang-option:hover {
+            background: #eff6ff;
+        }
+
+        .lang-option.active {
+            background: #dbeafe;
+            color: #059ee3;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .round-icon-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .card-body {
+            padding: 40px;
+            background: #ffffff;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: 900;
+            color: #024566;
+            text-align: center;
+        }
+
+        .streak-row {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #eff6ff;
+            padding: 15px 25px;
+            border-radius: 30px;
+            border: 3px solid #dbeafe;
+        }
+
+        .streak-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .flame-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #fed7aa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .streak-label {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #9ca3af;
+        }
+
+        .streak-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: #024566;
+        }
+
+        .sound-toggle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .sound-on {
+            background: rgba(6, 182, 212, 0.15);
+            color: #059ee3;
+        }
+
+        .sound-off {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+
+        .rule-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 25px;
+            border-radius: 999px;
+            background: rgba(250, 204, 21, 0.2);
+            color: #92400e;
+            border: 2px solid #facc15;
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .inputs-card {
+            width: 100%;
+            max-width: 600px;
+            background: #f9fafb;
+            border-radius: 35px;
+            border: 3px solid #e5e7eb;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+
+        .field-label {
+            font-size: 14px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #059ee3;
+            margin-left: 15px;
+            margin-bottom: 8px;
+        }
+
+        .field-input {
+            width: 100%;
+            text-align: center;
+            font-size: 32px;
+            font-weight: 900;
+            padding: 15px 20px;
+            border-radius: 20px;
+            border: 0;
+            border-bottom: 6px solid #059ee3;
+            outline: none;
+        }
+
+        .field-input:disabled {
+            background: transparent;
+            border-bottom-color: #e5e7eb;
+            color: #9ca3af;
+        }
+
+        .field-input-editable {
+            background: #ffffff;
+            color: #024566;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.1);
+        }
+
+        .swap-icon-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            border-radius: 999px;
+            padding: 10px;
+            border: 3px solid #e5e7eb;
+            z-index: 5;
+        }
+
+        .swap-icon {
+            width: 24px;
+            height: 24px;
+            border-left: 3px solid currentColor;
+            border-bottom: 3px solid currentColor;
+            transform: rotate(-45deg);
+            position: relative;
+        }
+
+        .swap-icon::before,
+        .swap-icon::after {
+            content: "";
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-top: 3px solid currentColor;
+            border-right: 3px solid currentColor;
+        }
+
+        .swap-icon::before {
+            top: -3px;
+            left: -3px;
+            transform: rotate(-45deg);
+        }
+
+        .swap-icon::after {
+            bottom: -3px;
+            right: -3px;
+            transform: rotate(135deg);
+        }
+
+        .bottom-buttons {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+        }
+
+        .reset-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 25px;
+            border: none;
+            background: #f3f4f6;
+            color: #6b7280;
+            font-size: 36px;
+            cursor: pointer;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.05);
+        }
+
+        .check-button {
+            border-radius: 25px;
+            border: none;
+            background: #059ee3;
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            cursor: pointer;
+            box-shadow: 0 20px 40px rgba(5, 158, 227, 0.4);
+            padding: 0 30px;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            z-index: 100;
+            animation: pop 0.4s ease-out forwards;
+        }
+
+        .overlay.visible {
+            display: flex;
+        }
+
+        .overlay-bg {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 40px;
+        }
+
+        .overlay-content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .overlay-text {
+            font-size: 48px;
+            font-weight: 900;
+            transform: rotate(-3deg);
+            text-align: center;
+        }
+
+        .overlay-text.good {
+            color: #22c55e;
+        }
+
+        .overlay-text.bad {
+            color: #ec4899;
+        }
+
+        .overlay-image-wrapper {
+            width: 250px;
+            height: 250px;
+            border-radius: 35px;
+            background: #ffffff;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(15, 23, 42, 0.3);
+            border: 8px solid #ffffff;
+        }
+
+        .overlay-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .overlay-buttons {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .try-again-button,
+        .next-button {
+            width: 100%;
+            padding: 18px 0;
+            border-radius: 20px;
+            border: none;
+            font-weight: 900;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+        }
+
+        .try-again-button {
+            background: #eff6ff;
+            color: #059ee3;
+        }
+
+        .next-button-good {
+            background: #22c55e;
+            color: #ffffff;
+        }
+
+        .next-button-bad {
+            background: #059ee3;
+            color: #ffffff;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 600px) {
+            .app-shell { height: 95vh; }
+            .card-body { padding: 20px; gap: 20px; }
+            .title { font-size: 24px; }
+            .streak-row { padding: 10px 15px; }
+            .rule-pill { font-size: 16px; }
+            .field-input { font-size: 24px; }
+            .check-button { font-size: 20px; }
+            .overlay-text { font-size: 32px; }
+            .overlay-image-wrapper { width: 180px; height: 180px; }
+            .app-shell { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="app-shell">
+        <div class="card" id="unit-card">
+            <div class="card-header">
+                <div class="lang-menu-wrapper">
+                    <button class="lang-button" id="lang-button">
+                        <span class="lang-flag" id="lang-flag">🇪🇷</span>
+                        <span id="lang-label">ትግርኛ</span>
+                        <span class="chevron" id="lang-chevron"></span>
+                    </button>
+                    <div class="lang-menu" id="lang-menu" style="display:none;"></div>
+                </div>
+                <div class="header-buttons">
+                    <button class="round-icon-button" id="home-button">🏠</button>
+                    <button class="round-icon-button" id="back-button">⬅</button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <h1 class="title" id="title-text">ዓቀን ኪኢላ</h1>
+
+                <div class="streak-row">
+                    <div class="streak-left">
+                        <div class="flame-icon">🔥</div>
+                        <div>
+                            <div class="streak-label" id="streak-label">ነጥቢ</div>
+                            <div class="streak-value" id="streak-value">0</div>
+                        </div>
+                    </div>
+                    <button class="sound-toggle sound-on" id="sound-toggle" title="Toggle sound">🔊</button>
+                </div>
+
+                <div class="rule-pill">
+                    <span id="rule-text">100 ሴሜ = 1 ሜ</span>
+                </div>
+
+                <div class="inputs-card">
+                    <div>
+                        <div class="field-label" id="cm-label">ሳንቲሜትር (ሴሜ)</div>
+                        <input type="number" id="cm-input" class="field-input" placeholder="? ሴሜ" inputmode="numeric">
+                    </div>
+
+                    <div class="swap-icon-wrapper">
+                        <div class="swap-icon"></div>
+                    </div>
+
+                    <div>
+                        <div class="field-label" id="m-label">ሜትር (ሜ)</div>
+                        <input type="number" id="m-input" class="field-input" placeholder="? ሜ" inputmode="numeric">
+                    </div>
+                </div>
+
+                <div class="bottom-buttons">
+                    <button class="reset-button" id="reset-button" title="Reset">⟳</button>
+                    <button class="check-button" id="check-button">
+                        <span id="check-text">ፈትሽ!</span>
+                    </button>
+                </div>
+
+                <div class="overlay" id="feedback-overlay">
+                    <div class="overlay-bg"></div>
+                    <div class="overlay-content">
+                        <div class="overlay-text" id="feedback-text">ንፉዕ!</div>
+                        <div class="overlay-image-wrapper">
+                            <img id="feedback-image" class="overlay-image" src="assets/award.jpg" alt="feedback" />
+                        </div>
+                        <div class="overlay-buttons">
+                            <button class="try-again-button" id="try-again-button">እንደገና ፈትን</button>
+                            <button class="next-button-good" id="next-button">ዝቕፅል</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const LANGUAGES = [
+            { code: 'tg', label: 'ትግርኛ', flag: '🇪🇹' },
+            { code: 'am', label: 'አማርኛ', flag: '🇪🇹' },
+            { code: 'en', label: 'English', flag: '🇬🇧' },
+            { code: 'om', label: 'Afan Oromo', flag: '🌳' },
+        ];
+
+        const CONTENT = {
+            tg: {
+                title: "ዓቀን",
+                rule: "100 ሴሜ = 1 ሜ",
+                cm: "ሳንቲሜትር (ሴሜ)",
+                m: "ሜትር (ሜ)",
+                check: "ፈትሽ!",
+                next: "ዝቕፅል",
+                reset: "ጀምር",
+                streak: "ነጥቢ",
+                good: ["ንፉዕ!", "ፅቡቕ!", "ጎበዝ!", "ኣንበሳ!"],
+                bad: ["ኣይዞኻ!", "ደጊምካ ፈትን", "ጌጋ እዩ"],
+                phCm: "? ሴሜ",
+                phM: "? ሜ",
+                tryAgain: "ደጊምካ ፈትን"
+            },
+            en: {
+                title: "Unit Master",
+                rule: "100 cm = 1 m",
+                cm: "Centimeters (cm)",
+                m: "Meters (m)",
+                check: "Check!",
+                next: "Next",
+                reset: "Reset",
+                streak: "Score",
+                good: ["YAY!", "WOW!", "COOL!", "SUPER!"],
+                bad: ["OOPS!", "OH NO!", "TRY AGAIN"],
+                phCm: "? cm",
+                phM: "? m",
+                tryAgain: "Try Again"
+            },
+            am: {
+                title: "መለኪያ ጨዋታ",
+                rule: "100 ሴሜ = 1 ሜ",
+                cm: "ሳንቲሜትር (ሴሜ)",
+                m: "ሜትር (ሜ)",
+                check: "አረጋግጥ",
+                next: "ቀጣይ",
+                reset: "ጀምር",
+                streak: "ነጥብ",
+                good: ["ጎበዝ!", "አሪፍ!", "ድንቅ!", "በርታ!"],
+                bad: ["አይዞህ!", "እንደገና ሞክር", "ተሳስተሃል"],
+                phCm: "? ሴሜ",
+                phM: "? ሜ",
+                tryAgain: "እንደገና ሞክር"
+            },
+            om: {
+                title: "Tapha Yuunitii",
+                rule: "100 sm = 1 m",
+                cm: "Santimeetira (sm)",
+                m: "Meetira (m)",
+                check: "Mirkaneessi",
+                next: "Itti Aanu",
+                reset: "Eegsi",
+                streak: "Qabxii",
+                good: ["Baay'ee Gaarii!", "Jabaa!", "Sirrii!", "Qixxee!"],
+                bad: ["Lakki!", "Irra Deebi'i", "Dogoggora"],
+                phCm: "? sm",
+                phM: "? m",
+                tryAgain: "Irra deebi'i"
+            }
+        };
+
+        const GIFS = {
+            correct: "assets/award.jpg",
+            wrong: "assets/wrong.jpg"
+        };
+
+        const SOUNDS = {
+            correct: "assets/success.mp3",
+            wrong: "assets/a_aa.mp3"
+        };
+
+        let currentLang = 'tg'; // Default is Tigrinya
+        let currentQuestion = null;
+        let currentInput = '';
+        let streak = 0;
+        let soundOn = true;
+        let particles = [];
+
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const langButton = document.getElementById('lang-button');
+        const langFlag = document.getElementById('lang-flag');
+        const langLabel = document.getElementById('lang-label');
+        const langChevron = document.getElementById('lang-chevron');
+        const langMenu = document.getElementById('lang-menu');
+
+        const titleText = document.getElementById('title-text');
+        const ruleText = document.getElementById('rule-text');
+        const cmLabel = document.getElementById('cm-label');
+        const mLabel = document.getElementById('m-label');
+        const checkText = document.getElementById('check-text');
+        const streakLabel = document.getElementById('streak-label');
+        const streakValue = document.getElementById('streak-value');
+
+        const cmInput = document.getElementById('cm-input');
+        const mInput = document.getElementById('m-input');
+
+        const soundToggle = document.getElementById('sound-toggle');
+        const resetButton = document.getElementById('reset-button');
+        const checkButton = document.getElementById('check-button');
+
+        const overlay = document.getElementById('feedback-overlay');
+        const feedbackText = document.getElementById('feedback-text');
+        const feedbackImage = document.getElementById('feedback-image');
+        const tryAgainButton = document.getElementById('try-again-button');
+        const nextButton = document.getElementById('next-button');
+
+        function applyLanguage() {
+            const txt = CONTENT[currentLang];
+            titleText.textContent = txt.title;
+            ruleText.textContent = txt.rule;
+            cmLabel.textContent = txt.cm;
+            mLabel.textContent = txt.m;
+            checkText.textContent = txt.check;
+            streakLabel.textContent = txt.streak;
+            cmInput.placeholder = txt.phCm;
+            mInput.placeholder = txt.phM;
+            tryAgainButton.textContent = txt.tryAgain;
+
+            const langInfo = LANGUAGES.find(l => l.code === currentLang);
+            langFlag.textContent = langInfo.flag;
+            langLabel.textContent = langInfo.label;
+        }
+
+        function updateInputs() {
+            if (!currentQuestion) return;
+
+            if (currentQuestion.type === 'cm') {
+                cmInput.value = currentQuestion.val;
+                cmInput.disabled = true;
+                cmInput.classList.remove('field-input-editable');
+
+                mInput.disabled = false;
+                mInput.classList.add('field-input-editable');
+                mInput.value = currentInput;
+            } else {
+                mInput.value = currentQuestion.val;
+                mInput.disabled = true;
+                mInput.classList.remove('field-input-editable');
+
+                cmInput.disabled = false;
+                cmInput.classList.add('field-input-editable');
+                cmInput.value = currentInput;
+            }
+        }
+
+        function newQuestion() {
+            const isCm = Math.random() > 0.5;
+            let val, ans;
+
+            if (isCm) {
+                // Easy numbers for lower grades (multiples of 100 or 50)
+                val = (Math.floor(Math.random() * 10) + 1) * 100;
+                ans = val / 100;
+            } else {
+                val = Math.floor(Math.random() * 9) + 1;
+                ans = val * 100;
+            }
+
+            currentQuestion = { type: isCm ? 'cm' : 'm', val, ans };
+            currentInput = '';
+            overlay.classList.remove('visible');
+            updateInputs();
+        }
+
+        function playAudio(success) {
+            if (!soundOn) return;
+            const src = success ? SOUNDS.correct : SOUNDS.wrong;
+            const audio = new Audio(src);
+            audio.play().catch(() => {});
+        }
+
+        // --- Confetti Logic ---
+        function fireConfetti(count = 150) {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const colors = ['#FFD93D', '#6BCB77', '#FF6B6B', '#4D96FF', '#ffffff', '#FF5F7E', '#059ee3'];
+            
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height + 20,
+                    vx: (Math.random() - 0.5) * 25,
+                    vy: (Math.random() - 0.8) * 35,
+                    size: Math.random() * 10 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1.0,
+                    rotation: Math.random() * 360,
+                    rVel: (Math.random() - 0.5) * 10
+                });
+            }
+
+            if(!window.confettiRunning) {
+                window.confettiRunning = true;
+                animateConfetti();
+            }
+        }
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let alive = false;
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                if (p.life > 0) {
+                    alive = true;
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.6; // gravity
+                    p.vx *= 0.99;
+                    p.life -= 0.01;
+                    p.rotation += p.rVel;
+                    
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.life;
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                } else {
+                    particles.splice(i, 1);
+                }
+            }
+            if(alive) requestAnimationFrame(animateConfetti);
+            else {
+                window.confettiRunning = false;
+                particles = [];
+            }
+        }
+
+        function showFeedback(isCorrect) {
+            const txt = CONTENT[currentLang];
+            const pool = isCorrect ? txt.good : txt.bad;
+            const msg = pool[Math.floor(Math.random() * pool.length)];
+
+            feedbackText.textContent = msg;
+            feedbackText.className = 'overlay-text ' + (isCorrect ? 'good' : 'bad');
+            feedbackImage.src = isCorrect ? GIFS.correct : GIFS.wrong;
+
+            nextButton.textContent = txt.next;
+            nextButton.className = isCorrect ? 'next-button-good next-button' : 'next-button-bad next-button';
+
+            if (isCorrect) {
+                tryAgainButton.style.display = 'none';
+                fireConfetti(200);
+            } else {
+                tryAgainButton.style.display = 'block';
+            }
+
+            overlay.classList.add('visible');
+        }
+
+        function handleCheck() {
+            if (!currentQuestion) return;
+
+            const editableInput = currentQuestion.type === 'cm' ? mInput : cmInput;
+            const valueStr = editableInput.value.trim();
+            if (!valueStr) return;
+
+            const userVal = parseFloat(valueStr);
+            if (isNaN(userVal)) return;
+
+            const isCorrect = Math.abs(userVal - currentQuestion.ans) < 0.01;
+            if (isCorrect) {
+                streak += 1;
+                playAudio(true);
+            } else {
+                streak = 0;
+                playAudio(false);
+            }
+            streakValue.textContent = streak;
+            showFeedback(isCorrect);
+        }
+
+        function buildLangMenu() {
+            langMenu.innerHTML = '';
+            LANGUAGES.forEach(lang => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'lang-option' + (lang.code === currentLang ? ' active' : '');
+                btn.innerHTML = `<span>${lang.label}</span><span>${lang.flag}</span>`;
+                btn.addEventListener('click', () => {
+                    currentLang = lang.code;
+                    applyLanguage();
+                    langMenu.style.display = 'none';
+                    langChevron.classList.remove('open');
+                });
+                langMenu.appendChild(btn);
+            });
+        }
+
+        function initEvents() {
+            langButton.addEventListener('click', () => {
+                const isOpen = langMenu.style.display === 'block';
+                langMenu.style.display = isOpen ? 'none' : 'block';
+                langChevron.classList.toggle('open', !isOpen);
+            });
+
+            document.addEventListener('mousedown', (e) => {
+                if (!langMenu.contains(e.target) && !langButton.contains(e.target)) {
+                    langMenu.style.display = 'none';
+                    langChevron.classList.remove('open');
+                }
+            });
+
+            soundToggle.addEventListener('click', () => {
+                soundOn = !soundOn;
+                soundToggle.classList.toggle('sound-on', soundOn);
+                soundToggle.classList.toggle('sound-off', !soundOn);
+                soundToggle.textContent = soundOn ? '🔊' : '🔇';
+            });
+
+            resetButton.addEventListener('click', () => {
+                streak = 0;
+                streakValue.textContent = streak;
+                newQuestion();
+            });
+
+            checkButton.addEventListener('click', handleCheck);
+
+            cmInput.addEventListener('input', (e) => {
+                if (currentQuestion && currentQuestion.type === 'm') {
+                    currentInput = e.target.value;
+                }
+            });
+
+            mInput.addEventListener('input', (e) => {
+                if (currentQuestion && currentQuestion.type === 'cm') {
+                    currentInput = e.target.value;
+                }
+            });
+
+            tryAgainButton.addEventListener('click', () => {
+                overlay.classList.remove('visible');
+            });
+
+            nextButton.addEventListener('click', () => {
+                newQuestion();
+            });
+
+            document.getElementById('home-button').addEventListener('click', () => {
+                window.location.href = 'index.html';
+            });
+
+            document.getElementById('back-button').addEventListener('click', () => {
+                window.history.back();
+            });
+        }
+
+        (function init() {
+            applyLanguage();
+            buildLangMenu();
+            initEvents();
+            newQuestion();
+        })();
+    </script>
+</body>
+</html>

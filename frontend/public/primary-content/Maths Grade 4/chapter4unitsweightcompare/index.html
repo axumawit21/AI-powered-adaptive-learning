@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Weight Compare Pro | ምውድዳር ኣሃድታት ክብደት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --harbor-blue: #1e293b;
+            --ocean: #0ea5e9;
+            --cargo-orange: #f97316;
+            --cargo-red: #ef4444;
+            --cargo-green: #22c55e;
+            --gold: #facc15;
+            --white: #ffffff;
+            --slate: #475569;
+            --shadow: rgba(0, 0, 0, 0.2);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: linear-gradient(180deg, #ff9a9e 0%, #fecfef 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            color: var(--harbor-blue);
+        }
+
+        .cloud {
+            position: fixed; background: white; border-radius: 50px; opacity: 0.6; z-index: 1;
+            animation: moveCloud linear infinite;
+        }
+        .cloud::before, .cloud::after { content: ''; position: absolute; background: white; border-radius: 50%; }
+        .cloud1 { width: 120px; height: 45px; top: 15%; left: -150px; animation-duration: 45s; }
+        .cloud2 { width: 160px; height: 55px; top: 30%; left: -200px; animation-duration: 65s; }
+        @keyframes moveCloud { from { left: -250px; } to { left: 110vw; } }
+
+        .waves {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 80px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%230ea5e9" fill-opacity="0.6" d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,133.3C960,149,1056,203,1152,213.3C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: 1440px 120px; animation: waveMove 15s linear infinite; z-index: 2;
+        }
+        @keyframes waveMove { from { background-position-x: 0; } to { background-position-x: 1440px; } }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6000; }
+
+        header {
+            width: 100%; max-width: 1000px; padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            gap: 15px;
+        }
+
+        .stat-group { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        .pill {
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
+            padding: 8px 15px; border-radius: 20px; border: 2.5px solid var(--white);
+            display: flex; align-items: center; gap: 6px; font-weight: 800;
+            box-shadow: 0 4px 10px var(--shadow); font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+        }
+        .stat-val { color: var(--cargo-orange); font-size: 1.1em; }
+
+        .header-controls { display: flex; gap: 10px; align-items: center; justify-content: center; }
+        .icon-btn {
+            background: white; border: none; width: 42px; height: 42px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; box-shadow: 0 4px 10px var(--shadow); transition: transform 0.2s;
+        }
+        .icon-btn:active { transform: scale(0.9); }
+
+        .lang-select {
+            padding: 8px 12px; border-radius: 15px; border: 2.5px solid var(--white);
+            background: white; font-weight: bold; cursor: pointer; font-size: 0.9rem;
+            box-shadow: 0 4px 10px var(--shadow); outline: none;
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 800px; display: flex; flex-direction: column;
+            padding: 10px; gap: clamp(15px, 5vh, 40px); justify-content: center; align-items: center; z-index: 10;
+        }
+
+        .title-text {
+            font-size: clamp(1.4rem, 6vw, 2.2rem); font-weight: 900; text-align: center;
+            color: var(--harbor-blue); text-shadow: 2px 2px 0 rgba(255,255,255,0.5);
+            margin-bottom: 10px;
+        }
+
+        .scale-container {
+            position: relative; width: 100%; max-width: 550px; height: clamp(220px, 45vh, 350px);
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .scale-base {
+            width: 140px; height: 25px; background: #64748b; border-radius: 15px 15px 0 0;
+            position: relative; z-index: 5; border-bottom: 6px solid #334155;
+        }
+        .scale-pillar {
+            width: 20px; height: 65%; background: #94a3b8;
+            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
+            border-radius: 10px; border-right: 4px solid #64748b;
+        }
+
+        .scale-beam {
+            width: 100%; height: 16px; background: #475569; border-radius: 8px;
+            position: absolute; top: 35%; left: 0; 
+            transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; justify-content: space-between; z-index: 10;
+        }
+
+        .scale-plate {
+            width: clamp(100px, 28vw, 180px); height: 12px; background: #334155; border-radius: 6px;
+            position: absolute; bottom: -130px; display: flex; justify-content: center;
+            transition: transform 1s;
+        }
+        .scale-plate-left { left: -30px; }
+        .scale-plate-right { right: -30px; }
+
+        .cargo-box {
+            width: clamp(90px, 24vw, 140px); height: clamp(75px, 18vw, 100px); 
+            background: var(--cargo-orange); border: 4px solid rgba(0,0,0,0.1); border-radius: 15px;
+            position: absolute; bottom: 12px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; color: white; font-weight: 900;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2), inset 0 0 20px rgba(0,0,0,0.1);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        .cargo-box.blue { background: var(--ocean); }
+        .cargo-val { font-size: clamp(1.2rem, 4.5vw, 2rem); z-index: 1; }
+        .cargo-unit { font-size: clamp(0.7rem, 2vw, 1rem); opacity: 0.95; z-index: 1; }
+
+        .tilt-left { transform: rotate(-15deg); }
+        .tilt-right { transform: rotate(15deg); }
+        .tilt-balanced { transform: rotate(0deg); }
+
+        .controls {
+            display: flex; gap: clamp(8px, 3vw, 20px); width: 100%; max-width: 500px;
+            margin-top: 10px; padding-bottom: 20px;
+        }
+        .comp-btn {
+            flex: 1; height: clamp(65px, 11vh, 90px); background: var(--white); 
+            border: 4px solid var(--harbor-blue); border-radius: 20px;
+            font-size: clamp(1.8rem, 7vw, 2.8rem); font-weight: 900; cursor: pointer;
+            box-shadow: 0 8px 0 var(--harbor-blue); transition: 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .comp-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 var(--harbor-blue); }
+        .comp-btn:hover { background: var(--gold); }
+
+        .overlay {
+            position: fixed; inset: 0; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 5000;
+            background: rgba(255,255,255,0.95); text-align: center; padding: 20px;
+        }
+        .overlay h2 { font-size: clamp(2.5rem, 8vw, 4.5rem); margin-bottom: 10px; }
+        .overlay.error { background: var(--cargo-red); color: white; }
+        .big-icon { font-size: clamp(6rem, 15vw, 10rem); margin-bottom: 20px; animation: bounce 1s infinite alternate; }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        @media (max-width: 480px) {
+            header { 
+                flex-direction: column; 
+                padding: 10px; 
+                gap: 12px; 
+            }
+            .stat-group { width: 100%; }
+            .header-controls { width: 100%; }
+            .container { gap: 20px; }
+            .scale-beam { height: 12px; }
+            .scale-plate { bottom: -110px; }
+            .cargo-box { bottom: 10px; }
+            .scale-plate-left { left: -10px; }
+            .scale-plate-right { right: -10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+    <div class="waves"></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <header>
+        <div class="stat-group">
+            <div class="pill">⭐ <span id="lblScore">Score</span>: <span id="valScore" class="stat-val">0</span></div>
+            <div class="pill">👑 <span id="lblHigh">High</span>: <span id="valHigh" class="stat-val">0</span></div>
+            <div class="pill">🆙 <span id="lblLvl">Level</span>: <span id="valLvl" class="stat-val">1</span></div>
+        </div>
+        <div class="header-controls">
+            <button class="icon-btn" id="muteBtn" onclick="toggleMute()">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="setLanguage(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="title-text" id="pageTitle">ምውድዳር ኣሃድታት ክብደት</h1>
+
+        <div class="scale-container">
+            <div class="scale-beam tilt-balanced" id="scaleBeam">
+                <div class="scale-plate scale-plate-left">
+                    <div class="cargo-box" id="boxLeft">
+                        <span class="cargo-val" id="valLeft">?</span>
+                        <span class="cargo-unit" id="unitLeft">?</span>
+                    </div>
+                </div>
+                <div class="scale-plate scale-plate-right">
+                    <div class="cargo-box blue" id="boxRight">
+                        <span class="cargo-val" id="valRight">?</span>
+                        <span class="cargo-unit" id="unitRight">?</span>
+                    </div>
+                </div>
+            </div>
+            <div class="scale-pillar"></div>
+            <div class="scale-base"></div>
+        </div>
+
+        <div class="controls">
+            <button class="comp-btn" onclick="checkAnswer('<')">&lt;</button>
+            <button class="comp-btn" onclick="checkAnswer('=')">=</button>
+            <button class="comp-btn" onclick="checkAnswer('>')">&gt;</button>
+        </div>
+    </div>
+
+    <div id="success-overlay" class="overlay">
+        <div class="big-icon">🚢</div>
+        <h2 id="txtWin">ንፉዕ!</h2>
+        <p id="txtWinSub" style="font-size: 1.5rem; color: var(--slate);">ልክዕ እዩ!</p>
+    </div>
+
+    <div id="error-overlay" class="overlay error">
+        <div class="big-icon">⚓</div>
+        <h2 id="txtFail">ጌጋ!</h2>
+        <p id="txtFailSub" style="font-size: 1.5rem; opacity: 0.9;">እንደገና ፈትን</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { title: "ምውድዳር ኣሃድታት ክብደት", win: "ንፉዕ!", winsub: "ልክዕ እዩ!", fail: "ጌጋ!", failsub: "እንደገና ፈትን", score: "ውፅኢት", high: "ዝለዓለ", level: "ደረጃ", units: { g: "ግ", kg: "ኪ.ግ", q: "ኩንታል", t: "ቶን" } },
+            am: { title: "የክብደት መለኪያዎችን ማወዳደር", win: "ድንቅ ስራ!", winsub: "ትክክል ነው!", fail: "ስህተት!", failsub: "እንደገና ይሞክሩ", score: "ውጤት", high: "ከፍተኛ", level: "ደረጃ", units: { g: "ግ", kg: "ኪ.ግ", q: "ኩንታል", t: "ቶን" } },
+            en: { title: "Weight Comparison", win: "Excellent!", winsub: "Correct!", fail: "Wrong!", failsub: "Try Again", score: "Score", high: "High", level: "Level", units: { g: "g", kg: "kg", q: "quintal", t: "ton" } },
+            om: { title: "Ulfaatina Wal-dorgomsiisuu", win: "Hojii Gaarii!", winsub: "Sirriidha!", fail: "Dogoggora!", failsub: "Irra deebi'i yaali", score: "Qabxii", high: "Olaanaa", level: "Sadarkaa", units: { g: "g", kg: "kg", q: "kuntaala", t: "tonii" } },
+            so: { title: "Isbarbardhigga Miisaanka", win: "Shaqo Fiican!", winsub: "Waa sax!", fail: "Khalad!", failsub: "Markale isku day", score: "Dhibco", high: "Sare", level: "Heerka", units: { g: "g", kg: "kg", q: "kuntaal", t: "ton" } }
+        };
+
+        let score = 0, lang = 'ti', currentTask = null, busy = false, muted = false;
+        let highScore = parseInt(localStorage.getItem('weight_compare_high')) || 0;
+        const factors = { g: 1, kg: 1000, q: 100000, t: 1000000 };
+        const unitList = ['g', 'kg', 'q', 't'];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if (type === 'tap') { o.type = 'sine'; o.frequency.setValueAtTime(600, n); g.gain.setValueAtTime(0.05, n); o.start(); o.stop(n + 0.1); }
+            else if (type === 'win') { o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1)); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.5); }
+            else if (type === 'err') { o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.exponentialRampToValueAtTime(40, n + 0.3); g.gain.setValueAtTime(0.1, n); o.start(); o.stop(n + 0.3); }
+        }
+
+        function toggleMute() { muted = !muted; document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊'; }
+
+        function setLanguage(l) {
+            lang = l;
+            localStorage.setItem('weight_compare_lang', lang);
+            updateUI();
+        }
+
+        function updateUI() {
+            const t = i18n[lang];
+            document.getElementById('pageTitle').innerText = t.title;
+            document.getElementById('lblScore').innerText = t.score;
+            document.getElementById('lblHigh').innerText = t.high;
+            document.getElementById('lblLvl').innerText = t.level;
+            document.getElementById('txtWin').innerText = t.win;
+            document.getElementById('txtWinSub').innerText = t.winsub;
+            document.getElementById('txtFail').innerText = t.fail;
+            document.getElementById('txtFailSub').innerText = t.failsub;
+            document.getElementById('valScore').innerText = score;
+            document.getElementById('valHigh').innerText = highScore;
+            document.getElementById('valLvl').innerText = Math.floor(score / 100) + 1;
+            if (currentTask) renderTask();
+        }
+
+        function generateTask() {
+            busy = false;
+            document.getElementById('scaleBeam').className = 'scale-beam tilt-balanced';
+            
+            const level = Math.floor(score / 100) + 1;
+            let u1, u2, v1, v2;
+
+            if (level === 1) {
+                u1 = u2 = unitList[Math.floor(Math.random() * 2) + 1]; // kg or q
+                v1 = Math.floor(Math.random() * 50) + 1;
+                v2 = Math.floor(Math.random() * 50) + 1;
+            } else if (level === 2) {
+                u1 = 'kg'; u2 = 'g';
+                v1 = Math.floor(Math.random() * 10) + 1;
+                const r = Math.random();
+                if (r < 0.4) v2 = v1 * 1000;
+                else if (r < 0.7) v2 = (v1 * 1000) + 500;
+                else v2 = (v1 * 1000) - 500;
+            } else {
+                u1 = unitList[Math.floor(Math.random() * 4)];
+                u2 = unitList[Math.floor(Math.random() * 4)];
+                v1 = Math.floor(Math.random() * 10) + 1;
+                v2 = Math.floor(Math.random() * 1000) + 1;
+                if (Math.random() > 0.8) {
+                   v2 = (v1 * factors[u1]) / factors[u2];
+                   if (!Number.isInteger(v2)) v2 = Math.floor(v2) + 1; 
+                }
+            }
+
+            const w1 = v1 * factors[u1];
+            const w2 = v2 * factors[u2];
+            const correctOp = w1 === w2 ? '=' : (w1 > w2 ? '>' : '<');
+
+            currentTask = { v1, u1, v2, u2, w1, w2, correctOp };
+            renderTask();
+        }
+
+        function renderTask() {
+            const t = i18n[lang];
+            document.getElementById('valLeft').innerText = currentTask.v1;
+            document.getElementById('unitLeft').innerText = t.units[currentTask.u1];
+            document.getElementById('valRight').innerText = currentTask.v2;
+            document.getElementById('unitRight').innerText = t.units[currentTask.u2];
+        }
+
+        function checkAnswer(userOp) {
+            if (busy) return;
+            busy = true; sfx('tap');
+
+            const beam = document.getElementById('scaleBeam');
+            const { correctOp, w1, w2 } = currentTask;
+
+            if (w1 > w2) beam.className = 'scale-beam tilt-left';
+            else if (w1 < w2) beam.className = 'scale-beam tilt-right';
+            else beam.className = 'scale-beam tilt-balanced';
+
+            setTimeout(() => {
+                if (userOp === correctOp) {
+                    score += 25;
+                    if (score > highScore) { 
+                        highScore = score; 
+                        localStorage.setItem('weight_compare_high', highScore); 
+                    }
+                    handleWin();
+                } else {
+                    handleErr();
+                }
+            }, 800);
+        }
+
+        function handleWin() {
+            sfx('win'); burst(300);
+            const overlay = document.getElementById('success-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                updateUI();
+                generateTask();
+            }, 1800);
+        }
+
+        function handleErr() {
+            sfx('err');
+            const overlay = document.getElementById('error-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.getElementById('scaleBeam').className = 'scale-beam tilt-balanced';
+                busy = false;
+            }, 1200);
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#f97316', '#0ea5e9', '#facc15', '#22c55e', '#ffffff'];
+            const p = [];
+            for(let i=0; i<count; i++) p.push({
+                x: Math.random()*c.width, y: c.height+20, vx: (Math.random()-0.5)*40, vy: (Math.random()-1.2)*65,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 2.5, r: Math.random()*360, rv: (Math.random()-0.5)*20
+            });
+            (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=p.length-1; i>=0; i--){
+                    const pt=p[i]; if(pt.l>0){
+                        al=true; pt.x+=pt.vx; pt.y+=pt.vy; pt.vy+=0.85; pt.l-=0.01; pt.r+=pt.rv;
+                        x.save(); x.translate(pt.x,pt.y); x.rotate(pt.r*Math.PI/180);
+                        x.fillStyle=pt.c; x.fillRect(-pt.s/2,-pt.s/2,pt.s,pt.s); x.restore();
+                    } else p.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f);
+            })();
+        }
+
+        window.onload = () => {
+            const savedLang = localStorage.getItem('weight_compare_lang') || 'ti';
+            document.getElementById('langSelect').value = savedLang;
+            setLanguage(savedLang);
+            generateTask();
+        };
+    </script>
+</body>
+</html>

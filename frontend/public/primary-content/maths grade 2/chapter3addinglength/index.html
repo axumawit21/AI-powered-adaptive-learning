@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Length Legend | ንጉስ ንውሓት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0ea5e9;
+            --primary-pink: #f472b6;
+            --primary-purple: #a855f7;
+            --primary-lime: #84cc16;
+            --light-bg: #f0f9ff;
+            --glass: rgba(255, 255, 255, 0.9);
+            --card-border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: linear-gradient(-45deg, #f0f9ff, #fae8ff, #f0fdf4, #fffbeb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden;
+            color: #1e293b;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2000; }
+
+        header {
+            width: 100%; max-width: 1200px; padding: 20px;
+            display: grid; grid-template-columns: auto 1fr auto; align-items: center; z-index: 100;
+            gap: 15px;
+        }
+
+        .main-title {
+            text-align: center; font-size: 1.8rem; font-weight: 900;
+            background: linear-gradient(to right, #0ea5e9, #a855f7, #f472b6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 0 rgba(16, 235, 27, 0.8);
+            text-transform: uppercase; letter-spacing: 1px;
+            grid-column: 1 / span 3;
+            margin-bottom: 10px;
+        }
+
+        .score-pill {
+            background: white;
+            padding: 8px 15px; border-radius: 50px; font-weight: 800; font-size: 1.2rem; color: #0ea5e9;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px solid #bae6fd;
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        .lang-select {
+            padding: 8px 15px; border-radius: 20px; border: none; font: inherit; font-weight: 800; cursor: pointer;
+            background: linear-gradient(135deg, #a855f7, #f472b6); color: white;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); transition: 0.2s;
+            font-size: 0.9rem;
+        }
+        .lang-select:active { transform: scale(0.95); }
+
+        .container {
+            flex: 1; width: 100%; max-width: 1100px; display: flex; flex-direction: column; 
+            justify-content: flex-start; align-items: center; padding: 10px 15px; gap: 20px;
+        }
+
+        /* Workshop Area */
+        .workshop {
+            width: 100%; display: flex; flex-direction: column; gap: 15px; align-items: center;
+        }
+
+        .tape-container {
+            width: 100%; max-width: 900px; height: 160px; 
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 25px; border: 4px solid #fff;
+            position: relative; overflow: hidden; display: flex; align-items: center; padding: 0 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05), inset 0 0 10px rgba(0,0,0,0.02);
+        }
+
+        .ruler {
+            height: 50px; border-radius: 12px; position: absolute; left: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.4rem; color: #fff;
+            transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            white-space: nowrap;
+            padding: 0 10px;
+        }
+
+        /* Tick Marks */
+        .ruler::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 12px;
+            background-image: linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px);
+            background-size: 15px 100%;
+        }
+
+        .ruler-a { background: linear-gradient(90deg, #38bdf8, #0ea5e9); z-index: 2; }
+        .ruler-b { background: linear-gradient(90deg, #f472b6, #db2777); z-index: 3; }
+        
+        .result-line {
+            position: absolute; bottom: 25px; left: 20px; height: 8px; background: #84cc16;
+            border-radius: 4px; box-shadow: 0 0 15px rgba(132, 204, 22, 0.4); opacity: 0; transition: 1s;
+        }
+
+        /* Problem Card */
+        .problem-card {
+            width: 100%; max-width: 700px; background: var(--glass); backdrop-filter: blur(30px);
+            border-radius: 35px; padding: 25px 20px; border: 6px solid #fff;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            display: flex; flex-direction: column; gap: 20px; text-align: center; color: #1e293b;
+            position: relative;
+        }
+
+        .story-text { font-size: 1.2rem; font-weight: 700; color: #334155; line-height: 1.4; }
+        
+        .equation { font-size: 2.2rem; font-weight: 900; color: #6366f1; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+
+        .num-pill {
+            background: #fff; padding: 5px 15px; border-radius: 15px;
+            border: 3px solid #e2e8f0; color: #1e293b;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-width: 50px;
+        }
+
+        .ans-box {
+            min-width: 100px; height: 75px; background: #fff; border: 4px dashed #cbd5e1;
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            color: #6366f1; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 2.5rem;
+        }
+        .ans-box.active { 
+            border-style: solid; border-color: #38bdf8; 
+            background: #f0f9ff; box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); transform: scale(1.05);
+        }
+
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; max-width: 500px; margin: 0 auto; }
+        .key {
+            height: 60px; background: white; border: none; border-radius: 15px;
+            font-size: 1.5rem; font-weight: 800; color: #475569; cursor: pointer;
+            box-shadow: 0 5px 0 #e2e8f0; transition: all 0.1s; display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(3px); box-shadow: 0 2px 0 #e2e8f0; }
+        .key.del { background: #fff1f2; color: #f43f5e; box-shadow: 0 5px 0 #fecdd3; }
+        .key.check { 
+            grid-column: span 4; background: linear-gradient(135deg, #84cc16, #65a30d); 
+            color: #fff; box-shadow: 0 6px 0 #4d7c0f; 
+            text-transform: uppercase; letter-spacing: 1px; height: 70px; margin-top: 5px; font-size: 1.6rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-10px);} 75%{transform:translateX(10px);} }
+        .shake { animation: shake 0.4s; }
+
+        #success-msg {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 4rem; font-weight: 900; color: #22c55e; opacity: 0; pointer-events: none; z-index: 50;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+        }
+        .show-success { animation: popSuccess 1.5s forwards; }
+        @keyframes popSuccess {
+            0%{opacity:0; transform: translate(-50%, -50%) scale(0.5);}
+            30%{opacity:1; transform: translate(-50%, -50%) scale(1.2);}
+            100%{opacity:0; transform: translate(-50%, -100%) scale(1);}
+        }
+
+        @media (min-width: 850px) {
+            .main-title { grid-column: 2; grid-row: 1; font-size: 2.2rem; margin-bottom: 0; }
+            header { grid-template-columns: 1fr 2.5fr 1fr; padding: 25px; }
+            .container { gap: 30px; justify-content: center; }
+            .problem-card { padding: 40px; border-radius: 45px; }
+            .story-text { font-size: 1.6rem; }
+            .equation { font-size: 3.5rem; gap: 10px; }
+            .ans-box { min-width: 140px; height: 100px; font-size: 3.5rem; }
+            .key { height: 70px; font-size: 1.8rem; border-radius: 20px; box-shadow: 0 8px 0 #e2e8f0; }
+            .key.check { height: 85px; font-size: 2rem; letter-spacing: 2px; }
+            .tape-container { height: 180px; padding: 0 40px; }
+            .ruler { height: 60px; font-size: 1.8rem; border-radius: 15px; left: 40px; }
+            .result-line { left: 40px; bottom: 30px; height: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <header>
+        <button class="lang-select" id="langBtn" onclick="toggleLang()">ትግርኛ</button>
+        <h1 class="main-title" id="mainTitle">ምድማርን ምጉዳልን ዓቐናት ንውሓት</h1>
+        <div class="score-pill">📏 <span id="scoreVal">0</span></div>
+    </header>
+
+    <div class="container">
+        <div class="workshop">
+            <div class="tape-container" id="tapeCon">
+                <div class="ruler ruler-a" id="rulerA"></div>
+                <div class="ruler ruler-b" id="rulerB"></div>
+                <div class="result-line" id="resLine"></div>
+            </div>
+        </div>
+
+        <div class="problem-card" id="gameCard">
+            <div id="success-msg">ንፉዕ!</div>
+            <p class="story-text" id="storyText">...</p>
+            <div class="equation">
+                <span class="num-pill" id="n1">0</span>
+                <span id="unit1" style="color: #64748b; font-size: 0.6em; margin-right: 5px;">ሜ</span>
+                <span id="op" style="color: #f472b6">+</span>
+                <span class="num-pill" id="n2">0</span>
+                <span id="unit2" style="color: #64748b; font-size: 0.6em; margin-left: 5px;">ሜ</span>
+                <span style="margin: 0 5px;">=</span>
+                <div class="ans-box active" id="ansBox">?</div>
+            </div>
+
+            <div class="keypad">
+                <button class="key" onclick="press(1)">1</button>
+                <button class="key" onclick="press(2)">2</button>
+                <button class="key" onclick="press(3)">3</button>
+                <button class="key del" onclick="press('bk')">⌫</button>
+                <button class="key" onclick="press(4)">4</button>
+                <button class="key" onclick="press(5)">5</button>
+                <button class="key" onclick="press(6)">6</button>
+                <button class="key" onclick="press(0)">0</button>
+                <button class="key" onclick="press(7)">7</button>
+                <button class="key" onclick="press(8)">8</button>
+                <button class="key" onclick="press(9)">9</button>
+                <button class="key check" id="btnCheck" onclick="check()">ፈትሽ (Check)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { title: "ምድማርን ምጉዳልን ዓቐናት ንውሓት", check: "ፈትሽ", win: "ንፉዕ!", m: "ሜ", cm: "ሴሜ", add: "ሓደ ዓንዲ {a}{u} ነይርዎ። {b}{u} ምስ ተወሰኾ ብሓፈሻ ክንደይ ኮይኑ?", sub: "ሓደ ገመድ {a}{u} ንውሓት ነይርዎ። {b}{u} ምስ ተቖርፀ ክንደይ ይተርፍ?" },
+            am: { title: "የርዝመት መለኪያዎችን መደመርና መቀነስ", check: "አረጋግጥ", win: "ድንቅ!", m: "ሜ", cm: "ሴሜ", add: "አንድ ምሰሶ {a}{u} ነበር። {b}{u} ሲጨመርበት በጥቅሉ ስንት ሆነ?", sub: "አንድ ገመድ {a}{u} ርዝመት ነበረው። {b}{u} ሲቆረጥ ስንት ተረፈ?" },
+            en: { title: "Add/Subtract Length Units", check: "Check", win: "Correct!", m: "m", cm: "cm", add: "A pole was {a}{u}. After adding {b}{u}, what is the total length?", sub: "A rope was {a}{u} long. After cutting {b}{u}, how much is left?" },
+            om: { title: "Ida'uu fi Hir'isuu Safartuu Dheerinaa", check: "Mirkaneessi", win: "Sirrii!", m: "m", cm: "sm", add: "Utubaan tokko dheerina {a}{u} qaba ture. {b}{u} yoo itti dabalame waliigala meeqa ta'a?", sub: "Funyoon tokko dheerina {a}{u} qaba ture. {b}{u} yoo irraa murame meeqa hafa?" },
+            so: { title: "Isku-darka iyo Kala-goynta Cabirka Dhererka", check: "Hubi", win: "Sax!", m: "m", cm: "sm", add: "Tiir wuxuu ahaa {a}{u}. Markii lagu daray {b}{u} waa imisa wadarta guud?", sub: "Xadhig wuxuu ahaa {a}{u}. Markii laga gooyay {b}{u} imisa ayaa haray?" }
+        };
+
+        let score = 0, currentProb = {}, userAns = "", lang = 'ti', particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(400, n); o.frequency.exponentialRampToValueAtTime(800, n + 0.1);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.08));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.6);
+                o.start(); o.stop(n + 0.6);
+            } else {
+                o.type = 'sawtooth'; o.frequency.value = 120;
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.3);
+                o.start(); o.stop(n + 0.3);
+            }
+        }
+
+        function generate() {
+            const mode = Math.random() > 0.5 ? 'add' : 'sub';
+            const unit = Math.random() > 0.5 ? 'm' : 'cm';
+            let a, b, ans;
+
+            if (unit === 'm') {
+                a = Math.floor(Math.random() * 8) + 2;
+                b = Math.floor(Math.random() * (mode === 'add' ? 5 : (a - 1))) + 1;
+            } else {
+                a = Math.floor(Math.random() * 60) + 20;
+                b = Math.floor(Math.random() * (mode === 'add' ? 30 : (a - 10))) + 5;
+            }
+            ans = mode === 'add' ? a + b : a - b;
+
+            currentProb = { a, b, ans, mode, unit };
+            userAns = "";
+
+            document.getElementById('n1').innerText = a;
+            document.getElementById('n2').innerText = b;
+            document.getElementById('op').innerText = mode === 'add' ? '+' : '-';
+            document.getElementById('unit1').innerText = i18n[lang][unit];
+            document.getElementById('unit2').innerText = i18n[lang][unit];
+            document.getElementById('ansBox').innerText = "?";
+            document.getElementById('btnCheck').innerText = i18n[lang].check;
+            document.getElementById('success-msg').classList.remove('show-success');
+            document.getElementById('mainTitle').innerText = i18n[lang].title;
+
+            const story = i18n[lang][mode].replace('{a}', a).replace('{b}', b).replace(/{u}/g, i18n[lang][unit]);
+            document.getElementById('storyText').innerHTML = story;
+
+            updateVisuals();
+        }
+
+        function updateVisuals() {
+            const tapeCon = document.getElementById('tapeCon');
+            const padding = window.innerWidth >= 850 ? 80 : 40;
+            const conWidth = tapeCon.clientWidth - padding;
+            const maxVal = currentProb.unit === 'm' ? 15 : 120;
+            const pxlPerUnit = conWidth / maxVal;
+
+            const rulerA = document.getElementById('rulerA');
+            const rulerB = document.getElementById('rulerB');
+            const resLine = document.getElementById('resLine');
+            
+            const startX = padding / 2;
+
+            rulerA.style.width = (currentProb.a * pxlPerUnit) + 'px';
+            rulerA.innerText = `${currentProb.a}${i18n[lang][currentProb.unit]}`;
+            rulerA.style.left = startX + 'px';
+            
+            if (window.innerWidth >= 850) {
+                rulerA.style.top = '40px';
+                rulerB.style.height = '60px';
+                rulerA.style.height = '60px';
+            } else {
+                rulerA.style.top = '30px';
+                rulerB.style.height = '50px';
+                rulerA.style.height = '50px';
+            }
+
+            rulerB.style.width = (currentProb.b * pxlPerUnit) + 'px';
+            rulerB.innerText = `${currentProb.b}${i18n[lang][currentProb.unit]}`;
+            
+            if (currentProb.mode === 'add') {
+                rulerB.style.left = (startX + currentProb.a * pxlPerUnit) + 'px';
+                rulerB.style.top = window.innerWidth >= 850 ? '40px' : '30px';
+            } else {
+                rulerB.style.left = startX + 'px';
+                rulerB.style.top = window.innerWidth >= 850 ? '95px' : '85px';
+            }
+
+            resLine.style.left = startX + 'px';
+            resLine.style.opacity = '0';
+        }
+
+        function press(k) {
+            sfx('tap');
+            if(k === 'bk') userAns = userAns.slice(0, -1);
+            else if(userAns.length < 3) userAns += k;
+            document.getElementById('ansBox').innerText = userAns || "?";
+        }
+
+        function check() {
+            if(userAns === "") return;
+            if(parseInt(userAns) === currentProb.ans) {
+                score += 10;
+                document.getElementById('scoreVal').innerText = score;
+                sfx('win'); burst(700);
+
+                const resLine = document.getElementById('resLine');
+                const tapeCon = document.getElementById('tapeCon');
+                const padding = window.innerWidth >= 850 ? 80 : 40;
+                const conWidth = tapeCon.clientWidth - padding;
+                const maxVal = currentProb.unit === 'm' ? 15 : 120;
+                const pxlPerUnit = conWidth / maxVal;
+
+                resLine.style.width = (currentProb.ans * pxlPerUnit) + 'px';
+                resLine.style.opacity = '1';
+                
+                const msg = document.getElementById('success-msg');
+                msg.innerText = i18n[lang].win;
+                msg.classList.add('show-success');
+
+                setTimeout(generate, 2500);
+            } else {
+                sfx('err');
+                document.getElementById('gameCard').classList.add('shake');
+                setTimeout(() => document.getElementById('gameCard').classList.remove('shake'), 500);
+            }
+        }
+
+        function toggleLang() {
+            const ks = Object.keys(i18n);
+            lang = ks[(ks.indexOf(lang) + 1) % ks.length];
+            document.getElementById('langBtn').innerText = lang === 'ti' ? 'ትግርኛ' : lang.toUpperCase();
+            generate();
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#0ea5e9', '#f472b6', '#a855f7', '#84cc16', '#fbbf24', '#ffffff', '#3b82f6'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random() * c.width, y: c.height + 20, 
+                vx: (Math.random()-0.5)*40, vy: (Math.random()-0.8)*60,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)],
+                l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*25
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.95; p.vx *= 0.98; p.l-=0.008; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1);
+                        x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = generate;
+        window.onresize = updateVisuals;
+    </script>
+</body>
+</html>

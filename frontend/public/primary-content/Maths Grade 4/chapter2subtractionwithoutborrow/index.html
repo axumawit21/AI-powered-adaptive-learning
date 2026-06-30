@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Subtraction Architect | ብዘይ ምልቃሕ ምጉዳል</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #f97316; /* Orange */
+            --secondary: #14b8a6; /* Teal */
+            --success: #22c55e; /* Green */
+            --accent: #f43f5e; /* Rose */
+            --danger: #ef4444;
+            --blueprint: #431407; /* Deep Terracotta */
+            --glass: rgba(255, 255, 255, 0.95);
+            --neon-cyan: #2dd4bf;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: #fff7ed;
+            background-image: 
+                linear-gradient(rgba(249, 115, 22, 0.05) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(249, 115, 22, 0.05) 2px, transparent 2px);
+            background-size: 40px 40px;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden;
+            color: #1e293b;
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4000; }
+
+        header {
+            width: 100%; max-width: 1100px; padding: 20px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            flex-wrap: wrap; gap: 10px;
+        }
+
+        .badges { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .stat-pill { 
+            background: white; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 1rem; color: var(--primary);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 3px solid #ffedd5;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .stat-val { color: var(--secondary); }
+        .high-score { border-color: #fdba74; }
+        .high-score .stat-val { color: #f97316; }
+
+        .btn-icon {
+            background: white; border: none; width: 45px; height: 45px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            color: var(--primary); font-size: 1.2rem; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+        }
+        .btn-icon:active { transform: scale(0.9); }
+
+        .lang-select {
+            padding: 10px 15px; border-radius: 20px; border: 3px solid white; font: inherit; font-weight: bold; cursor: pointer;
+            background: var(--glass); color: var(--primary); box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transition: 0.2s; font-size: 0.9rem;
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 1200px; display: flex; flex-direction: column; 
+            padding: 10px; gap: 30px; z-index: 10; justify-content: center;
+        }
+
+        .game-card {
+            background: var(--blueprint);
+            border-radius: 40px; padding: 40px 20px; 
+            border: 8px solid #ffffff;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.15);
+            width: 100%; text-align: center; display: flex; flex-direction: column; gap: 15px;
+            animation: slideUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; color: white;
+        }
+
+        @keyframes slideUp { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .game-title {
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(to right, #fb923c, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Perfectly Aligned Vertical Math */
+        .math-container {
+            display: flex; flex-direction: column; align-items: flex-end; 
+            width: fit-content; margin: 0 auto; position: relative;
+            gap: 10px;
+        }
+
+        .row-grid { display: flex; gap: 20px; justify-content: flex-end; }
+        
+        .box-base {
+            width: 85px; height: 110px; border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 4rem; font-weight: 900; transition: 0.3s;
+        }
+
+        .digit-text { color: white; background: transparent; }
+        
+        .minus-sign { position: absolute; left: -70px; bottom: 130px; font-size: 5rem; color: var(--primary); }
+        .math-line { width: calc(100% + 90px); height: 8px; background: white; border-radius: 4px; margin-right: -40px; }
+
+        .digit-box {
+            background: rgba(255,255,255,0.1);
+            border: 4px dashed rgba(255,255,255,0.3);
+            color: var(--neon-cyan);
+            cursor: pointer;
+        }
+        .digit-box.active { 
+            background: white; border-style: solid; border-color: var(--secondary); 
+            color: var(--blueprint); transform: scale(1.05); box-shadow: 0 0 30px rgba(20, 184, 166, 0.5);
+        }
+        .digit-box.wrong { border-color: var(--danger); background: rgba(239, 68, 68, 0.3); animation: shake 0.4s; }
+
+        /* Keypad Section */
+        .keypad-section {
+            width: 100%;
+            max-width: 850px; /* Slightly wider */
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .keypad { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 12px; 
+            width: 100%; 
+        }
+
+        .key {
+            height: 75px; background: white; border: none; border-radius: 20px;
+            font-size: 2rem; font-weight: 800; color: #1e293b; cursor: pointer;
+            box-shadow: 0 8px 0 #fed7aa; transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 4px 0 #fed7aa; }
+        .key.del { background: #fee2e2; color: var(--danger); box-shadow: 0 8px 0 #fca5a5; }
+        
+        .key.check { 
+            width: 100%;
+            background: var(--success); 
+            color: white; 
+            box-shadow: 0 10px 0 #14532d; 
+            font-size: 2.2rem; 
+            height: 95px; 
+            margin-top: 10px;
+            text-transform: uppercase; 
+            letter-spacing: 4px;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+        .key.check:active { transform: translateY(6px); box-shadow: 0 4px 0 #14532d; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-15px); } 40%, 80% { transform: translateX(15px); } }
+        .shake { animation: shake 0.4s; }
+
+        #error-screen {
+            position: fixed; inset: 0; background: rgba(239, 68, 68, 0.3);
+            display: none; pointer-events: none; z-index: 2500;
+            align-items: center; justify-content: center;
+        }
+        #error-screen span { font-size: 10rem; color: white; opacity: 0.5; }
+
+        #success-overlay {
+            position: fixed; inset: 0; background: rgba(20, 184, 166, 0.95);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 3000; color: white; text-align: center;
+            backdrop-filter: blur(15px); padding: 20px;
+        }
+        #success-overlay h2 { font-size: 4rem; margin-top: 20px; text-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .box-base { width: 60px; height: 80px; font-size: 2.5rem; border-radius: 12px; }
+            .row-grid { gap: 10px; }
+            .minus-sign { left: -50px; bottom: 95px; font-size: 3.5rem; }
+            .math-line { width: calc(100% + 70px); }
+            .key { height: 60px; font-size: 1.6rem; border-radius: 15px; }
+            .key.check { height: 75px; font-size: 1.6rem; }
+            .game-card { padding: 30px 15px; }
+            .game-title { font-size: 1.8rem; }
+        }
+
+        @media (max-width: 480px) {
+            .box-base { width: 45px; height: 65px; font-size: 2rem; border-radius: 10px; border-width: 3px; }
+            .row-grid { gap: 8px; }
+            .minus-sign { left: -40px; bottom: 75px; font-size: 2.5rem; }
+            .math-line { width: calc(100% + 55px); margin-right: -30px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <div id="error-screen"><span>❌</span></div>
+
+    <header>
+        <div class="header-left">
+            <button class="btn-icon" id="muteBtn" onclick="toggleMute()" title="Sound Toggle">🔊</button>
+            <div class="badges">
+                <div class="stat-pill high-score">
+                    <span id="highLabel" class="stat-label">ዝለዓለ</span>
+                    <span id="highScoreVal">0</span>
+                </div>
+                <div class="stat-pill">
+                    <span id="scoreLabel" class="stat-label">ነጥቢ</span>
+                    <span id="scoreVal">0</span>
+                </div>
+                <div class="stat-pill">
+                    <span id="lvlLabel" class="stat-label">ደረጃ</span>
+                    <span id="levelVal">1</span>
+                </div>
+            </div>
+        </div>
+        <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+            <option value="ti">ትግርኛ</option>
+            <option value="am">አማርኛ</option>
+            <option value="en">English</option>
+            <option value="om">Oromoo</option>
+            <option value="so">Soomaali</option>
+        </select>
+    </header>
+
+    <div class="container">
+        <div class="game-card" id="gameCard">
+            <h1 class="game-title" id="pageTitle">ብዘይ ምልቃሕ ምጉዳል</h1>
+            
+            <div class="math-container">
+                <div class="row-grid" id="num1Row"></div>
+                <div class="row-grid" id="num2Row">
+                    <span class="minus-sign">-</span>
+                </div>
+                <div class="math-line"></div>
+                <div class="row-grid" id="answerRow"></div>
+            </div>
+        </div>
+
+        <div class="keypad-section">
+            <div class="keypad" id="keypad"></div>
+            <button class="key check" id="btnCheck" onclick="checkAnswer()">ኣረጋግፅ (Check)</button>
+        </div>
+    </div>
+
+    <div id="success-overlay">
+        <div style="font-size: 6rem; animation: bounce 1s infinite alternate;">📐</div>
+        <h2 id="txtWin">ብጣዕሚ ጎበዝ!</h2>
+        <p style="font-size: 1.2rem;" id="txtWinSub">ብትኽክል ተመሊሱ!</p>
+    </div>
+
+    <script>
+        const i18n = {
+            ti: { title: "ብዘይ ምልቃሕ ምጉዳል", win: "ብጣዕሚ ጎበዝ!", winsub: "ብትኽክል ተመሊሱ!", level: "ደረጃ", score: "ነጥቢ", high: "ዝለዓለ", check: "ኣረጋግፅ" },
+            am: { title: "ብድር የሌለበት መቀነስ", win: "ድንቅ ስራ!", winsub: "በትክክል መልሰዋል!", level: "ደረጃ", score: "ነጥብ", high: "ከፍተኛ", check: "አረጋግጥ" },
+            en: { title: "Subtraction (No Borrowing)", win: "Great Job!", winsub: "You answered correctly!", level: "Level", score: "Score", high: "High", check: "Check" },
+            om: { title: "Hir'isuu (Ergaa kan hin qabne)", win: "Guddina!", winsub: "Sirriitti deebisteetta!", level: "Sadarkaa", score: "Qabxii", high: "Olaanaa", check: "Mirkaneessi" },
+            so: { title: "Kala-goyn (Sidasho la'aan)", win: "Shaqo Fiican!", winsub: "Si sax ah ayaad uga jawaabtay!", level: "Heerka", score: "Dhibco", high: "Sare", check: "Hubi" }
+        };
+
+        let score = 0, level = 1, lang = 'ti', currentQuestion = null, muted = false;
+        let activeIdx = 0; 
+        let userDigits = []; 
+        let highScore = parseInt(localStorage.getItem('sub_no_borrow_arch_high')) || 0;
+        let particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(600, n); o.frequency.exponentialRampToValueAtTime(300, n + 0.1);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.1));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.8);
+                o.start(); o.stop(n + 0.8);
+            } else {
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.linearRampToValueAtTime(50, n + 0.3);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.3);
+                o.start(); o.stop(n + 0.3);
+            }
+        }
+
+        function toggleMute() {
+            muted = !muted;
+            document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊';
+        }
+
+        function generateQuestion() {
+            let digitCount = level === 1 ? 3 : (level === 2 ? 4 : (level === 3 ? 5 : 6));
+            let n1Arr = [], n2Arr = [];
+            
+            for (let i = 0; i < digitCount; i++) {
+                let d1 = Math.floor(Math.random() * 9);
+                if (i === digitCount - 1) d1 = Math.max(1, d1);
+                
+                // For no borrowing, d2 <= d1
+                let d2 = Math.floor(Math.random() * (d1 + 1));
+                
+                n1Arr.unshift(d1); n2Arr.unshift(d2);
+            }
+
+            const n1 = parseInt(n1Arr.join(''));
+            const n2 = parseInt(n2Arr.join(''));
+            const ans = n1 - n2;
+            const ansArr = ans.toString().padStart(digitCount, '0').split('').map(Number);
+
+            currentQuestion = { n1, n2, ans, n1Arr: n1Arr.reverse(), n2Arr: n2Arr.reverse(), digitCount };
+            userDigits = new Array(digitCount).fill("?");
+            activeIdx = 0; 
+            renderLevel();
+        }
+
+        function renderLevel() {
+            const q = currentQuestion;
+            const t = i18n[lang];
+            document.getElementById('pageTitle').innerText = t.title;
+            
+            const rows = {
+                num1: document.getElementById('num1Row'),
+                num2: document.getElementById('num2Row'),
+                ans: document.getElementById('answerRow')
+            };
+
+            Object.values(rows).forEach(r => {
+                const plus = r.querySelector('.minus-sign');
+                r.innerHTML = '';
+                if(plus) r.appendChild(plus);
+            });
+
+            for (let i = q.digitCount - 1; i >= 0; i--) {
+                // Num1 Box
+                const n1Digit = q.n1Arr[i] ?? "";
+                const n1Box = document.createElement('div');
+                n1Box.className = 'box-base digit-text';
+                n1Box.innerText = n1Digit;
+                rows.num1.appendChild(n1Box);
+
+                // Num2 Box
+                const n2Digit = q.n2Arr[i] ?? "";
+                const n2Box = document.createElement('div');
+                n2Box.className = 'box-base digit-text';
+                n2Box.innerText = n2Digit;
+                rows.num2.appendChild(n2Box);
+
+                // Ans Box
+                const aBox = document.createElement('div');
+                aBox.className = 'box-base digit-box';
+                aBox.innerText = userDigits[i];
+                if (activeIdx === i) aBox.classList.add('active');
+                aBox.onclick = () => { sfx('tap'); activeIdx = i; renderLevel(); };
+                rows.ans.appendChild(aBox);
+            }
+
+            updateStats();
+        }
+
+        function press(k) {
+            sfx('tap');
+            if (k === 'bk') {
+                userDigits[activeIdx] = "?";
+                if (activeIdx > 0 && userDigits[activeIdx] === "?") activeIdx--;
+            } else {
+                userDigits[activeIdx] = k;
+                if (activeIdx < currentQuestion.digitCount - 1) activeIdx++;
+            }
+            renderLevel();
+        }
+
+        function checkAnswer() {
+            if (userDigits.includes("?")) { handleError(); return; }
+            const userTotal = parseInt(userDigits.slice().reverse().join(''));
+            if (userTotal === currentQuestion.ans) handleSuccess();
+            else handleError();
+        }
+
+        function handleSuccess() {
+            score += 10;
+            if (score > highScore) { highScore = score; localStorage.setItem('sub_no_borrow_arch_high', highScore); }
+            level = Math.floor(score / 50) + 1;
+            sfx('win'); burst(500);
+            const overlay = document.getElementById('success-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => { overlay.style.display = 'none'; generateQuestion(); }, 2000);
+        }
+
+        function handleError() {
+            sfx('err');
+            document.getElementById('gameCard').classList.add('shake');
+            document.getElementById('error-screen').style.display = 'flex';
+            document.querySelectorAll('.digit-box').forEach(b => b.classList.add('wrong'));
+            setTimeout(() => {
+                document.getElementById('gameCard').classList.remove('shake');
+                document.getElementById('error-screen').style.display = 'none';
+                document.querySelectorAll('.digit-box').forEach(b => b.classList.remove('wrong'));
+            }, 600);
+        }
+
+        function updateStats() {
+            const t = i18n[lang];
+            document.getElementById('scoreVal').innerText = score;
+            document.getElementById('levelVal').innerText = level;
+            document.getElementById('highScoreVal').innerText = highScore;
+            document.getElementById('scoreLabel').innerText = t.score;
+            document.getElementById('lvlLabel').innerText = t.level;
+            document.getElementById('highLabel').innerText = t.high;
+            document.getElementById('btnCheck').innerText = t.check;
+        }
+
+        function changeLang(l) { lang = l; renderLevel(); }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#f97316', '#14b8a6', '#22c55e', '#f43f5e', '#ffffff', '#2dd4bf'];
+            for(let i=0; i<count; i++) particles.push({
+                x: Math.random() * c.width, y: c.height + 20, vx: (Math.random()-0.5)*30, vy: (Math.random()-0.8)*45,
+                s: Math.random()*10+5, c: colors[Math.floor(Math.random()*colors.length)], l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*15
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.6; p.vx *= 0.99; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = () => {
+            const kp = document.getElementById('keypad');
+            [1,2,3,4,5,6,7,8,9,0].forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'key'; b.innerText = k; b.onclick = () => press(k); kp.appendChild(b);
+            });
+            const del = document.createElement('button');
+            del.className = 'key del'; del.innerText = '⌫'; del.onclick = () => press('bk'); kp.appendChild(del);
+            generateQuestion();
+        };
+    </script>
+</body>
+</html>

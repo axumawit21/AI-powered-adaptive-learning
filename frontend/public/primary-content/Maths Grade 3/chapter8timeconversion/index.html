@@ -1,0 +1,525 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Time Machine - ምስጢር ግዘ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.7);
+            --neon-blue: #00e5ff;
+            --neon-pink: #ff007f;
+            --neon-green: #39ff14;
+            --text-white: #f8fafc;
+            --primary: #4361ee;
+            --secondary: #f72585;
+            --accent: #fbbf24;
+            --shadow: rgba(0, 229, 255, 0.2);
+        }
+
+        * { box-sizing: border-box; transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: 
+                linear-gradient(rgba(0, 229, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            user-select: none;
+            color: var(--text-white);
+        }
+
+        /* --- Header --- */
+        header {
+            width: 100%;
+            padding: 15px 30px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            border-bottom: 3px solid var(--neon-blue);
+            box-shadow: 0 0 20px var(--shadow);
+            position: sticky; top: 0;
+        }
+
+        .header-item-left { display: flex; justify-content: flex-start; }
+        .header-item-right { display: flex; justify-content: flex-end; }
+
+        .grade-badge {
+            background: var(--neon-pink); color: white; width: 50px; height: 50px;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.6rem; border: 3px solid white;
+            box-shadow: 0 0 15px var(--neon-pink); transform: rotate(-5deg);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        h1 { margin: 0; color: var(--neon-blue); font-size: 1.8rem; font-weight: 900; letter-spacing: -1px; text-align: center; text-shadow: 0 0 10px var(--neon-blue); }
+
+        /* Custom Dropdown */
+        .custom-select-wrapper { position: relative; display: inline-block; cursor: pointer; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; font-weight: 800; color: var(--neon-blue);
+            height: 40px; background: rgba(255,255,255,0.1); border-radius: 20px;
+            width: 160px; border: 2px solid var(--neon-blue);
+        }
+        .custom-options {
+            position: absolute; top: 115%; right: 0; left: 0;
+            background: #1e293b; opacity: 0; visibility: hidden;
+            pointer-events: none; transform: translateY(-10px);
+            transition: all 0.3s ease; display: flex; flex-direction: column;
+            border-radius: 15px; padding: 6px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            border: 1px solid var(--neon-blue); z-index: 200;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; pointer-events: all; transform: translateY(0); }
+        .custom-option { padding: 10px; border-radius: 10px; cursor: pointer; font-weight: 600; color: #cbd5e1; }
+        .custom-option:hover { background: rgba(0, 229, 255, 0.1); color: var(--neon-blue); }
+
+        /* --- Main Content --- */
+        .container {
+            flex: 1; width: 100%; max-width: 900px;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 30px 20px; z-index: 10;
+            justify-content: flex-start;
+            gap: 25px;
+        }
+
+        .score-board { display: flex; gap: 20px; }
+        .score-pill {
+            background: rgba(255, 255, 255, 0.05); padding: 10px 25px; border-radius: 30px;
+            font-weight: 900; color: white;
+            border: 2px solid var(--neon-blue);
+            display: flex; align-items: center; gap: 10px;
+            font-size: 1.1rem; backdrop-filter: blur(5px);
+        }
+
+        /* --- Mission Control Display --- */
+        .mission-panel {
+            background: var(--panel-bg); padding: 40px; border-radius: 40px;
+            border: 4px solid rgba(0, 229, 255, 0.3);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3), inset 0 0 20px rgba(0, 229, 255, 0.1);
+            width: 100%; max-width: 600px; text-align: center;
+            position: relative; overflow: hidden;
+        }
+        .mission-panel::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+            animation: scan 3s linear infinite;
+        }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        .question-text {
+            font-family: 'Orbitron', sans-serif; font-size: 2.8rem;
+            color: var(--neon-green); text-shadow: 0 0 15px var(--neon-green);
+            margin-bottom: 20px; word-spacing: 5px;
+        }
+        .unit-label { font-size: 1.2rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-top: 10px; }
+
+        /* Battery Progress */
+        .battery-wrap {
+            width: 100%; height: 35px; border: 3px solid #475569;
+            border-radius: 12px; padding: 4px; margin: 20px 0;
+            background: #000; position: relative;
+        }
+        .battery-wrap::after {
+            content: ''; position: absolute; right: -12px; top: 8px;
+            width: 10px; height: 16px; background: #475569; border-radius: 0 4px 4px 0;
+        }
+        .battery-fill {
+            height: 100%; width: 0%; background: linear-gradient(90deg, #0ea5e9, #22c55e);
+            border-radius: 6px; box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- Keypad --- */
+        .input-display {
+            background: #000; border: 3px solid #334155;
+            padding: 15px; border-radius: 20px; margin-bottom: 25px;
+            width: 220px; font-family: 'Orbitron', sans-serif;
+            font-size: 3rem; color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink); text-align: center;
+            min-height: 80px; display: flex; align-items: center; justify-content: center;
+        }
+
+        .keypad {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 15px; width: 100%; max-width: 350px;
+        }
+        .key {
+            background: rgba(255,255,255,0.05); border: 2px solid #334155;
+            height: 70px; border-radius: 15px; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 1.8rem; font-weight: 800; cursor: pointer;
+            box-shadow: 0 5px 0 #1e293b;
+        }
+        .key:active { transform: translateY(4px); box-shadow: none; background: rgba(0, 229, 255, 0.1); }
+        .key-del { color: var(--neon-pink); border-color: var(--neon-pink); }
+        .key-go {
+            grid-column: span 3; background: var(--neon-blue); color: #0f172a;
+            font-weight: 900; border: none; height: 80px; border-radius: 20px;
+            font-size: 2rem; box-shadow: 0 8px 0 #0091ea;
+        }
+        .key-go:active { transform: translateY(5px); box-shadow: none; }
+
+        /* --- Overlays --- */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(15px); padding: 20px;
+        }
+        .overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+        
+        .modal {
+            background: #1e293b; padding: 50px; border-radius: 50px;
+            text-align: center; max-width: 480px; width: 95%;
+            border: 8px solid var(--neon-blue);
+            box-shadow: 0 0 100px rgba(0, 229, 255, 0.3);
+        }
+        .modal-icon { font-size: 7rem; display: block; margin-bottom: 25px; }
+        .modal-title { font-size: 3rem; font-weight: 900; color: white; margin-bottom: 15px; font-family: 'Orbitron', sans-serif; }
+        .modal-body { font-size: 1.4rem; color: #94a3b8; margin-bottom: 40px; font-weight: 700; line-height: 1.4; }
+
+        .btn-modal {
+            background: var(--neon-blue); color: #0f172a; border: none;
+            padding: 20px 60px; border-radius: 50px; font-weight: 900;
+            font-size: 1.6rem; cursor: pointer; box-shadow: 0 10px 0 #0091ea;
+            width: 100%;
+        }
+        .btn-modal:active { transform: translateY(6px); box-shadow: none; }
+
+        #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 1100; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media (max-width: 600px) {
+            header { padding: 10px 15px; grid-template-columns: auto 1fr auto; }
+            h1 { font-size: 1.2rem; }
+            .question-text { font-size: 1.8rem; }
+            .key { height: 60px; font-size: 1.4rem; }
+            .key-go { height: 70px; font-size: 1.5rem; }
+            .input-display { width: 180px; font-size: 2.2rem; height: 65px; }
+            .mission-panel { padding: 25px; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+    <div class="header-item-left"><div class="grade-badge">3</div></div>
+    <h1 id="app-title">Time Machine</h1>
+    <div class="header-item-right">
+        <div class="custom-select-wrapper" id="lang-dropdown">
+            <div class="custom-select">
+                <div class="custom-select__trigger">
+                    <span id="current-lang-text">🗺️ ትግርኛ</span>
+                    <span style="font-size:0.8rem">▼</span>
+                </div>
+                <div class="custom-options">
+                    <div class="custom-option" data-value="ti">ትግርኛ</div>
+                    <div class="custom-option" data-value="am">አማርኛ</div>
+                    <div class="custom-option" data-value="en">English</div>
+                    <div class="custom-option" data-value="om">Afan Oromoo</div>
+                    <div class="custom-option" data-value="so">Soomaali</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="score-board">
+        <div class="score-pill">🎖️ <span id="lbl-record">Record</span>: <span id="val-high" style="margin-left:5px">0</span></div>
+        <div class="score-pill">⭐ <span id="lbl-score">Score</span>: <span id="val-score" style="margin-left:5px">0</span></div>
+    </div>
+
+    <div class="mission-panel">
+        <div class="unit-label" id="lbl-sync">Temporal Syncing...</div>
+        <div class="question-text" id="q-text">--</div>
+        <div class="battery-wrap">
+            <div class="battery-fill" id="power-bar"></div>
+        </div>
+    </div>
+
+    <div class="input-display" id="user-input">?</div>
+
+    <div class="keypad">
+        <div class="key" onclick="pressKey('1')">1</div>
+        <div class="key" onclick="pressKey('2')">2</div>
+        <div class="key" onclick="pressKey('3')">3</div>
+        <div class="key" onclick="pressKey('4')">4</div>
+        <div class="key" onclick="pressKey('5')">5</div>
+        <div class="key" onclick="pressKey('6')">6</div>
+        <div class="key" onclick="pressKey('7')">7</div>
+        <div class="key" onclick="pressKey('8')">8</div>
+        <div class="key" onclick="pressKey('9')">9</div>
+        <div class="key key-del" onclick="pressKey('C')">C</div>
+        <div class="key" onclick="pressKey('0')">0</div>
+        <div class="key key-del" onclick="pressKey('BS')">⌫</div>
+        <button class="key-go" id="btn-go" onclick="checkAnswer()">ENGAGE ⚡</button>
+    </div>
+</div>
+
+<!-- Reactions Overlays -->
+<div class="overlay" id="overlay-win">
+    <div class="modal">
+        <span class="modal-icon">⚡🛸</span>
+        <div class="modal-title" id="win-title">ትኽክል!</div>
+        <div class="modal-body" id="win-body">ብጣዕሚ ጽቡቕ! ጀግና ግዘ።</div>
+        <button class="btn-modal" onclick="nextLevel()" id="btn-next">Next Jump ➡</button>
+    </div>
+</div>
+
+<div class="overlay" id="overlay-fail">
+    <div class="modal" style="border-color: var(--neon-pink);">
+        <span class="modal-icon">⚠️</span>
+        <div class="modal-title" id="fail-title">Temporal Error!</div>
+        <div class="modal-body" id="fail-body">እንደገና ፈትን። ሕሳብካ ተጠንቂቕካ ርኣዮ።</div>
+        <button class="btn-modal" onclick="closeFail()" id="btn-retry" style="background:var(--neon-pink); box-shadow: 0 10px 0 #9d174d; color:white;">Retry Link 🔄</button>
+    </div>
+</div>
+
+<script>
+    const translations = {
+        ti: {
+            title: "ምስጢር ግዘ", record: "ዝለዓለ", score: "ነጥቢ", sync: "Temporal Syncing...",
+            engage: "ጀምር ⚡", win: "ትኽክል!", winSub: "ብጣዕሚ ጽቡቕ! ጀግና ።",
+            fail: "ጌጋ!", failSub: "ተጠንቂቕካ ርኣዮ።", next: "ቀፃሊ ➡", retry: "እንደገና ፈትን 🔄",
+            hr: "ሰዓት", min: "ደቒቓ", day: "መዓልቲ", week: "ሰሙን", month: "ወርሒ", year: "ዓመት"
+        },
+        am: {
+            title: "የጊዜ ማሽን", record: "ከፍተኛ", score: "ውጤት", sync: "Temporal Syncing...",
+            engage: "ጀምር ⚡", win: "ትክክል!", winSub: "በጣም ጎበዝ! የጊዜ ጀግና ነህ።",
+            fail: "ስህተት!", failSub: "ሒሳቡን በደንብ ይመልከቱ።", next: "ቀጣይ ➡", retry: "እንደገና ሞክር 🔄",
+            hr: "ሰዓት", min: "ደቂቃ", day: "ቀን", week: "ሳምንት", month: "ወር", year: "አመት"
+        },
+        en: {
+            title: "Time Machine", record: "Record", score: "Score", sync: "Temporal Syncing...",
+            engage: "Engage ⚡", win: "Correct!", winSub: "Excellent! You are a Time Hero.",
+            fail: "Error!", failSub: "Calculation error. Check your math.", next: "Next Jump ➡", retry: "Retry Link 🔄",
+            hr: "Hours", min: "Minutes", day: "Days", week: "Weeks", month: "Months", year: "Years"
+        },
+        om: {
+            title: "Maashinii Yeroo", record: "Rikardii", score: "Qabxii", sync: "Temporal Syncing...",
+            engage: "Eegali ⚡", win: "Sirrii!", winSub: "Baay'ee gaariidha! Goota yerooti.",
+            fail: "Dogoggora!", failSub: "Herrega kee sirriitti ilaali.", next: "Itti Aanu ➡", retry: "Irra deebi'ii 🔄",
+            hr: "Sa'aatii", min: "Daqiiqaa", day: "Guyyaa", week: "Torban", month: "Ji'a", year: "Waggaa"
+        },
+        so: {
+            title: "Mashiinka Waqtiga", record: "Rikoodh", score: "Dhibco", sync: "Temporal Syncing...",
+            engage: "Bilow ⚡", win: "Sax!", winSub: "Aad u fiican! Waxaad tahay geesi waqtiga.",
+            fail: "Khalad!", failSub: "Isku day mar kale.", next: "Xiga ➡", retry: "Mar kale isku day 🔄",
+            hr: "Saacadood", min: "Daqiiqadood", day: "Maalmood", week: "Todobaadyo", month: "Bilood", year: "Sanado"
+        }
+    };
+
+    let currentLang = 'ti';
+    let score = 0;
+    let highScore = localStorage.getItem('timeMachineHigh_V1') || 0;
+    let currentAns = 0;
+    let inputVal = "";
+    let isConfettiActive = false;
+
+    function init() {
+        document.getElementById('val-high').textContent = highScore;
+        updateLanguage();
+        generateProblem();
+    }
+
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('lbl-record').textContent = t.record;
+        document.getElementById('lbl-score').textContent = t.score;
+        document.getElementById('lbl-sync').textContent = t.sync;
+        document.getElementById('btn-go').textContent = t.engage;
+        document.getElementById('win-title').textContent = t.win;
+        document.getElementById('win-body').textContent = t.winSub;
+        document.getElementById('btn-next').textContent = t.next;
+        document.getElementById('fail-title').textContent = t.fail;
+        document.getElementById('fail-body').textContent = t.failSub;
+        document.getElementById('btn-retry').textContent = t.retry;
+        
+        if (currentAns > 0) generateProblem(); // Refresh text
+    }
+
+    function generateProblem() {
+        const tr = translations[currentLang];
+        const types = [
+            { q: tr.hr, a: tr.min, mul: 60, max: 4 },
+            { q: tr.day, a: tr.hr, mul: 24, max: 3 },
+            { q: tr.week, a: tr.day, mul: 7, max: 9 },
+            { q: tr.month, a: tr.day, mul: 30, max: 2 },
+            { q: tr.year, a: tr.month, mul: 12, max: 5 }
+        ];
+
+        const p = types[Math.floor(Math.random() * types.length)];
+        const val = Math.floor(Math.random() * p.max) + 1;
+        
+        currentAns = val * p.mul;
+        document.getElementById('q-text').innerHTML = `${val} <span style="color:var(--neon-pink)">${p.q}</span> = ? <span style="color:var(--neon-pink)">${p.a}</span>`;
+        
+        inputVal = "";
+        document.getElementById('user-input').textContent = "?";
+        document.getElementById('power-bar').style.width = (score % 100) + '%';
+    }
+
+    function pressKey(k) {
+        if (k === 'C') {
+            inputVal = "";
+        } else if (k === 'BS') {
+            inputVal = inputVal.slice(0, -1);
+        } else {
+            if (inputVal.length < 5) inputVal += k;
+        }
+        document.getElementById('user-input').textContent = inputVal || "?";
+        playSound('tick');
+    }
+
+    function checkAnswer() {
+        const val = parseInt(inputVal);
+        if (isNaN(val)) return;
+
+        if (val === currentAns) {
+            score += 20;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('timeMachineHigh_V1', highScore);
+            }
+            updateScoreUI();
+            startConfetti();
+            playSound('win');
+            document.getElementById('power-bar').style.width = '100%';
+            document.getElementById('overlay-win').classList.add('show');
+        } else {
+            playSound('fail');
+            document.getElementById('overlay-fail').classList.add('show');
+        }
+    }
+
+    function closeFail() {
+        document.getElementById('overlay-fail').classList.remove('show');
+        inputVal = "";
+        document.getElementById('user-input').textContent = "?";
+    }
+
+    function nextLevel() {
+        stopConfetti();
+        document.getElementById('overlay-win').classList.remove('show');
+        generateProblem();
+    }
+
+    function restartGame() {
+        score = 0;
+        updateScoreUI();
+        document.getElementById('overlay-fail').classList.remove('show');
+        generateProblem();
+    }
+
+    function updateScoreUI() {
+        document.getElementById('val-score').textContent = score;
+        document.getElementById('val-high').textContent = highScore;
+    }
+
+    // Dropdown Handling
+    const dropdown = document.getElementById('lang-dropdown');
+    const trigger = dropdown.querySelector('.custom-select__trigger');
+    const options = dropdown.querySelectorAll('.custom-option');
+
+    trigger.addEventListener('click', (e) => {
+        dropdown.querySelector('.custom-select').classList.toggle('open');
+        e.stopPropagation();
+    });
+
+    options.forEach(opt => {
+        opt.addEventListener('click', function(e) {
+            e.stopPropagation();
+            currentLang = this.dataset.value;
+            document.getElementById('current-lang-text').textContent = "🗺️ " + this.textContent;
+            dropdown.querySelector('.custom-select').classList.remove('open');
+            updateLanguage();
+        });
+    });
+
+    window.addEventListener('click', () => dropdown.querySelector('.custom-select').classList.remove('open'));
+
+    // Audio Engine
+    function playSound(type) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        if (type === 'win') {
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(523, t); osc.frequency.exponentialRampToValueAtTime(1046, t + 0.15);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+            osc.start(t); osc.stop(t + 0.5);
+        } else if (type === 'tick') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(400, t);
+            gain.gain.setValueAtTime(0.05, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+            osc.start(t); osc.stop(t + 0.1);
+        } else {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); osc.frequency.linearRampToValueAtTime(80, t + 0.4);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.4);
+            osc.start(t); osc.stop(t + 0.4);
+        }
+    }
+
+    // Confetti Rain
+    let pieces = [];
+    function startConfetti() {
+        isConfettiActive = true;
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        pieces = [];
+        for(let i=0; i<100; i++) {
+            pieces.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                vx: (Math.random() - 0.5) * 5,
+                vy: Math.random() * 5 + 3,
+                color: `hsl(${Math.random()*360}, 100%, 70%)`,
+                size: Math.random() * 10 + 5
+            });
+        }
+        function anim() {
+            if (!isConfettiActive) return;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            pieces.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if (p.y > canvas.height) p.y = -20;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            });
+            requestAnimationFrame(anim);
+        }
+        anim();
+    }
+    function stopConfetti() {
+        isConfettiActive = false;
+        const canvas = document.getElementById('confetti-canvas');
+        canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>

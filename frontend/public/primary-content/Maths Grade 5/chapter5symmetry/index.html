@@ -1,0 +1,1095 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Symmetry & Reflection - ሲሜትሪን ፅብራቅን</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700;900&family=Noto+Sans+Ethiopic:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Mirror/Crystal Theme */
+            --primary: #4CC9F0;   /* Sky Blue */
+            --secondary: #7209B7; /* Purple */
+            --accent: #F72585;    /* Pink */
+            --glass: rgba(255, 255, 255, 0.9);
+            --bg-gradient: linear-gradient(135deg, #E0C3FC 0%, #8EC5FC 100%);
+            --text: #2B2D42;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Comic Neue', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 12% 18%, rgba(247, 37, 133, 0.18), transparent 45%),
+                radial-gradient(circle at 88% 18%, rgba(76, 201, 240, 0.18), transparent 45%),
+                radial-gradient(circle at 16% 86%, rgba(114, 9, 183, 0.16), transparent 50%),
+                radial-gradient(circle at 86% 88%, rgba(255, 190, 11, 0.10), transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* --- Header --- */
+        header {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 4px solid var(--secondary);
+            border-radius: 0 0 25px 25px;
+            background-image: linear-gradient(90deg, rgba(76, 201, 240, 0.18), rgba(247, 37, 133, 0.12), rgba(114, 9, 183, 0.14));
+        }
+
+        .grade-badge {
+            background: var(--secondary);
+            color: white;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.5rem;
+            border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: var(--secondary);
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin: 0 15px;
+            text-align: center;
+            text-shadow: 1px 1px 0 white;
+        }
+
+        /* Custom Select */
+        .custom-select-wrapper { position: relative; z-index: 200; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; font-weight: 800; color: var(--text);
+            height: 45px; background: #fff; cursor: pointer;
+            border: 3px solid var(--primary); border-radius: 25px;
+            width: 150px; font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .custom-select__trigger:hover { transform: scale(1.05); }
+        .custom-options {
+            position: absolute; top: 125%; right: 0;
+            background: #fff; border: 3px solid var(--primary);
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            opacity: 0; visibility: hidden; transform: translateY(-15px);
+            padding: 10px; display: flex; flex-direction: column; gap: 5px;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; transform: translateY(0); }
+        .custom-option { padding: 10px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+        .custom-option:hover { background: #E0F7FA; color: var(--secondary); }
+
+        /* --- Container --- */
+        .container {
+            max-width: 1180px;
+            margin: 36px auto;
+            padding: 0 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            position: relative;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            inset: -14px;
+            border-radius: 55px;
+            background:
+                linear-gradient(135deg, rgba(76, 201, 240, 0.16), rgba(247, 37, 133, 0.12), rgba(114, 9, 183, 0.12)),
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.8), transparent 45%),
+                radial-gradient(circle at 80% 70%, rgba(255,255,255,0.6), transparent 50%);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.08);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container > * { position: relative; z-index: 1; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 15px;
+            background: rgba(255,255,255,0.5);
+            padding: 8px;
+            border-radius: 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .tab-btn {
+            padding: 12px 30px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 900;
+            font-size: 1.1rem;
+            cursor: pointer;
+            background: transparent;
+            color: #555;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { transform: translateY(-2px); }
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 0 #AD1457;
+            transform: translateY(-2px);
+        }
+        .tab-btn.active:active { transform: translateY(0); box-shadow: none; }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 40px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            border: 6px solid white;
+            width: 100%;
+            min-height: 550px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            animation: fadeIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .card.active { display: flex; }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 40px;
+            background: linear-gradient(135deg, rgba(76, 201, 240, 0.10), rgba(247, 37, 133, 0.10), rgba(114, 9, 183, 0.08));
+            opacity: 0.60;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 40px;
+            background: radial-gradient(circle at 20% 18%, rgba(255,255,255,0.92), transparent 38%);
+            opacity: 0.50;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .card > * { position: relative; z-index: 1; }
+
+        /* --- Symmetry Mode --- */
+        .shape-display {
+            width: 100%;
+            height: 350px;
+            background: #F8FAFC;
+            border-radius: 30px;
+            border: 4px dashed #CBD5E0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .shape-display::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 30px;
+            background:
+                radial-gradient(circle at 22% 20%, rgba(76, 201, 240, 0.14), transparent 45%),
+                radial-gradient(circle at 82% 70%, rgba(247, 37, 133, 0.12), transparent 48%);
+            pointer-events: none;
+        }
+
+        .sym-shape {
+            transition: transform 0.5s;
+            cursor: pointer;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1));
+        }
+        .sym-shape:hover { transform: scale(1.05); }
+
+        .line-of-symmetry {
+            position: absolute;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+            box-shadow: 0 0 10px var(--accent);
+        }
+        .line-vertical { width: 4px; height: 100%; top: 0; left: 50%; transform: translateX(-50%); border-left: 2px dashed white; }
+        .line-horizontal { height: 4px; width: 100%; top: 50%; left: 0; transform: translateY(-50%); border-top: 2px dashed white; }
+        .show-line .line-of-symmetry { opacity: 1; }
+
+        .controls-grid {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .control-btn {
+            background: white;
+            border: 3px solid #e2e8f0;
+            padding: 15px 25px;
+            border-radius: 20px;
+            font-weight: 800;
+            color: var(--text);
+            cursor: pointer;
+            box-shadow: 0 4px 0 #cbd5e0;
+            font-size: 1rem;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .control-btn:hover { border-color: var(--secondary); background: #E0F7FA; transform: translateY(-3px); }
+        .control-btn.active { border-color: var(--primary); background: #E0F2FE; color: var(--secondary); transform: translateY(-3px); }
+
+        /* --- Reflection Mode (Canvas) --- */
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 350px;
+            background: white;
+            border: 4px solid var(--secondary);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            cursor: crosshair;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        .canvas-container::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            background:
+                radial-gradient(circle at 20% 18%, rgba(76, 201, 240, 0.10), transparent 45%),
+                radial-gradient(circle at 82% 75%, rgba(247, 37, 133, 0.10), transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .canvas-container > * { position: relative; z-index: 1; }
+        
+        canvas { width: 100%; height: 100%; border-radius: 16px; touch-action: none; }
+
+        .mirror-line {
+            position: absolute;
+            top: 0; bottom: 0; left: 50%;
+            width: 4px;
+            background: var(--accent);
+            transform: translateX(-50%);
+            pointer-events: none;
+            border-left: 2px dashed white;
+        }
+
+        .tool-bar {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .color-btn {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .color-btn:hover { transform: scale(1.2); }
+        .color-btn.active { border-color: var(--text); transform: scale(1.1); }
+
+        .btn-clear {
+            background: #EF476F; color: white;
+            border: none; padding: 10px 20px;
+            border-radius: 20px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 0 #9F0E2F;
+        }
+        .btn-clear:hover { transform: translateY(-2px) scale(1.02); }
+        .btn-clear:active { transform: translateY(3px); box-shadow: none; }
+
+        /* --- Quiz Mode --- */
+        .score-board {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .score-pill {
+            background: #fff;
+            padding: 8px 25px;
+            border-radius: 25px;
+            font-weight: 900;
+            font-size: 1.2rem;
+            border: 3px solid #eee;
+            display: flex; gap: 8px; align-items: center;
+            box-shadow: 0 4px 0 #eee;
+        }
+        .score-pill.high { color: #B7791F; border-color: var(--accent); background: #FFFBEB; }
+        .score-pill.curr { color: #06D6A0; border-color: #06D6A0; background: #F0FFF4; }
+
+        .quiz-question {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--text);
+            margin-bottom: 30px;
+            text-align: center;
+            background: #E2E8F0;
+            padding: 15px 30px;
+            border-radius: 20px;
+            width: 100%;
+            border-left: 8px solid var(--secondary);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .opt-btn {
+            background: white;
+            border: 3px solid #E2E8F0;
+            padding: 20px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 0 6px 0 #CBD5E0;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        .opt-btn:hover { border-color: var(--secondary); background: #EBF8FF; transform: translateY(-3px); }
+        .opt-btn:active { transform: translateY(3px); box-shadow: none; }
+        .opt-img { width: 80px; height: 80px; object-fit: contain; pointer-events: none; }
+
+        /* Feedback Overlay */
+        .feedback-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95);
+            border-radius: 40px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            animation: fadeIn 0.3s;
+        }
+        .feedback-overlay.show { display: flex; }
+
+        .fb-icon { font-size: 6rem; margin-bottom: 10px; animation: popIn 0.5s; }
+        .fb-title { font-size: 3rem; font-weight: 900; margin-bottom: 10px; }
+        .fb-sub { font-size: 1.5rem; color: #718096; margin-bottom: 30px; font-weight: bold; }
+        
+        .btn-action {
+            padding: 15px 50px;
+            border-radius: 40px;
+            font-size: 1.5rem; font-weight: 900;
+            color: white; border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+        .btn-next { background: var(--secondary); box-shadow: 0 6px 0 #1D4ED8; }
+        .btn-next:hover { transform: scale(1.05); }
+        .btn-restart { background: var(--primary); box-shadow: 0 6px 0 #C53030; }
+        .btn-restart:hover { transform: scale(1.05); }
+        .btn-action:active { transform: translateY(4px); box-shadow: none; }
+
+        @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        #confetti-canvas.show { opacity: 1; }
+
+        /* SVG & Shapes */
+        .svg-shape { fill: var(--primary); stroke: var(--text); stroke-width: 3px; }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            header { padding: 10px 15px; flex-wrap: wrap; justify-content: center; gap: 10px; }
+            h1 { font-size: 1.4rem; margin: 0 5px; width: 100%; }
+            .grade-badge { width: 45px; height: 45px; font-size: 1.3rem; }
+            .container { padding: 0 15px; margin: 20px auto; }
+            .card { padding: 20px; border-width: 4px; min-height: 480px; border-radius: 30px; }
+            .shape-display, .canvas-container { height: 280px; }
+            .opt-btn { padding: 15px; font-size: 1rem; }
+            .quiz-question { font-size: 1.3rem; padding: 15px; }
+            .tabs { padding: 5px; }
+            .tab-btn { font-size: 1rem; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="grade-badge">5</div>
+    <h1 id="app-title">Symmetry & Reflection</h1>
+    <div class="custom-select-wrapper">
+        <div class="custom-select">
+            <div class="custom-select__trigger">
+                <span id="current-lang-label">🗺️ ትግርኛ</span>
+                <div style="font-size:0.8rem">▼</div>
+            </div>
+            <div class="custom-options">
+                <span class="custom-option selected" data-value="ti">ትግርኛ</span>
+                <span class="custom-option" data-value="am">አማርኛ</span>
+                <span class="custom-option" data-value="en">English</span>
+                <span class="custom-option" data-value="om">Afan Oromoo</span>
+                <span class="custom-option" data-value="so">Soomaali</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchMode('sym')" id="tab-sym">Symmetry 🦋</button>
+        <button class="tab-btn" onclick="switchMode('ref')" id="tab-ref">Reflection 🪞</button>
+        <button class="tab-btn" onclick="switchMode('quiz')" id="tab-quiz">Quiz 🎮</button>
+    </div>
+
+    <!-- SYMMETRY MODE -->
+    <div id="card-sym" class="card active">
+        <div class="shape-display" id="sym-display">
+            <!-- Line of Symmetry -->
+            <div class="line-of-symmetry line-vertical"></div>
+            <!-- Shapes -->
+            <svg width="200" height="200" viewBox="0 0 200 200" id="sym-svg">
+                <!-- Butterfly Path Placeholder -->
+                <path d="M100 180 Q60 180 40 140 Q20 100 60 80 Q20 40 100 40 Q180 40 140 80 Q180 100 160 140 Q140 180 100 180 Z" class="svg-shape" />
+            </svg>
+        </div>
+        
+        <p id="sym-inst" style="text-align:center; font-weight:bold; color:#718096; margin-bottom:10px;">Click the shape to see the Line of Symmetry!</p>
+        <p id="sym-def" style="text-align:center; font-weight:bold; color:#4A5568; margin-top:0; margin-bottom:20px;">Symmetry means two halves match like a mirror.</p>
+
+        <div class="controls-grid">
+            <button class="control-btn active" onclick="setShape('butterfly')">🦋 <span class="lbl-butterfly">Butterfly</span></button>
+            <button class="control-btn" onclick="setShape('heart')">❤️ <span class="lbl-heart">Heart</span></button>
+            <button class="control-btn" onclick="setShape('star')">⭐ <span class="lbl-star">Star</span></button>
+            <button class="control-btn" onclick="setShape('triangle')">🔺 <span class="lbl-triangle">Triangle</span></button>
+        </div>
+    </div>
+
+    <!-- REFLECTION MODE -->
+    <div id="card-ref" class="card">
+        <p id="ref-inst" style="text-align:center; font-weight:bold; color:#718096; margin-bottom:15px;">Draw on the Left, see the Reflection on the Right!</p>
+        
+        <div class="tool-bar">
+            <div class="color-btn active" style="background: #2B2D42;" onclick="setPenColor('#2B2D42', this)"></div>
+            <div class="color-btn" style="background: #FF006E;" onclick="setPenColor('#FF006E', this)"></div>
+            <div class="color-btn" style="background: #3A86FF;" onclick="setPenColor('#3A86FF', this)"></div>
+            <div class="color-btn" style="background: #FFBE0B;" onclick="setPenColor('#FFBE0B', this)"></div>
+            <button class="btn-clear" onclick="clearCanvas()" id="btn-clear">Clear 🗑️</button>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="ref-canvas"></canvas>
+            <div class="mirror-line"></div>
+        </div>
+    </div>
+
+    <!-- QUIZ MODE -->
+    <div id="card-quiz" class="card">
+        <div class="score-board">
+            <div class="score-pill high">🏆 <span id="high-score">0</span></div>
+            <div class="score-pill curr">⭐ <span id="score">0</span></div>
+        </div>
+
+        <div class="quiz-question" id="quiz-q">Which shape has symmetry?</div>
+
+        <div class="options-grid" id="options-container">
+            <!-- Dynamic Options -->
+        </div>
+
+        <!-- Feedback Overlay -->
+        <div class="feedback-overlay" id="feedback">
+            <div class="fb-icon" id="fb-icon">🎉</div>
+            <div class="fb-title" id="fb-title">Correct!</div>
+            <div class="fb-sub" id="fb-sub"></div>
+            
+            <button class="btn-action btn-next" onclick="nextQuestion()" id="btn-next">Next ➡</button>
+            <button class="btn-action btn-restart" onclick="restartGame()" id="btn-restart" style="display:none;">Play Again 🔄</button>
+        </div>
+    </div>
+
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+    // --- Translations ---
+    const translations = {
+        ti: {
+            title: "ሲሜትሪን ፅብራቅን",
+            tabSym: "ሲሜትሪ 🦋",
+            tabRef: "ፅብራቅ 🪞",
+            tabQuiz: "ፈተና 🎮",
+            symInst: "ነቲ ቅርጺ ጠውቁ እሞ መስመር ሲሜትሪ ርኣዩ!",
+            symDef: "ሲሜትሪ ማለት ክልተ ፍርቂ ከም መስተዋት ተመሳሳሊ ምዃኑ እዩ።",
+            refInst: "ብጸጋም ስኣሉ፣ ብየማን ፅብራቁ ርኣዩ!",
+            btnClear: "ኣጽሪ 🗑️",
+            qSym: "ኣየናይ ቅርጺ እዩ ሲሜትሪ ዘለዎ?",
+            qRef: "ኣየናይ እዩ ትኽክል ፅብራቅ?",
+            shapes: { butterfly: "ጽወ", heart: "ልቢ", star: "ኮኾብ", triangle: "ስሉስ ኩርናዕ" },
+            correct: "ትኽክል!",
+            wrong: "ተጋግዩ!",
+            gameover: "ጸወታ ተወዲኡ!",
+            finalScore: "ውፅኢትኩም: ",
+            btnNext: "ቀፃሊ ➡",
+            btnRestart: "እንደገና ጀምር 🔄"
+        },
+        am: {
+            title: "ሲሜትሪ እና ነጸብራቅ",
+            tabSym: "ሲሜትሪ 🦋",
+            tabRef: "ነጸብራቅ 🪞",
+            tabQuiz: "ፈተና 🎮",
+            symInst: "የሲሜትሪ መስመሩን ለማየት ቅርጹን ይንኩ!",
+            symDef: "ሲሜትሪ ማለት ሁለቱ ግማሾች እንደ መስተዋት ተመሳሳይ መሆናቸው ነው።",
+            refInst: "በግራ በኩል ይሳሉ፣ ነጸብራቁን በቀኝ ይመልከቱ!",
+            btnClear: "አጽዳ 🗑️",
+            qSym: "የትኛው ቅርጽ ነው ሲሜትሪ ያለው?",
+            qRef: "የትኛው ነው ትክክለኛ ነጸብራቅ?",
+            shapes: { butterfly: "ቢራቢሮ", heart: "ልብ", star: "ኮከብ", triangle: "ሶስት ማዕዘን" },
+            correct: "ትክክል!",
+            wrong: "ስህተት!",
+            gameover: "ጨዋታው አብቅቷል!",
+            finalScore: "የእርስዎ ውጤት: ",
+            btnNext: "ቀጣይ ➡",
+            btnRestart: "እንደገና ጀምር 🔄"
+        },
+        en: {
+            title: "Symmetry & Reflection",
+            tabSym: "Symmetry 🦋",
+            tabRef: "Reflection 🪞",
+            tabQuiz: "Quiz 🎮",
+            symInst: "Click the shape to see the Line of Symmetry!",
+            symDef: "Symmetry means the two halves match like a mirror.",
+            refInst: "Draw on the Left, see the Reflection on the Right!",
+            btnClear: "Clear 🗑️",
+            qSym: "Which shape has symmetry?",
+            qRef: "Which is the correct reflection?",
+            shapes: { butterfly: "Butterfly", heart: "Heart", star: "Star", triangle: "Triangle" },
+            correct: "Correct!",
+            wrong: "Incorrect!",
+            gameover: "Game Over!",
+            finalScore: "Your Score: ",
+            btnNext: "Next ➡",
+            btnRestart: "Play Again 🔄"
+        },
+        om: {
+            title: "Simeetirii fi Calaqqee",
+            tabSym: "Simeetirii 🦋",
+            tabRef: "Calaqqee 🪞",
+            tabQuiz: "Qormaata 🎮",
+            symInst: "Sarara Simeetirii arguuf bocicha tuqi!",
+            symDef: "Simeetiriin jechuun bocni lamaan akka daawwitiitti walfakkaatu jechuu dha.",
+            refInst: "Bitaa irratti kaasi, mirga irratti calaqqee isaa ilaali!",
+            btnClear: "Qulqulleessi 🗑️",
+            qSym: "Boca kamtu simeetirii qaba?",
+            qRef: "Kamtu calaqqee sirrii dha?",
+            shapes: { butterfly: "Billaacha", heart: "Onnee", star: "Urjii", triangle: "Rog-sadee" },
+            correct: "Sirrii!",
+            wrong: "Dogoggora!",
+            gameover: "Tapha Dhumate!",
+            finalScore: "Qabxii Keessan: ",
+            btnNext: "Itti Aanu ➡",
+            btnRestart: "Irra Deebi'ii 🔄"
+        },
+        so: {
+            title: "Symmetry & Reflection",
+            tabSym: "Symmetry 🦋",
+            tabRef: "Milicsiga 🪞",
+            tabQuiz: "Imtixaan 🎮",
+            symInst: "Riix qaabka si aad u aragto Xariiqda Symmetry-ga!",
+            symDef: "Symmetry waa marka labada dhinac ay isu egyihiin sida muraayad.",
+            refInst: "Bidixda wax ku sawir, midigta ka eeg milicsiga!",
+            btnClear: "Tirtir 🗑️",
+            qSym: "Qaabkee leh symmetry?",
+            qRef: "Kee baa ah milicsiga saxda ah?",
+            shapes: { butterfly: "Balambaallis", heart: "Wadnaha", star: "Xiddig", triangle: "Saddex-xagal" },
+            correct: "Sax!",
+            wrong: "Qaldan!",
+            gameover: "Ciyaartu way dhamaatay!",
+            finalScore: "Dhibcahaaga: ",
+            btnNext: "Xiga ➡",
+            btnRestart: "Dib u billow 🔄"
+        }
+    };
+
+    let currentLang = 'ti';
+    let score = 0;
+    let highScore = localStorage.getItem('symRefHighScore') || 0;
+    let currentQuizType = 'sym'; // 'sym' or 'ref'
+    let currentQuizAnswer = '';
+    let lastQuizKey = '';
+
+    function pickNonRepeating(list) {
+        if (!Array.isArray(list) || list.length === 0) return null;
+        if (list.length === 1) return list[0];
+
+        let item = list[Math.floor(Math.random() * list.length)];
+        let guard = 0;
+        while (item && item.key && item.key === lastQuizKey && guard < 8) {
+            item = list[Math.floor(Math.random() * list.length)];
+            guard++;
+        }
+        if (item && item.key) lastQuizKey = item.key;
+        return item;
+    }
+
+    // --- Audio ---
+    const AudioEngine = {
+        ctx: new (window.AudioContext || window.webkitAudioContext)(),
+        playTone(freq, type, duration) {
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+        },
+        playSuccess() { this.playTone(600, 'sine', 0.1); setTimeout(() => this.playTone(800, 'sine', 0.2), 100); },
+        playError() { this.playTone(200, 'sawtooth', 0.2); setTimeout(() => this.playTone(150, 'sawtooth', 0.3), 150); },
+        playPop() { this.playTone(400, 'sine', 0.05); }
+    };
+
+    // --- Core Logic ---
+    function init() {
+        document.getElementById('high-score').textContent = highScore;
+        updateLanguage();
+        setShape('butterfly');
+        setupCanvas();
+    }
+
+    function switchMode(mode) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-'+mode).classList.add('active');
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+        document.getElementById('card-'+mode).classList.add('active');
+        
+        if (mode === 'ref') {
+            requestAnimationFrame(() => {
+                setupCanvas();
+            });
+        }
+
+        if (mode === 'quiz') nextQuestion();
+    }
+
+    // --- Symmetry Mode ---
+    const shapes = {
+        butterfly: `M100 180 Q60 180 40 140 Q20 100 60 80 Q20 40 100 40 Q180 40 140 80 Q180 100 160 140 Q140 180 100 180 Z`,
+        heart: `M100 180 L100 180 L40 100 Q20 70 50 50 Q80 30 100 70 Q120 30 150 50 Q180 70 160 100 Z`,
+        star: `M100 20 L125 80 L190 80 L140 120 L160 180 L100 140 L40 180 L60 120 L10 80 L75 80 Z`,
+        triangle: `M100 30 L170 170 L30 170 Z`
+    };
+
+    function setShape(name) {
+        // Reset Visuals
+        document.getElementById('sym-display').classList.remove('show-line');
+        document.querySelectorAll('.control-btn').forEach(b => b.classList.remove('active'));
+        
+        // Update SVG
+        const path = document.querySelector('#sym-svg path');
+        path.setAttribute('d', shapes[name]);
+        path.style.fill = getShapeColor(name);
+        path.classList.add('sym-shape');
+        
+        // Highlight Btn
+        // Simple logic to find button by text content or index? 
+        // Let's use onclick mapping implicitly.
+        const btns = document.querySelectorAll('.control-btn');
+        if(name === 'butterfly') btns[0].classList.add('active');
+        if(name === 'heart') btns[1].classList.add('active');
+        if(name === 'star') btns[2].classList.add('active');
+        if(name === 'triangle') btns[3].classList.add('active');
+
+        // Click Handler for Animation
+        path.onclick = () => {
+            document.getElementById('sym-display').classList.add('show-line');
+            AudioEngine.playPop();
+        };
+    }
+
+    function getShapeColor(name) {
+        if(name==='butterfly') return '#FF006E';
+        if(name==='heart') return '#F72585';
+        if(name==='star') return '#FFBE0B';
+        return '#3A86FF';
+    }
+
+    // --- Reflection Mode (Canvas) ---
+    const canvas = document.getElementById('ref-canvas');
+    const ctx = canvas.getContext('2d');
+    let painting = false;
+    let penColor = '#2B2D42';
+    let lastX = 0;
+    let lastY = 0;
+
+    function setupCanvas() {
+        // Resize canvas resolution
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+
+        if (!canvas._pointerHandlersAttached) {
+            canvas.addEventListener('pointerdown', startPosition);
+            canvas.addEventListener('pointermove', draw);
+            canvas.addEventListener('pointerup', endPosition);
+            canvas.addEventListener('pointercancel', endPosition);
+            canvas._pointerHandlersAttached = true;
+        }
+    }
+
+    function startPosition(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const midX = canvas.width / 2;
+
+        // Only allow drawing on left side
+        if (x > midX) return;
+
+        painting = true;
+        lastX = x;
+        lastY = y;
+        ctx.strokeStyle = penColor;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+
+        if (typeof canvas.setPointerCapture === 'function') {
+            canvas.setPointerCapture(e.pointerId);
+        }
+    }
+
+    function endPosition(e) {
+        painting = false;
+        ctx.beginPath();
+        if (e && typeof canvas.releasePointerCapture === 'function') {
+            try { canvas.releasePointerCapture(e.pointerId); } catch(_) {}
+        }
+    }
+
+    function draw(e) {
+        if (!painting) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const midX = canvas.width / 2;
+
+        // Only allow drawing on left side
+        if (x > midX) return;
+
+        ctx.strokeStyle = penColor;
+
+        // Draw Left (smooth lines)
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        // Draw Reflection (Right)
+        const refLastX = midX + (midX - lastX);
+        const refX = midX + (midX - x);
+        ctx.beginPath();
+        ctx.moveTo(refLastX, lastY);
+        ctx.lineTo(refX, y);
+        ctx.stroke();
+
+        lastX = x;
+        lastY = y;
+    }
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        AudioEngine.playPop();
+    }
+
+    function setPenColor(color, btn) {
+        penColor = color;
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        AudioEngine.playPop();
+    }
+
+    // --- Quiz Mode ---
+    function nextQuestion() {
+        document.getElementById('feedback').classList.remove('show');
+        document.getElementById('btn-next').style.display = 'none';
+        document.getElementById('btn-restart').style.display = 'none';
+
+        currentQuizType = Math.random() > 0.5 ? 'sym' : 'ref';
+        const t = translations[currentLang];
+        document.getElementById('quiz-q').textContent = (currentQuizType === 'sym') ? t.qSym : t.qRef;
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+
+        if(currentQuizType === 'sym') {
+            const symQuestions = [
+                {
+                    key: 'sym-kite',
+                    symHTML: `<svg width="90" height="90" viewBox="0 0 100 100"><path d="M50 92 L22 48 Q50 12 78 48 Z" fill="#FF006E"/></svg>`,
+                    asymHTML: `<svg width="90" height="90" viewBox="0 0 100 100"><path d="M18 78 L34 18 L92 46 L66 92 Z" fill="#3A86FF"/></svg>`
+                },
+                {
+                    key: 'sym-heart',
+                    symHTML: `<svg width="90" height="90" viewBox="0 0 100 100"><path d="M50 86 L22 58 Q10 44 22 30 Q36 18 50 32 Q64 18 78 30 Q90 44 78 58 Z" fill="#F72585"/></svg>`,
+                    asymHTML: `<svg width="90" height="90" viewBox="0 0 100 100"><path d="M18 70 Q40 10 64 40 Q88 64 58 86 Q40 98 28 86 Z" fill="#4CC9F0"/></svg>`
+                },
+                {
+                    key: 'sym-triangle',
+                    symHTML: `<svg width="90" height="90" viewBox="0 0 100 100"><path d="M50 14 L86 86 L14 86 Z" fill="#FFBE0B"/></svg>`,
+                    asymHTML: `<svg width="90" height="90" viewBox="0 0 100 100"><path d="M18 22 L84 46 L42 86 Z" fill="#7209B7"/></svg>`
+                },
+                {
+                    key: 'sym-butterfly',
+                    symHTML: `<svg width="90" height="90" viewBox="0 0 100 100"><path d="M50 88 Q30 88 20 70 Q10 50 28 40 Q10 22 50 22 Q90 22 72 40 Q90 50 80 70 Q70 88 50 88 Z" fill="#3A86FF"/></svg>`,
+                    asymHTML: `<svg width="90" height="90" viewBox="0 0 100 100"><path d="M18 80 Q18 40 40 30 Q58 22 80 36 Q66 56 84 78 Q58 96 34 86 Z" fill="#FF006E"/></svg>`
+                }
+            ];
+
+            const q = pickNonRepeating(symQuestions) || symQuestions[0];
+            const isCorrectLeft = Math.random() > 0.5;
+            currentQuizAnswer = isCorrectLeft ? 'A' : 'B';
+
+            const optA = document.createElement('div');
+            optA.className = 'opt-btn';
+            optA.innerHTML = isCorrectLeft ? q.symHTML : q.asymHTML;
+            optA.onclick = () => handleAnswer('A');
+
+            const optB = document.createElement('div');
+            optB.className = 'opt-btn';
+            optB.innerHTML = isCorrectLeft ? q.asymHTML : q.symHTML;
+            optB.onclick = () => handleAnswer('B');
+
+            container.appendChild(optA);
+            container.appendChild(optB);
+
+        } else {
+            const refQuestions = [
+                { key: 'ref-pq', correct: 'p | q', wrong: 'p | p' },
+                { key: 'ref-bd', correct: 'b | d', wrong: 'b | b' },
+                { key: 'ref-34', correct: '3 | Ɛ', wrong: '3 | 3' },
+                { key: 'ref-open', correct: 'C | Ɔ', wrong: 'C | C' }
+            ];
+
+            const q = pickNonRepeating(refQuestions) || refQuestions[0];
+            const isCorrectLeft = Math.random() > 0.5;
+            currentQuizAnswer = isCorrectLeft ? 'A' : 'B';
+
+            const correctHTML = `<div style="font-size:3rem; font-weight:bold; color:#7209B7">${q.correct}</div>`;
+            const wrongHTML = `<div style="font-size:3rem; font-weight:bold; color:#7209B7">${q.wrong}</div>`;
+
+            const optA = document.createElement('div');
+            optA.className = 'opt-btn';
+            optA.innerHTML = isCorrectLeft ? correctHTML : wrongHTML;
+            optA.onclick = () => handleAnswer('A');
+
+            const optB = document.createElement('div');
+            optB.className = 'opt-btn';
+            optB.innerHTML = isCorrectLeft ? wrongHTML : correctHTML;
+            optB.onclick = () => handleAnswer('B');
+
+            container.appendChild(optA);
+            container.appendChild(optB);
+        }
+    }
+
+    function handleAnswer(choice) {
+        const t = translations[currentLang];
+        const overlay = document.getElementById('feedback');
+        const icon = document.getElementById('fb-icon');
+        const title = document.getElementById('fb-title');
+        const sub = document.getElementById('fb-sub');
+        const btnNext = document.getElementById('btn-next');
+        const btnRestart = document.getElementById('btn-restart');
+
+        if (choice === currentQuizAnswer) {
+            score += 10;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('symRefHighScore', highScore);
+            }
+            document.getElementById('score').textContent = score;
+            document.getElementById('high-score').textContent = highScore;
+            
+            AudioEngine.playSuccess();
+            triggerConfetti();
+            
+            icon.textContent = '🎉';
+            title.textContent = t.correct;
+            title.style.color = "var(--success)";
+            sub.textContent = "";
+            btnNext.style.display = 'block';
+            btnRestart.style.display = 'none';
+        } else {
+            AudioEngine.playError();
+            
+            icon.textContent = '❌';
+            title.textContent = t.gameover;
+            title.style.color = "var(--primary)";
+            sub.textContent = t.finalScore + score;
+            
+            btnNext.style.display = 'none';
+            btnRestart.style.display = 'block';
+        }
+        overlay.classList.add('show');
+    }
+
+    function restartGame() {
+        score = 0;
+        document.getElementById('score').textContent = 0;
+        nextQuestion();
+    }
+
+    // --- Translations ---
+    const selectWrapper = document.querySelector('.custom-select-wrapper');
+    const selectCustom = document.querySelector('.custom-select');
+    const options = document.querySelectorAll('.custom-option');
+
+    selectWrapper.addEventListener('click', (e) => {
+        selectCustom.classList.toggle('open'); e.stopPropagation();
+    });
+
+    options.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!this.classList.contains('selected')) {
+                const prev = this.parentNode.querySelector('.custom-option.selected');
+                if(prev) prev.classList.remove('selected');
+                this.classList.add('selected');
+                
+                const label = this.textContent;
+                const value = this.getAttribute('data-value');
+                document.getElementById('current-lang-label').textContent = "🗺️ " + label;
+                selectCustom.classList.remove('open');
+                
+                currentLang = value;
+                updateLanguage();
+            }
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (!selectCustom.contains(e.target)) selectCustom.classList.remove('open');
+    });
+
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('tab-sym').textContent = t.tabSym;
+        document.getElementById('tab-ref').textContent = t.tabRef;
+        document.getElementById('tab-quiz').textContent = t.tabQuiz;
+        document.getElementById('sym-inst').textContent = t.symInst;
+        document.getElementById('sym-def').textContent = t.symDef;
+        document.getElementById('ref-inst').textContent = t.refInst;
+        document.getElementById('btn-clear').textContent = t.btnClear;
+        
+        document.querySelector('.lbl-butterfly').textContent = t.shapes.butterfly;
+        document.querySelector('.lbl-heart').textContent = t.shapes.heart;
+        document.querySelector('.lbl-star').textContent = t.shapes.star;
+        document.querySelector('.lbl-triangle').textContent = t.shapes.triangle;
+        
+        document.getElementById('btn-next').textContent = t.btnNext;
+        document.getElementById('btn-restart').textContent = t.btnRestart;
+    }
+
+    // --- Confetti ---
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.classList.add('show');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const pieces = [];
+        for(let i=0; i<80; i++) {
+            pieces.push({
+                x: canvas.width/2, y: canvas.height/2,
+                vx: (Math.random() - 0.5) * 20,
+                vy: (Math.random() - 0.5) * 20 - 10,
+                c: `hsl(${Math.random()*360}, 100%, 50%)`,
+                r: Math.random() * 6 + 3
+            });
+        }
+        function anim() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            let active = false;
+            pieces.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.5;
+                if(p.y < canvas.height) active = true;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                ctx.fillStyle = p.c;
+                ctx.fill();
+            });
+            if(active) {
+                requestAnimationFrame(anim);
+            } else {
+                canvas.classList.remove('show');
+            }
+        }
+        anim();
+    }
+
+    window.onload = init;
+
+</script>
+</body>
+</html>

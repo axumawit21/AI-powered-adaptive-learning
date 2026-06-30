@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Animal Explorer</title>
+    <style>
+        @font-face {
+            font-family: Supercell;
+            src: url("./assets/Supercell-Magic_5.ttf");
+        }
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+        
+        .card-container {
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+            perspective: 1000px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 150px);
+            min-height: 0;
+            padding: 0 5px;
+            box-sizing: border-box;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 15px 10px 10px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            margin: 0 5px 10px;
+            position: relative;
+            overflow: visible;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            width: calc(100% - 10px);
+            box-sizing: border-box;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+        }
+        
+        .animal-image {
+            width: 100%;
+            flex: 1;
+            min-height: 200px;
+            max-height: 40vh;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin: 10px 0;
+            transition: transform 0.3s;
+        }
+        
+        .animal-name {
+            font-size: 2rem;
+            color: #333;
+            margin: 10px 0;
+            text-transform: capitalize;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            flex-shrink: 0;
+            padding: 10px 5px;
+            position: relative;
+            z-index: 1;
+            gap: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .nav-btn {
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 15px;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .nav-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.7;
+            border-color: transparent;
+        }
+        
+        .counter {
+            text-align: center;
+            color: #666;
+            margin: 5px 0;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .sound-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            margin: 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        
+        .sound-btn:hover {
+            transform: scale(1.1);
+            background: #45a049;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px 5px;
+                overflow-x: hidden;
+            }
+            
+            .header {
+                padding: 10px;
+                margin-bottom: 5px;
+                border-radius: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+                margin: 0;
+            }
+            
+            .header p {
+                font-size: 0.9rem;
+                margin: 5px 0 0;
+            }
+            
+            .card-container {
+                padding: 0;
+                margin: 0 auto;
+                width: 100%;
+                max-height: none;
+            }
+            
+            .card {
+                width: 100%;
+                margin: 0 0 10px;
+                padding: 10px 5px;
+                border-radius: 15px;
+            }
+            
+            .animal-name {
+                font-size: 1.8rem;
+                margin: 5px 0;
+            }
+            
+            .animal-image {
+                min-height: 180px;
+                max-height: 40vh;
+                margin: 5px 0;
+            }
+            
+            .navigation {
+                position: fixed;
+                bottom: 10px;
+                left: 5px;
+                right: 5px;
+                background: white;
+                padding: 10px;
+                border-radius: 50px;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+                z-index: 1000;
+                margin: 0;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+            
+            .nav-btn {
+                padding: 12px 15px;
+                font-size: 1rem;
+                min-width: 120px;
+                margin: 0;
+                flex: 1;
+            }
+            
+            .sound-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+                margin: 5px auto 15px;
+            }
+            
+            .counter {
+                margin-bottom: 70px; /* Space for fixed navigation */
+                font-size: 0.95rem;
+            }
+        }
+        
+        .bounce {
+            animation: bounce 1s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🐾 Animal Explorer 🐾</h1>
+        <p>Listen to the names of these animals!</p>
+    </div>
+    
+    <div class="card-container">
+        <div class="card">
+            <div class="animal-image" id="animalImage"></div>
+            <div class="animal-name" id="animalName"></div>
+            
+            <button class="sound-btn" id="soundBtn" title="Hear the name">
+                🔊
+            </button>
+            
+            <div class="navigation">
+                <button class="nav-btn" id="prevBtn">👈 Previous</button>
+                <button class="nav-btn" id="nextBtn">Next 👉</button>
+            </div>
+            
+            <div class="counter" id="counter">1 of 8</div>
+        </div>
+    </div>
+    
+    <audio src="" id="animalSound" autoplay></audio>
+    
+    <script>
+        const animals = [
+            { name: 'tiger', sound: 'tiger.mp3', image: 'tiger.jpg' },
+            { name: 'wolf', sound: 'wolf.mp3', image: 'wolf.jpg' },
+            { name: 'eagle', sound: 'eagle.mp3', image: 'eagle.jpg' },
+            { name: 'giraffe', sound: 'giraffe.mp3', image: 'giraffe.jpg' },
+            { name: 'zebra', sound: 'zebra.mp3', image: 'zebra.jpg' },
+            { name: 'kangaroo', sound: 'kangaroo.mp3', image: 'kangaroo.jpg' },
+            { name: 'penguin', sound: 'penguin.mp3', image: 'penguin.jpg' },
+            { name: 'dolphin', sound: 'dolphin.mp3', image: 'dolphin.jpg' }
+        ];
+        
+        let currentIndex = 0;
+        const animalImage = document.getElementById('animalImage');
+        const animalName = document.getElementById('animalName');
+        const animalSound = document.getElementById('animalSound');
+        const soundBtn = document.getElementById('soundBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const counter = document.getElementById('counter');
+        
+        // Initialize the first animal
+        function showAnimal(index) {
+            const animal = animals[index];
+            animalImage.style.backgroundImage = `url('./assets/${animal.image}')`;
+            animalName.textContent = animal.name;
+            animalSound.src = `./assets/${animal.sound}`;
+            updateCounter();
+            updateButtons();
+            
+            // Add bounce animation
+            soundBtn.classList.add('bounce');
+            setTimeout(() => soundBtn.classList.remove('bounce'), 1000);
+        }
+        
+        function updateCounter() {
+            counter.textContent = `${currentIndex + 1} of ${animals.length}`;
+        }
+        
+        function updateButtons() {
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex === animals.length - 1;
+        }
+        
+        // Event listeners
+        soundBtn.addEventListener('click', () => {
+            animalSound.currentTime = 0;
+            animalSound.play();
+            soundBtn.classList.add('bounce');
+            setTimeout(() => soundBtn.classList.remove('bounce'), 1000);
+        });
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                showAnimal(currentIndex);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentIndex < animals.length - 1) {
+                currentIndex++;
+                showAnimal(currentIndex);
+            }
+        });
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                currentIndex--;
+                showAnimal(currentIndex);
+            } else if (e.key === 'ArrowRight' && currentIndex < animals.length - 1) {
+                currentIndex++;
+                showAnimal(currentIndex);
+            } else if (e.key === ' ' || e.key === 'Enter') {
+                animalSound.currentTime = 0;
+                animalSound.play();
+                soundBtn.classList.add('bounce');
+                setTimeout(() => soundBtn.classList.remove('bounce'), 1000);
+            }
+        });
+        
+        // Initialize
+        showAnimal(0);
+    </script>
+</body>
+</html>

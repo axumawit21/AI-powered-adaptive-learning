@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>የአማርኛ ፊደላት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans Ethiopic', 'Baloo 2', cursive, sans-serif;
+        }
+
+        html, body {
+            background: linear-gradient(135deg, #84d8ff, #1363db);
+            min-height: 100vh;
+            padding: 10px 20px 20px 20px;
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite alternate;
+        }
+
+
+        .header-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            padding: 4px 10px;
+            margin: 0 auto 8px auto;
+            max-width: 90%;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header {
+            font-size: clamp(14px, 3.2vw, 20px);
+            color: white;
+            text-align: center;
+            font-weight: bolder;
+            margin: 0;
+            padding: 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+            font-family: 'Baloo 2', sans-serif;
+            line-height: 1.3;
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .lang-select {
+            padding: 6px 10px;
+            font-size: 14px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.8);
+            color: #2c3e50;
+            min-width: 150px;
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 1px, 1px);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        @media (min-width: 769px) {
+            .header-row { position: relative; }
+            .header-row .header {
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                width: max-content;
+            }
+            .header-row .lang-select { margin-left: auto; }
+        }
+
+        .instruction {
+            font-size: clamp(10px, 1.6vw, 12px);
+            color: #e0f7ff;
+            font-weight: bolder;
+            text-align: center;
+            margin: 2px 0 4px 0;
+            padding: 0 10px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            line-height: 1.2;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            align-items: start;
+            max-width: 100%;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+
+        .single-letter {
+            background: white;
+            border: 8px solid #ffd700;
+            width: 100%;
+            aspect-ratio: 1/1;
+            max-width: 250px;
+            font-size: 15vw;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a90e2;
+            margin: 0 auto;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .single-letter::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0.3) 0%,
+                rgba(255, 255, 255, 0) 50%
+            );
+            transform: rotate(30deg);
+            pointer-events: none;
+        }
+
+        .display-container {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: space-between;
+            gap: 20px;
+            height: 100%;
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        .image-container {
+            height: 100%;
+            max-height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .image {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .image:hover {
+            transform: scale(1.05);
+        }
+
+
+        
+
+        .alphabet-container {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            gap: 10px;
+            width: 100%;
+            margin-top: 0;
+            padding: 15px 10px;
+            overflow-x: auto;
+            scrollbar-width: none; /* For Firefox */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            scroll-snap-type: x mandatory;
+            scroll-padding: 10px;
+            max-width: 100vw;
+        }
+        
+        .alphabet-container::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .alphabet-container::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .alphabet-container::-webkit-scrollbar {
+            display: none; /* For Chrome, Safari and Opera */
+        }
+
+        .alphabet {
+            background: white;
+            border: 4px solid #4a90e2;
+            min-width: 60px;
+            height: 60px;
+            font-size: 2em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .alphabet:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        .alphabet:active {
+            transform: translateY(0) scale(0.95);
+        }
+
+        .instruction {
+            text-align: center;
+            color: white;
+            margin: 15px 0;
+            font-size: 1.2em;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+
+        @media (max-width: 768px) {
+            body {
+                overflow-x: hidden;
+                padding: 8px 8px 12px 8px;
+            }
+            
+            .header-container {
+                max-width: 100%;
+                padding: 8px 12px;
+            }
+
+            .header-row {
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .lang-select {
+                width: 100%;
+                min-width: 0;
+                font-size: 16px;
+                padding: 10px 12px;
+            }
+            
+            .container {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                padding: 6px;
+                padding-left: 0;
+                width: 100%;
+                margin: 0 auto;
+                box-sizing: border-box;
+            }
+            
+            .single-letter {
+                max-width: 180px;
+                font-size: 24vw;
+                margin: 0 auto;
+            }
+            .display-container {
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .main-content {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .image-container {
+                max-height: 40vh;
+                padding: 6px;
+            }
+            
+            
+
+            .alphabet-container {
+                padding: 12px 8px;
+            }
+            
+            .alphabet {
+                min-width: 56px;
+                height: 56px;
+                font-size: 1.6em;
+                scroll-snap-align: start;
+            }
+        }
+
+        /* Extra-small devices */
+        @media (max-width: 400px) {
+            .container {
+                padding: 4px;
+                gap: 12px;
+            }
+
+            .single-letter {
+                max-width: 150px;
+                font-size: 26vw;
+                margin-left: 6px;
+            }
+
+            .image-container {
+                max-height: 36vh;
+            }
+
+            .alphabet-container {
+                padding: 10px 6px;
+                gap: 8px;
+            }
+
+            .alphabet {
+                min-width: 48px;
+                height: 48px;
+                font-size: 1.4em;
+            }
+
+            
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+
+        @keyframes twinkle {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+
+        .alphabet:nth-child(1) { background-color: #FF9AA2; border-color: #FF6B81; }
+        .alphabet:nth-child(2) { background-color: #FFB7B2; border-color: #FF8C94; }
+        .alphabet:nth-child(3) { background-color: #FFDAC1; border-color: #FFB347; }
+        .alphabet:nth-child(4) { background-color: #E2F0CB; border-color: #77DD77; }
+        .alphabet:nth-child(5) { background-color: #B5EAD7; border-color: #55CBCD; }
+        .alphabet:nth-child(6) { background-color: #C7CEEA; border-color: #A7BFE8; }
+        .alphabet:nth-child(7) { background-color: #D4A5A5; border-color: #C38E9E; }
+    </style>
+</head>
+
+<body>
+    <div class="stars" id="stars"></div>
+    <div class="header-container">
+        <div class="header-row">
+            <div class="header">የአማርኛ ፊደላት</div>
+            <label for="languageSelect" class="visually-hidden">Language</label>
+            <select id="languageSelect" class="lang-select" aria-label="Language">
+                <option value="am" selected>አማርኛ</option>
+                <option value="ti">ትግርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Afaan Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+        <p class="instruction">በምስሉ ላይ በመጫን የፊደሉን ድምፅ ይስማሉ!</p>
+    </div>
+    
+    <div class="container">
+        <div class="single-letter" id="singleLetter">መ</div>
+        
+        <div class="display-container">
+            <div class="main-content">
+                <div class="image-container">
+                    <img class="image" src="assets/car.png" alt="መኪና">
+                </div>
+            </div>
+            <div class="alphabet-container" id="alphabetContainer">
+                <!-- Alphabet buttons will be added here by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <audio class="sound" src="" autoplay></audio>
+
+<script>
+    // Create stars for background
+    function createStars() {
+        const starsContainer = document.getElementById('stars');
+        const starsCount = 50;
+        
+        for (let i = 0; i < starsCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            
+            // Random size between 2px and 5px
+            const size = Math.random() * 3 + 2;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            
+            // Random position
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+            
+            // Random animation duration between 1s and 3s
+            star.style.animationDuration = `${Math.random() * 2 + 1}s`;
+            star.style.animationDelay = `${Math.random() * 2}s`;
+            
+            starsContainer.appendChild(star);
+        }
+    }
+
+
+    // Initialize the game
+    document.addEventListener('DOMContentLoaded', function() {
+        createStars();
+        
+        const letters = ["መ", "ሙ", "ሚ", "ማ", "ሜ", "ም", "ሞ"]; // The alphabet family "መ-ሞ"
+        const fixedImageSrc = "assets/car.png"; // Use the uploaded car image
+        const fixedImageAlt = "መኪና"; // Amharic word for car
+        
+        const singleLetter = document.getElementById('singleLetter');
+        const imageElement = document.querySelector('.image');
+        const soundElement = document.querySelector('.sound');
+        const alphabetContainer = document.getElementById('alphabetContainer');
+
+        const languageSelect = document.getElementById('languageSelect');
+
+        const i18n = {
+            am: {
+                title: 'የአማርኛ ፊደላት',
+                instruction: 'በምስሉ ላይ በመጫን የፊደሉን ድምፅ ይስማሉ!'
+            },
+            ti: {
+                title: 'ፊደላት ትግርኛ',
+                instruction: 'ነቲ ምስሊ ብምጥዋቅ ናይቲ ፊደል ድምጺ ይስምዑ!'
+            },
+            en: {
+                title: 'Amharic Letters',
+                instruction: 'Tap the picture to hear the letter sound!'
+            },
+            om: {
+                title: 'Qubee Amaariffaa',
+                instruction: 'Suuraa tuqi, sagalee qubee dhagayi!'
+            },
+            so: {
+                title: 'Farta Amxaari',
+                instruction: 'Guji sawirka si aad u maqasho codka xarafka!'
+            }
+        };
+
+        function applyLanguage(lang) {
+            const t = i18n[lang] || i18n.am;
+            document.title = t.title;
+            document.querySelector('.header').textContent = t.title;
+            document.querySelector('.instruction').textContent = t.instruction;
+            document.documentElement.setAttribute('lang', lang);
+        }
+
+        const savedLang = localStorage.getItem('app_lang') || 'am';
+        languageSelect.value = savedLang;
+        applyLanguage(savedLang);
+
+        languageSelect.addEventListener('change', (e) => {
+            const lang = e.target.value;
+            localStorage.setItem('app_lang', lang);
+            applyLanguage(lang);
+        });
+        
+        // Create alphabet buttons
+        letters.forEach((letter, index) => {
+            const button = document.createElement('button');
+            button.className = 'alphabet';
+            button.textContent = letter; // Display the specific letter
+            button.setAttribute('data-index', index);
+            button.setAttribute('aria-label', `Select letter ${letter}`);
+            
+            // Add animation class on hover
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px) scale(1.1)';
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+            });
+            
+            // Add click event
+            button.addEventListener('click', function() {
+                const index = this.getAttribute('data-index');
+                updateDisplay(index);
+                
+                // Add click effect
+                this.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 100);
+            });
+            
+            alphabetContainer.appendChild(button);
+        });
+        
+        // Function to update the display
+        function updateDisplay(index) {
+            const letter = letters[index]; // Get the specific letter from the array
+            
+            // Update the single letter display with animation
+            singleLetter.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                singleLetter.style.transform = 'scale(1)';
+            }, 200);
+            
+            singleLetter.textContent = letter; // Display the current letter
+            
+            
+            // Update image with fade effect (always the same car image)
+            imageElement.style.opacity = '0';
+            setTimeout(() => {
+                imageElement.src = fixedImageSrc; // Always set to car.png
+                imageElement.alt = fixedImageAlt; // Alt text for car
+                imageElement.style.opacity = '1';
+            }, 200);
+            
+            // Play sound
+            soundElement.src = `assets/${letter}.mp3`; // Play sound for the current letter
+            soundElement.play().catch(e => console.log("Audio play failed:", e));
+        }
+        
+        // Initialize with the first letter (መ)
+        updateDisplay(0);
+    });
+</script>
+</body>
+</html>

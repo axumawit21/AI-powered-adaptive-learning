@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Solid Shapes Explorer | ፀፃር ምስልታት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0d9488;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --accent: #f59e0b;
+            --neon-blue: #38bdf8;
+            --neon-purple: #a855f7;
+            --bg-grad: linear-gradient(135deg, #020617 0%, #1e1b4b 50%, #1e293b 100%);
+            --glass: rgba(255, 255, 255, 0.95);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: var(--bg-grad);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #fff;
+            overflow-x: hidden;
+            transition: background-color 0.2s;
+        }
+
+        body.wrong-flash { background: #7f1d1d !important; }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+        #wrong-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9500; pointer-events: none;
+        }
+        #wrong-overlay span { 
+            font-size: clamp(12rem, 40vw, 25rem); 
+            color: #fff; 
+            text-shadow: 0 0 80px rgba(239, 68, 68, 0.8); 
+            font-weight: 900; 
+            -webkit-text-stroke: 10px #ef4444;
+            animation: pulseX 0.4s infinite alternate; 
+        }
+        @keyframes pulseX { 
+            from { transform: scale(0.9); opacity: 0.8; } 
+            to { transform: scale(1.1); opacity: 1; } 
+        }
+
+        header {
+            width: 100%;
+            max-width: 1300px;
+            padding: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .badges { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        
+        .stat-pill {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            border: 2px solid #f1f5f9;
+            color: #1e1b4b;
+        }
+        .stat-label { color: #64748b; font-size: 0.9rem; text-transform: uppercase; }
+        .stat-val { color: var(--neon-purple); }
+        .pill-high { border-color: var(--accent); }
+        .pill-high .stat-val { color: var(--accent); }
+
+        .header-controls { display: flex; gap: 15px; align-items: center; }
+        .btn-mute {
+            width: 50px; height: 50px; border-radius: 50%; border: none;
+            background: white; color: #64748b; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .lang-select {
+            padding: 12px 20px;
+            border-radius: 18px;
+            border: 2px solid var(--neon-blue);
+            background: white;
+            font-family: inherit;
+            font-weight: 800;
+            cursor: pointer;
+            outline: none;
+            color: var(--neon-blue);
+            font-size: 1rem;
+        }
+
+        .container {
+            flex: 1;
+            width: 100%;
+            max-width: 1300px;
+            display: flex;
+            padding: 10px 20px;
+            gap: 25px;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .main-title {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+            margin-bottom: 5px;
+        }
+
+        .game-layout {
+            display: flex;
+            flex-direction: row;
+            gap: 30px;
+            width: 100%;
+            align-items: stretch;
+            justify-content: center;
+        }
+
+        .amazing-card {
+            background: var(--glass);
+            backdrop-filter: blur(30px);
+            border: 8px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            border-radius: 50px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+            color: #1e1b4b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .amazing-card::before {
+            content: "";
+            position: absolute;
+            inset: -8px;
+            border-radius: 58px;
+            padding: 8px;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple), var(--secondary), var(--accent));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: -1;
+            animation: borderRotate 6s linear infinite;
+        }
+
+        @keyframes borderRotate {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        .visual-card {
+            flex: 1.2;
+            max-width: 700px;
+            gap: 25px;
+        }
+
+        .interaction-card {
+            flex: 0.8;
+            max-width: 500px;
+            gap: 25px;
+            justify-content: center;
+        }
+
+        .visual-stage {
+            width: 100%;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 35px;
+            padding: 20px;
+            overflow: hidden;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.05);
+        }
+
+        .shape-preview {
+            width: 100%;
+            max-width: 300px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15rem;
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.2));
+            animation: float 4s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .question-txt {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1e293b;
+            padding: 12px 25px;
+            background: #eff6ff;
+            border-radius: 20px;
+            border-bottom: 5px solid #cbd5e1;
+            width: 100%;
+            text-align: center;
+        }
+
+        .choices-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .choice-btn {
+            padding: 22px;
+            background: white;
+            border: 3px solid #f1f5f9;
+            border-radius: 25px;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #1e1b4b;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #e2e8f0;
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .choice-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #e2e8f0; }
+        .choice-btn:hover { background: #f8fafc; color: var(--neon-purple); border-color: var(--neon-purple); }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-15px); } 75% { transform: translateX(15px); } }
+        .shake { animation: shake 0.4s; }
+
+        #success-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.99);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 9990; text-align: center;
+            backdrop-filter: blur(30px);
+        }
+        .success-icon { font-size: 12rem; margin-bottom: 20px; animation: bouncePop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes bouncePop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        @media (max-width: 1024px) {
+            .game-layout { flex-direction: column; align-items: center; }
+            .visual-card, .interaction-card { max-width: 700px; width: 100%; }
+            .visual-stage { min-height: 300px; }
+            .choice-btn { padding: 18px; font-size: 1.4rem; }
+        }
+
+        @media (max-width: 600px) {
+            .main-title { font-size: 1.5rem; }
+            .question-txt { font-size: 1.2rem; }
+            .amazing-card { padding: 25px 15px; border-radius: 40px; }
+            .visual-stage { min-height: 250px; }
+            .shape-preview { font-size: 10rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <div id="wrong-overlay"><span>❌</span></div>
+
+    <header>
+        <div class="badges">
+            <div class="stat-pill"><span class="stat-label" id="txtLvl">ደረጃ</span><span id="valLvl" class="stat-val">1</span></div>
+            <div class="stat-pill pill-high"><span class="stat-label" id="txtHigh">ዝለዓለ</span><span id="valHigh" class="stat-val">0</span></div>
+            <div class="stat-pill">⭐ <span class="stat-label" id="txtScoreLabel">ነጥቢ</span> <span id="valScore" class="stat-val">0</span></div>
+        </div>
+        <div class="header-controls">
+            <button class="btn-mute" id="btnMute" onclick="toggleMute()">🔊</button>
+            <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+                <option value="ti">ትግርኛ</option>
+                <option value="am">አማርኛ</option>
+                <option value="en">English</option>
+                <option value="om">Oromoo</option>
+                <option value="so">Soomaali</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="main-title" id="pageTitle">ፀፃር ምስልታት (Solid Figures)</h1>
+
+        <div class="game-layout">
+            <!-- VISUAL SECTION -->
+            <div class="amazing-card visual-card" id="gameCard">
+                <p class="question-txt" id="txtQuest">እዚ እንታይ ዓይነት ምስሊ እዩ?</p>
+                <div class="visual-stage">
+                    <div id="shapePreview" class="shape-preview">📦</div>
+                </div>
+            </div>
+
+            <!-- INTERACTION SECTION -->
+            <div class="amazing-card interaction-card" id="interactionCard">
+                <div class="choices-grid" id="choicesGrid">
+                    <!-- Choice buttons generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-overlay">
+        <div class="success-icon" id="successEmoji">🏗️✨</div>
+        <h2 id="txtWin" style="font-size: 4rem; color: var(--secondary); text-shadow: 0 0 30px var(--secondary);">ብጣዕሚ ጎበዝ!</h2>
+        <p style="font-size: 2.2rem; color: #94a3b8;" id="txtWinSub">ብትኽክል ፈሊኻዮ ኣለኻ!</p>
+    </div>
+
+    <script>
+        const shapes = [
+            { id: 'cylinder', icon: '🥫', names: { ti: 'ሲሊንደር', am: 'ሲሊንደር', en: 'Cylinder', om: 'Siiliindarii', so: 'Siliindarka' } },
+            { id: 'prism', icon: '🧱', names: { ti: 'ፕሪዝም', am: 'ፕሪዝም', en: 'Prism', om: 'Piriizimii', so: 'Prism' } },
+            { id: 'cube', icon: '🎲', names: { ti: 'ኩብ', am: 'ኩብ', en: 'Cube', om: 'Iskweerii', so: 'Sadex-geesle' } },
+            { id: 'sphere', icon: '⚽', names: { ti: 'ድምብልብሎ', am: 'ድምብልብሎ', en: 'Sphere', om: 'Geengoo', so: 'Goobo' } },
+            { id: 'cone', icon: '🍦', names: { ti: 'ኮን', am: 'ኮን', en: 'Cone', om: 'Koonii', so: 'Coon' } },
+            { id: 'pyramid', icon: '📐', names: { ti: 'ፒራሚድ', am: 'ፒራሚድ', en: 'Pyramid', om: 'Piiraamiidii', so: 'Ahraam' } }
+        ];
+
+        const i18n = {
+            ti: { title: "ፀፃር ምስልታት (Solid Figures)", quest: "እዚ እንታይ ዓይነት ምስሊ እዩ?", win: "ብጣዕሚ ጎበዝ!", winsub: "ብትኽክል ፈሊኻዮ ኣለኻ!", lvl: "ደረጃ", high: "ዝለዓለ", score: "ነጥቢ" },
+            am: { title: "ጠጣር ምስሎች (Solid Figures)", quest: "ይህ ምን ዓይነት ምስል ነው?", win: "ድንቅ ስራ!", winsub: "በትክክል ለይተሃል!", lvl: "ደረጃ", high: "ከፍተኛ", score: "ነጥብ" },
+            en: { title: "Solid Figures", quest: "What shape is this?", win: "Great Job!", winsub: "You identified it correctly!", lvl: "Level", high: "Highest", score: "Score" },
+            om: { title: "Bocoota Jajjaboo (Solid Figures)", quest: "Kun bocicha maaliiti?", win: "Hojii Gaarii!", winsub: "Sirriitti adda baafatteetta!", lvl: "Sadarkaa", high: "Olaanaa", score: "Qabxii" },
+            so: { title: "Qaababka Adag (Solid Figures)", quest: "Waa maxay qaabkani?", win: "Shaqo Fiican!", winsub: "Si sax ah ayaad u aqoonsatay!", lvl: "Heerka", high: "Sare", score: "Dhibco" }
+        };
+
+        let state = {
+            lang: 'ti', score: 0, level: 1,
+            highScore: parseInt(localStorage.getItem('solids_high_score')) || 0,
+            targetShape: null,
+            busy: false, muted: false, particles: []
+        };
+
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function sfx(type) {
+            if (state.muted) return;
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const o = aCtx.createOscillator(), g = aCtx.createGain(), n = aCtx.currentTime;
+            o.connect(g); g.connect(aCtx.destination);
+            if(type === 'win') {
+                o.type = 'triangle'; [523, 659, 783, 1046].forEach((f, i) => o.frequency.setValueAtTime(f, n + i * 0.08));
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.7);
+                o.start(); o.stop(n + 0.7);
+            } else if(type === 'tap') {
+                o.type = 'sine'; o.frequency.setValueAtTime(800, n); o.frequency.exponentialRampToValueAtTime(400, n + 0.1);
+                g.gain.setValueAtTime(0.08, n); g.gain.linearRampToValueAtTime(0, n + 0.1);
+                o.start(); o.stop(n + 0.1);
+            } else {
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(150, n); o.frequency.linearRampToValueAtTime(50, n + 0.3);
+                g.gain.setValueAtTime(0.1, n); g.gain.linearRampToValueAtTime(0, n + 0.3);
+                o.start(); o.stop(n + 0.3);
+            }
+        }
+
+        function generate() {
+            state.busy = false;
+            state.level = Math.floor(state.score / 50) + 1;
+            
+            // Randomly select target shape
+            state.targetShape = shapes[Math.floor(Math.random() * shapes.length)];
+            
+            document.getElementById('shapePreview').innerText = state.targetShape.icon;
+            
+            // Shuffle and pick distractors
+            const distractors = shapes.filter(s => s.id !== state.targetShape.id).sort(() => Math.random() - 0.5).slice(0, 3);
+            const choices = [state.targetShape, ...distractors].sort(() => Math.random() - 0.5);
+
+            const grid = document.getElementById('choicesGrid');
+            grid.innerHTML = '';
+            choices.forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerText = c.names[state.lang];
+                btn.onclick = () => selectChoice(c);
+                grid.appendChild(btn);
+            });
+
+            updateUI();
+        }
+
+        function selectChoice(choice) {
+            if (state.busy) return;
+            sfx('tap');
+            if (choice.id === state.targetShape.id) {
+                handleSuccess();
+            } else {
+                handleError();
+            }
+        }
+
+        function handleSuccess() {
+            state.busy = true;
+            state.score += 10;
+            if (state.score > state.highScore) {
+                state.highScore = state.score;
+                localStorage.setItem('solids_high_score', state.highScore);
+            }
+            sfx('win');
+            burst(400);
+            const party = setInterval(() => burst(100), 200);
+
+            const overlay = document.getElementById('success-overlay');
+            const t = i18n[state.lang];
+            document.getElementById('txtWin').innerText = t.win;
+            document.getElementById('txtWinSub').innerText = t.winsub;
+            
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                clearInterval(party);
+                overlay.style.display = 'none';
+                generate();
+            }, 3000);
+        }
+
+        function handleError() {
+            state.busy = true;
+            sfx('err');
+            document.body.classList.add('wrong-flash');
+            document.getElementById('gameCard').classList.add('shake');
+            document.getElementById('interactionCard').classList.add('shake');
+            document.getElementById('wrong-overlay').style.display = 'flex';
+            
+            setTimeout(() => {
+                document.body.classList.remove('wrong-flash');
+                document.getElementById('gameCard').classList.remove('shake');
+                document.getElementById('interactionCard').classList.remove('shake');
+                document.getElementById('wrong-overlay').style.display = 'none';
+                state.busy = false;
+            }, 1000);
+        }
+
+        function updateUI() {
+            const t = i18n[state.lang];
+            document.getElementById('pageTitle').innerText = t.title;
+            document.getElementById('txtQuest').innerText = t.quest;
+            document.getElementById('valScore').innerText = state.score;
+            document.getElementById('valHigh').innerText = state.highScore;
+            document.getElementById('valLvl').innerText = state.level;
+            document.getElementById('txtLvl').innerText = t.lvl;
+            document.getElementById('txtHigh').innerText = t.high;
+            document.getElementById('txtScoreLabel').innerText = t.score;
+        }
+
+        function changeLang(l) { state.lang = l; generate(); }
+        function toggleMute() { state.muted = !state.muted; document.getElementById('btnMute').innerText = state.muted ? '🔇' : '🔊'; }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            if (c.width !== window.innerWidth) { c.width = window.innerWidth; c.height = window.innerHeight; }
+            const colors = ['#f43f5e', '#6366f1', '#facc15', '#00f2fe', '#ffffff', '#10b981'];
+            for(let i=0; i<count; i++) state.particles.push({
+                x: Math.random() * c.width, y: c.height + 20, vx: (Math.random()-0.5)*40, vy: (Math.random()-0.8)*60,
+                s: Math.random()*12+6, c: colors[Math.floor(Math.random()*colors.length)], 
+                l: 1.8, r: Math.random()*360, rv: (Math.random()-0.5)*30
+            });
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=state.particles.length-1; i>=0; i--){
+                    const p=state.particles[i]; if(p.l>0){
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.85; p.vx *= 0.985; p.l-=0.01; p.r+=p.rv;
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180);
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1.0); x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore();
+                    } else state.particles.splice(i,1);
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = generate;
+    </script>
+</body>
+</html>

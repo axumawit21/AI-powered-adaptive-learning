@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Village Story Quest | ዛንታ ቁሸት</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --c1: #6366F1;
+            --c2: #A855F7;
+            --c3: #EC4899;
+            --c4: #F59E0B;
+            --c5: #10B981;
+            --glass: rgba(255, 255, 255, 0.92);
+            --primary: #6366F1;
+            --success: #10B981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0; padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background: #EEF2FF;
+            /* Dynamic Aurora Gradient */
+            background: 
+                radial-gradient(at 0% 0%, var(--c1) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, var(--c2) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, var(--c3) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, var(--c4) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, var(--c5) 0px, transparent 50%);
+            background-size: 200% 200%;
+            animation: aurora 15s infinite alternate linear;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        @keyframes aurora {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
+        #confetti-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 2000;
+        }
+
+        header {
+            width: 100%; max-width: 1000px; padding: 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+
+        .level-counter {
+            background: white; padding: 12px 30px; border-radius: 50px;
+            font-weight: 800; font-size: 1.3rem; color: var(--primary);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 3px solid #E0E7FF;
+        }
+
+        .score-pill {
+            background: white; padding: 12px 30px; border-radius: 50px;
+            font-weight: 800; font-size: 1.5rem; color: #F59E0B;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            display: flex; align-items: center; gap: 8px;
+            border: 3px solid #FEF3C7;
+        }
+
+        .container {
+            flex: 1; width: 100%; max-width: 900px;
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 20px; gap: 20px; z-index: 10;
+        }
+
+        .story-card {
+            background: var(--glass); 
+            backdrop-filter: blur(30px);
+            border-radius: 50px; padding: 50px 30px; 
+            /* Multi-color Gradient Border */
+            border: 10px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.25);
+            text-align: center; display: flex; flex-direction: column; gap: 30px;
+            animation: slideUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .story-card::before {
+            content: '';
+            position: absolute;
+            top: -10px; bottom: -10px; left: -10px; right: -10px;
+            background: linear-gradient(45deg, var(--c1), var(--c2), var(--c3), var(--c4), var(--c5));
+            z-index: -1;
+            border-radius: 60px;
+            opacity: 0.8;
+        }
+
+        @keyframes slideUp { from { transform: translateY(60px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+        .story-visual {
+            font-size: 6rem; min-height: 140px; display: flex; 
+            justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+        }
+
+        .story-text {
+            font-size: 1.8rem; font-weight: 700; color: #1E293B;
+            line-height: 1.6; padding: 0 15px;
+            text-shadow: 1px 1px 0 white;
+        }
+
+        .ans-area {
+            display: flex; flex-direction: column; align-items: center; gap: 25px;
+        }
+
+        .ans-input-box {
+            width: 100%; max-width: 350px; height: 120px; background: white;
+            border: 8px dashed #CBD5E1; border-radius: 35px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 5rem; font-weight: 900; color: var(--primary);
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .ans-input-box.active { 
+            border-style: solid; 
+            border-color: var(--c2); 
+            box-shadow: 0 0 50px rgba(168, 85, 247, 0.4); 
+            transform: scale(1.05);
+        }
+
+        .keypad {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;
+            width: 100%; max-width: 550px;
+        }
+        .key {
+            height: 80px; background: white; border: none; border-radius: 22px;
+            font-size: 2.2rem; font-weight: 800; color: #475569; cursor: pointer;
+            box-shadow: 0 8px 0 #E2E8F0; transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 4px 0 #E2E8F0; }
+        
+        /* Keypad Color Variety */
+        .key:nth-child(1), .key:nth-child(5), .key:nth-child(9) { color: var(--c1); }
+        .key:nth-child(2), .key:nth-child(6), .key:nth-child(10) { color: var(--c5); }
+        .key:nth-child(3), .key:nth-child(7), .key:nth-child(11) { color: var(--c4); }
+
+        .key.del { background: #FFF1F2; color: #F43F5E; box-shadow: 0 8px 0 #FECDD3; }
+        .key.check { 
+            grid-column: span 4; 
+            background: linear-gradient(to right, var(--c5), #059669); 
+            color: white; 
+            box-shadow: 0 8px 0 #065F46; 
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            height: 95px;
+            margin-top: 10px;
+        }
+        .key.check:active { transform: translateY(6px); box-shadow: 0 2px 0 #065F46; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-15px); } 75% { transform: translateX(15px); } }
+        .shake { animation: shake 0.4s; }
+
+        #success-overlay {
+            position: fixed; inset: 0; 
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95));
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 3000; color: white; text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        #success-overlay h2 { font-size: 5rem; margin-bottom: 20px; text-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+        @media (max-width: 600px) {
+            .story-text { font-size: 1.3rem; }
+            .story-visual { font-size: 3.5rem; min-height: 100px; }
+            .ans-input-box { height: 90px; font-size: 3rem; border-radius: 25px; }
+            .key { height: 65px; font-size: 1.8rem; border-radius: 18px; }
+            .key.check { height: 80px; font-size: 1.8rem; }
+            .story-card { padding: 35px 20px; border-radius: 40px; }
+            h1 { font-size: 1.5rem; }
+            header { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+
+    <header>
+        <div class="level-counter">ሕቶ <span id="curLevel">1</span> / 18</div>
+        <div class="score-pill">⭐ <span id="scoreVal">0</span></div>
+    </header>
+
+    <div class="container">
+        <div class="story-card" id="storyCard">
+            <div class="story-visual" id="storyVisual">🐑🐑🐐🐐🐄🐄🐂🐂</div>
+            <div class="story-text" id="storyText">ኣይተ ተስፋይ ክልተ ኣባጊዕ፣ 2 ኣጣል፣ 2 ኣላሕምን 2 ኣቡዕርን እንተሊዮምዎም ብሓፈሻ ክንደይ እንስሳ ዘቤት ኣለዎም?</div>
+            
+            <div class="ans-area">
+                <div class="ans-input-box active" id="ansBox">?</div>
+                <div class="keypad">
+                    <button class="key" onclick="press(1)">1</button>
+                    <button class="key" onclick="press(2)">2</button>
+                    <button class="key" onclick="press(3)">3</button>
+                    <button class="key del" onclick="press('bk')">⌫</button>
+                    <button class="key" onclick="press(4)">4</button>
+                    <button class="key" onclick="press(5)">5</button>
+                    <button class="key" onclick="press(6)">6</button>
+                    <button class="key" onclick="press(0)">0</button>
+                    <button class="key" onclick="press(7)">7</button>
+                    <button class="key" onclick="press(8)">8</button>
+                    <button class="key" onclick="press(9)">9</button>
+                    <button class="key check" onclick="check()">ፈትሽ (Check)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-overlay">
+        <div style="font-size: 10rem; margin-bottom: 20px;">🏆</div>
+        <h2>ንኡድ ስራሕ!</h2>
+        <p style="font-size: 2rem;">ብትኽክል መሊስካዮ ኣለኻ!</p>
+    </div>
+
+    <script>
+        const scenarios = [
+            { t: "ኣይተ ተስፋይ ክልተ ኣባጊዕ፣ 2 ኣጣል፣ 2 ኣላሕምን 2 ኣቡዕርን እንተሊዮምዎም ብሓፈሻ ክንደይ እንስሳ ዘቤት ኣለዎም?", a: 8, v: "🐑🐑🐐🐐🐄🐄🐂🐂" },
+            { t: "ቅድስቲ ኣብ ወርሒ 2 ጊዜ ሽርሽር ትኸይድ። ኣብ 5 ወርሒ ክንደይ ጊዜ ሽርሽር ትኸይድ?", a: 10, v: "🏖️🏃‍♀️🏖️🏃‍♀️🏖️🏃‍♀️🏖️🏃‍♀️🏖️🏃‍♀️" },
+            { t: "ሓንቲ ላሕሚ 2 ቀርኒ ኣለዋ። 10 ኣላሕም ከክልተ ቀርኒ እንተሃለወን ክንደይ ቀርኒ ኣለወን?", a: 20, v: "🐄🐄🐄🐄🐄🐄🐄🐄🐄🐄" },
+            { t: "ኣብ መንጎ 40 ን 100ን ዘለዉ ርባሓት 10 ዝኾኑ ቁፅርታት ክንደይ እዮም? (50, 60, 70, 80, 90)", a: 5, v: "🔢🔢🔢🔢🔢" },
+            { t: "ኣይተ ገሰሰ ሰለስተ ዓዓሰርተ ብር ኣብ ፀጋማይ ጅቦኦም፣ ኣርባዕተ ዓዓሰርተ ብር ድማ ኣብ የማናይ ጅቦኦም ኣለዎም። ብሓፈሻ ክንደይ ብር ኣለዎም?", a: 70, v: "💵💵💵 + 💵💵💵💵" },
+            { t: "ኣብ ሓደ መቐመጢ መፃሕፍቲ 12 መፃሕፍቲ ኣለዉ። እቲ መቐመጢ መፃሕፍቲ ድማ ሰለስተ ደረጃታት ኣለዉዎ። ኣብ ሕድሕድ ደረጃ ክንደይ መፃሕፍቲ ኣለዉ?", a: 4, v: "📚📚📚📚📚📚📚📚📚📚📚📚" },
+            { t: "ኣብ 2ይ ክፍሊ 27 ተምሃሮ ኣለዉ። ስፖርት ክመሃሩ ኣብ ሰለስተ መስርዕ ብማዕረ እንተተሰሪዖም ኣብ ሕድ ሕድ መስርዕ ክንደይ ተምሃሮ ኣለዉ?", a: 9, v: "🎒🏃🎒🏃🎒🏃" },
+            { t: "ተምሃሮ ካልኣይ ክፍሊ ንውድድር ስፖርት ብ 4 መስርዕ ተሰሪዖም። ኣብ ሕድሕድ መስርዕ 10 ተምሃሮ እንተሊዮም በዝሒ ተምሃሮ ክንደይ እዩ?", a: 40, v: "🤸🤸🤸🤸" },
+            { t: "ኣይተ ከበደ ኣብ ዓመት ክልተ ኩንታል ድኹዒ ይጥቀሙ። ኣብ ኣርባዕተ ዓመት ክንደይ ኩንታል ድኹዒ ይጥቀሙ?", a: 8, v: "🚜🚜🚜🚜" },
+            { t: "ዋጋ ሓደ ኣናናስ ብር 4 እዩ። ኣደይ ለምለም ብብር 20 ክንደይ ኣናናስ ክዕድጋ ይኽእላ?", a: 5, v: "🍍🍍🍍🍍🍍" },
+            { t: "ዕድመ ሃና 10 ዓመት እዩ። ዕድመ ኣቦኣ 4 ዕፅፊ እንተኾይኑ ዕድመኦም ክንደይ እዩ?", a: 40, v: "🎂👨‍👧" },
+            { t: "ሹመንዲ እግሪ ኣባጊዑ እንትቖፅር 24 ኮይኑ። ክንደይ ኣባጊዕ ኣለውኦ?", a: 6, v: "🐑👣🐑👣🐑👣" },
+            { t: "ሓደ ትካል ሓለዋ ጥዕና ኣብ ዝሓለፈ ሰሙን 9 ሕሙማት ዓሶ ተቐቢሉ። ኣብዚ ሰሙን እዚ ድማ 5 ዕፅፊ ሕሙማት ዓሶ ተቐቢሉ። ክንደይ ሕሙማት ተቐቢሉ?", a: 45, v: "🏥💊" },
+            { t: "ንሓደ 2ይ ክፍሊ ተምሃራይ 6 ደፋትር የድልዮ። ን9 ተምሃሮ 2ይ ክፍሊ ብተመሳሳሊ ክንደይ ደፋትር የድልዮም?", a: 54, v: "📓📓📓📓📓" },
+            { t: "ኣርባዕተ ተምሃሮ ብሓፈሻ ክንደይ ኣፃብዕቲ ኣለዎም? (ሓደ ተምሃራይ 10 ኣፃብዕቲ)", a: 40, v: "🖐️🖐️🖐️🖐️" },
+            { t: "ኣደይ ለተገብርኤል 7 ደርሁ ኣለወአን። ሕድ ሕድ ደርሆ ኣብ ሰሙን 6 እንቋቖሖ ተውድቕ። ኣብ ሰሙን ክንደይ እንቋቖሖ ይረኽባ?", a: 42, v: "🐔🥚🥚🥚" },
+            { t: "መረስዕ ኣብ ክዳኑ 5 ጁባ ኣለዎ። ኣብ ሕድሕድ ጁባ ብር 8 እንተቐሚጡ ብሓፈሻ ክንደይ ብር ኣለዎ?", a: 40, v: "💰💰💰💰💰" },
+            { t: "ዋጋ ሓደ ደፍተር ብር 8 እዩ። ዋጋ 9 ደፋትር ክንደይ ብር እዩ?", a: 72, v: "📖🛍️" }
+        ];
+
+        let cur = 0, score = 0, userAns = "", particles = [];
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function sfx(type) {
+            if (aCtx.state === 'suspended') aCtx.resume();
+            const osc = aCtx.createOscillator(), gain = aCtx.createGain(), now = aCtx.currentTime;
+            osc.connect(gain); gain.connect(aCtx.destination);
+            if(type === 'tap') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
+            } else if(type === 'win') {
+                osc.type = 'triangle'; [523, 659, 783].forEach((f, i) => osc.frequency.setValueAtTime(f, now + i * 0.1));
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.6);
+                osc.start(); osc.stop(now + 0.6);
+            } else {
+                osc.type = 'sawtooth'; osc.frequency.value = 150;
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(); osc.stop(now + 0.3);
+            }
+        }
+
+        function loadLevel() {
+            const s = scenarios[cur];
+            document.getElementById('curLevel').innerText = cur + 1;
+            document.getElementById('storyVisual').innerText = s.v;
+            document.getElementById('storyText').innerText = s.t;
+            document.getElementById('ansBox').innerText = "?";
+            userAns = "";
+            document.getElementById('storyCard').classList.remove('shake');
+        }
+
+        function press(n) {
+            sfx('tap');
+            if(n === 'bk') userAns = userAns.slice(0, -1);
+            else if(userAns.length < 3) userAns += n;
+            document.getElementById('ansBox').innerText = userAns || "?";
+        }
+
+        function check() {
+            const s = scenarios[cur];
+            if(parseInt(userAns) === s.a) {
+                score += 10;
+                document.getElementById('scoreVal').innerText = score;
+                sfx('win');
+                burst(500);
+                
+                const overlay = document.getElementById('success-overlay');
+                overlay.style.display = 'flex';
+                
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    cur++;
+                    if(cur < scenarios.length) loadLevel();
+                    else {
+                        cur = 0;
+                        loadLevel();
+                    }
+                }, 2000);
+            } else {
+                sfx('err');
+                document.getElementById('storyCard').classList.add('shake');
+                setTimeout(() => document.getElementById('storyCard').classList.remove('shake'), 500);
+                userAns = "";
+                document.getElementById('ansBox').innerText = "?";
+            }
+        }
+
+        function burst(count = 150) {
+            const c = document.getElementById('confetti-canvas'), x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const colors = ['#6366F1', '#10B981', '#F472B6', '#FBBF24', '#A855F7', '#EC4899', '#ffffff'];
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x: Math.random() * c.width,
+                    y: c.height + 20,
+                    vx: (Math.random() - 0.5) * 45,
+                    vy: (Math.random() - 0.8) * 60,
+                    s: Math.random() * 12 + 6,
+                    c: colors[Math.floor(Math.random() * colors.length)],
+                    l: 1.5, r: Math.random() * 360, rv: (Math.random() - 0.5) * 20
+                });
+            }
+            if(!window.anim) { window.anim=true; (function f(){
+                x.clearRect(0,0,c.width,c.height); let al=false;
+                for(let i=particles.length-1; i>=0; i--){
+                    const p=particles[i]; 
+                    if(p.l > 0){ 
+                        al=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.95; p.vx *= 0.98; p.l-=0.01; p.r+=p.rv; 
+                        x.save(); x.translate(p.x,p.y); x.rotate(p.r*Math.PI/180); 
+                        x.fillStyle=p.c; x.globalAlpha=Math.min(p.l, 1); 
+                        x.fillRect(-p.s/2,-p.s/2,p.s,p.s); x.restore(); 
+                    } else { particles.splice(i,1); }
+                }
+                if(al) requestAnimationFrame(f); else window.anim=false;
+            })()}
+        }
+
+        window.onload = loadLevel;
+    </script>
+</body>
+</html>

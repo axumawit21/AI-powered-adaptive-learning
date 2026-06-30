@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Line Game - ጨረር ቁፅሪ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4CC9F0;
+            --primary-dark: #00b4d8;
+            --secondary: #F72585;
+            --accent: #F9C74F;
+            --success: #43AA8B;
+            --road: #374151;
+            --text: #2d3748;
+            --bg: #ecfdf5;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+
+        body {
+            font-family: 'Comic Neue', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(rgba(236, 253, 245, 0.20), rgba(236, 253, 245, 0.20)),
+                url('assets/bg.jpg');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* --- Header & Custom Dropdown --- */
+        header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 6px solid var(--accent);
+            border-radius: 0 0 20px 20px;
+        }
+
+        .header-left { display: flex; align-items: center; width: 140px; }
+        .header-center { flex-grow: 1; display: flex; justify-content: center; }
+        .header-right { display: flex; justify-content: flex-end; width: 140px; }
+
+        .grade-badge {
+            background: var(--accent);
+            color: #78350f;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            border: 2px solid white;
+        }
+
+        h1 {
+            color: var(--text);
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin: 0;
+            text-align: center;
+        }
+
+        /* --- Improved Custom Dropdown --- */
+        .custom-select-wrapper { 
+            position: relative; 
+            display: inline-block; 
+            cursor: pointer; 
+            z-index: 200; /* Ensure on top */
+        }
+        
+        .custom-select { 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; font-weight: bold; color: var(--text);
+            height: 45px; background: #fff; border: 2px solid var(--primary);
+            border-radius: 25px; box-shadow: 0 4px 0 var(--primary-dark);
+            width: 160px;
+            transition: 0.2s;
+        }
+        
+        .custom-select__trigger:active { 
+            transform: translateY(4px); 
+            box-shadow: none; 
+        }
+
+        .custom-select__options {
+            position: absolute; 
+            top: 120%; 
+            left: 0; 
+            right: 0;
+            background: transparent; 
+            opacity: 0; 
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* GAP ADDED HERE */
+        }
+
+        .custom-select.open .custom-select__options { 
+            opacity: 1; 
+            visibility: visible; 
+            pointer-events: all; 
+            transform: translateY(0);
+        }
+
+        .custom-option { 
+            padding: 12px 15px; 
+            font-weight: 600; 
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+
+        .custom-option:hover { 
+            background-color: var(--bg); 
+            color: var(--primary); 
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .custom-option.selected { 
+            background-color: var(--primary); 
+            color: #fff; 
+            border-color: var(--primary-dark);
+        }
+        
+        .arrow { 
+            width: 10px; height: 10px; 
+            border-left: 2px solid var(--primary); 
+            border-bottom: 2px solid var(--primary); 
+            transform: rotate(-45deg); 
+            transition: 0.3s; margin-top: -5px; 
+        }
+        
+        .custom-select.open .arrow { 
+            transform: rotate(135deg); 
+            margin-top: 5px; 
+        }
+
+        /* --- Game Container --- */
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .card {
+            background: white;
+            border-radius: 30px;
+            padding: 40px 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 5px solid white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .target-box {
+            background: #fdf2f8;
+            border: 3px dashed var(--secondary);
+            border-radius: 20px;
+            padding: 20px;
+            display: inline-block;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .target-label {
+            display: block;
+            color: var(--secondary);
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .target-number {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #2d3748;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
+        }
+
+        .instruction {
+            font-size: 1.4rem;
+            color: #4b5563;
+            margin-bottom: 40px;
+            font-weight: bold;
+        }
+
+        .btn-new {
+            background: var(--accent);
+            color: #78350f;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #d97706;
+            margin-top: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.1s;
+        }
+        .btn-new:active { transform: translateY(5px); box-shadow: none; }
+
+        /* --- Road Visuals --- */
+        .road-scroll {
+            overflow-x: auto;
+            padding: 80px 20px 40px 20px;
+            -ms-overflow-style: none; scrollbar-width: none; 
+            border-radius: 20px;
+            background: rgba(0,0,0,0.02);
+            position: relative;
+        }
+        .road-scroll::-webkit-scrollbar { display: none; }
+
+        .road {
+            position: relative;
+            height: 16px;
+            background: #4a5568;
+            border-radius: 8px;
+            min-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+        }
+
+        /* Road Segments (Clickable Areas) */
+        .segment {
+            flex-grow: 1;
+            height: 70px;
+            margin-top: -27px;
+            position: relative;
+            cursor: pointer;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .segment:hover {
+            background: rgba(67, 170, 139, 0.28);
+            border-color: rgba(67, 170, 139, 0.95);
+            box-shadow: 0 0 0 4px rgba(67, 170, 139, 0.18), 0 12px 22px rgba(0,0,0,0.18);
+            transform: scaleY(1.15);
+        }
+
+        .segment:active {
+            transform: scaleY(1.10);
+            background: rgba(67, 170, 139, 0.38);
+            box-shadow: 0 0 0 4px rgba(67, 170, 139, 0.12), 0 8px 18px rgba(0,0,0,0.16);
+        }
+
+        .segment.correct-range {
+            background: rgba(67, 170, 139, 0.55);
+            border-color: var(--success);
+            box-shadow: 0 0 0 4px rgba(67, 170, 139, 0.22), 0 0 22px rgba(67, 170, 139, 0.55);
+            transform: scaleY(1.15);
+        }
+
+        .segment.correct-range:hover,
+        .segment.correct-range:active {
+            background: rgba(67, 170, 139, 0.60);
+            border-color: var(--success);
+            box-shadow: 0 0 0 4px rgba(67, 170, 139, 0.26), 0 0 28px rgba(67, 170, 139, 0.60);
+            transform: scaleY(1.15);
+        }
+
+        .segment.wrong-range {
+            animation: shake 0.5s;
+            background: rgba(247, 37, 133, 0.2);
+            border-color: var(--secondary);
+        }
+
+        /* Milestones (Ticks) */
+        .milestone-wrapper {
+            position: relative;
+            width: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 6;
+            pointer-events: auto;
+        }
+
+        .tick {
+            width: 6px;
+            height: 24px;
+            background: #2d3748;
+            border-radius: 3px;
+            pointer-events: none;
+        }
+
+        .tick-label {
+            position: absolute;
+            top: 30px;
+            background: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #4a5568;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            pointer-events: auto;
+        }
+
+        .tick-label:hover {
+            background: var(--accent);
+            color: #78350f;
+            border-color: var(--accent);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+            transform: translateY(-2px) scale(1.06);
+        }
+
+        .tick-label:focus-visible {
+            outline: 3px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Car */
+        .car {
+            position: absolute;
+            top: -55px;
+            left: 0;
+            width: 70px;
+            height: 40px;
+            background: var(--secondary);
+            border-radius: 10px 10px 4px 4px;
+            z-index: 20;
+            display: none;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            transition: left 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-origin: center bottom;
+        }
+        .car::before { 
+            content: ''; position: absolute; top: 5px; left: 10px; right: 5px; height: 15px;
+            background: #cffafe; border-radius: 5px;
+        }
+        .car::after { 
+            content: ''; position: absolute; bottom: -8px; left: 8px; width: 14px; height: 14px;
+            background: #1a202c; border-radius: 50%;
+            box-shadow: 40px 0 0 #1a202c;
+            border: 3px solid #718096;
+            animation: spin 0.5s linear infinite;
+        }
+        
+        .car-visible { display: block; animation: carArrive 1s ease-out; }
+        .car-visible::after { animation: none; } /* Stop spinning when stopped */
+
+        /* Feedback */
+        .feedback-area {
+            min-height: 60px;
+            margin-top: 20px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s;
+        }
+        .feedback-area.show { opacity: 1; transform: translateY(0); }
+        .msg-correct { color: var(--success); }
+        .msg-wrong { color: var(--secondary); }
+
+        /* Confetti Container */
+        #confetti-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 50;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px; height: 10px;
+            background: var(--primary);
+            animation: fall linear forwards;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+            75% { transform: translateX(-8px); }
+        }
+        
+        @keyframes carArrive {
+            0% { transform: scale(0) translateY(-20px) rotate(-10deg); opacity: 0; }
+            60% { transform: scale(1.1) translateY(0) rotate(5deg); opacity: 1; }
+            80% { transform: scale(0.95) rotate(-2deg); }
+            100% { transform: scale(1) rotate(0); }
+        }
+
+        @keyframes fall {
+            to { transform: translateY(500px) rotate(720deg); opacity: 0; }
+        }
+
+        /* Mobile */
+        @media (max-width: 850px) {
+            header { padding: 1rem; flex-wrap: wrap; gap: 10px; }
+            .header-center { order: 3; width: 100%; margin-top: 5px; }
+            .header-left, .header-right { width: auto; }
+            .target-number { font-size: 2.5rem; }
+            .segment { height: 80px; margin-top: -32px; } /* Larger touch area */
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <div class="grade-badge">5</div>
+    </div>
+    <div class="header-center">
+        <h1 id="header-title">ጨረር ቁፅሪ</h1>
+    </div>
+    <div class="header-right">
+        <!-- Custom Dropdown -->
+        <div class="custom-select-wrapper">
+            <div class="custom-select">
+                <div class="custom-select__trigger">
+                    <span id="current-lang-label">🗺️ ትግርኛ</span>
+                    <div class="arrow"></div>
+                </div>
+                <div class="custom-select__options">
+                    <span class="custom-option selected" data-value="ti">ትግርኛ</span>
+                    <span class="custom-option" data-value="am">አማርኛ</span>
+                    <span class="custom-option" data-value="en">English</span>
+                    <span class="custom-option" data-value="om">Afan Oromoo</span>
+                    <span class="custom-option" data-value="so">Soomaali</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="card">
+        <div id="confetti-container"></div>
+        <div class="target-box">
+            <span class="target-label" id="lbl-target">ዝተወሃበ ቁፅሪ (Target):</span>
+            <div class="target-number" id="target-num">...</div>
+        </div>
+
+        <p class="instruction" id="instruction">እዚ ቁፅሪ ኣበይ ይርከብ? ኣብቲ መስመር ጠውቁ።</p>
+
+        <!-- Road Game Area -->
+        <div class="road-scroll">
+            <div class="road" id="road-track">
+                <!-- JS will inject segments and ticks here -->
+                <div class="car" id="game-car"></div>
+            </div>
+        </div>
+
+        <div class="feedback-area" id="feedback"></div>
+
+        <button class="btn-new" onclick="newGame()">
+            <span style="font-size:1.5rem">🎲</span> 
+            <span id="btn-new">ሓዲሽ ቁፅሪ</span>
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- Audio Engine ---
+    const AudioEngine = {
+        ctx: new (window.AudioContext || window.webkitAudioContext)(),
+        
+        playTone(freq, type, duration, startTime = 0) {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            
+            const now = this.ctx.currentTime + startTime;
+            osc.start(now);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+            osc.stop(now + duration);
+        },
+
+        playCorrect() {
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+            // High pitch arpeggio
+            this.playTone(523.25, 'sine', 0.1, 0);   // C5
+            this.playTone(659.25, 'sine', 0.1, 0.1); // E5
+            this.playTone(783.99, 'sine', 0.3, 0.2); // G5
+        },
+
+        playWrong() {
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+            // Low pitch buzz
+            this.playTone(150, 'sawtooth', 0.2, 0);
+            this.playTone(100, 'sawtooth', 0.3, 0.1);
+        }
+    };
+
+    const translations = {
+        ti: {
+            title: "ጨረር ቁፅሪ",
+            label: "ዝተወሃበ ቁፅሪ:",
+            inst: "እዚ ቁፅሪ ኣበይ ይርከብ? ኣብቲ ትክክል ቦታ ጠውቁ።",
+            newBtn: "ሓዲሽ ቁፅሪ",
+            correct: "ትኽክል! {n} ኣብ መንጎ {a} ን {b} ን ይርከብ።",
+            wrong: "ጌጋ! እንደገና ፈትን።",
+            langName: "ትግርኛ"
+        },
+        am: {
+            title: "የቁጥር መስመር",
+            label: "የተሰጠው ቁጥር:",
+            inst: "ይህ ቁጥር የት ይገኛል? በትክክለኛው ቦታ ላይ ይጫኑ።",
+            newBtn: "አዲስ ቁጥር",
+            correct: "ትክክል! {n} በ {a} እና {b} መካከል ይገኛል።",
+            wrong: "ስህተት! እንደገና ሞክር።",
+            langName: "አማርኛ"
+        },
+        en: {
+            title: "Number Line",
+            label: "Target Number:",
+            inst: "Where does this number belong? Click the road.",
+            newBtn: "New Number",
+            correct: "Correct! {n} is between {a} and {b}.",
+            wrong: "Wrong! Try again.",
+            langName: "English"
+        },
+        om: {
+            title: "Sarara Lakkoofsaa",
+            label: "Lakkoofsa Kenname:",
+            inst: "Lakkoofsi kun eessa jira? Bakka sirrii tuqi.",
+            newBtn: "Lakkoofsa Haaraa",
+            correct: "Sirrii! {n} gidduu {a} fi {b} argama.",
+            wrong: "Dogoggora! Irra deebi'i.",
+            langName: "Afan Oromoo"
+        },
+        so: {
+            title: "Xariiqda Tirada",
+            label: "Tirada La Rabo:",
+            inst: "Xagee bay tiradani ku jirtaa? Guji wadada.",
+            newBtn: "Tiro Cusub",
+            correct: "Sax! {n} waxay u dhaxaysaa {a} iyo {b}.",
+            wrong: "Qaldan! Isku day mar kale.",
+            langName: "Soomaali"
+        }
+    };
+
+    let currentLang = 'ti';
+    let targetNumber = 0;
+    let roadStart = 0;
+    let interval = 1000;
+    let isSolved = false;
+
+    function newGame() {
+        isSolved = false;
+        document.getElementById('feedback').className = 'feedback-area'; // Hide
+        document.getElementById('game-car').classList.remove('car-visible');
+        document.getElementById('game-car').style.display = 'none';
+        document.getElementById('confetti-container').innerHTML = ''; // Clear confetti
+
+        // 1. Randomize Range Base
+        const bases = [1000, 5000, 10000, 25000, 50000, 80000];
+        const baseStart = bases[Math.floor(Math.random() * bases.length)];
+        
+        // 2. Define Road Range (Display 6 intervals of 1000)
+        roadStart = baseStart;
+        const segmentsCount = 6;
+        
+        // 3. Pick Target inside one of the segments
+        const validSegmentIndex = Math.floor(Math.random() * (segmentsCount)); 
+        const minVal = roadStart + (validSegmentIndex * interval); 
+        const maxVal = minVal + interval;
+        
+        // Random number inside that segment
+        targetNumber = Math.floor(Math.random() * (interval - 20)) + minVal + 10;
+        
+        document.getElementById('target-num').textContent = targetNumber.toLocaleString();
+
+        renderRoad(segmentsCount);
+    }
+
+    function renderRoad(count) {
+        const track = document.getElementById('road-track');
+        const car = document.getElementById('game-car');
+        track.innerHTML = '';
+        track.appendChild(car);
+
+        for (let i = 0; i <= count; i++) {
+            const val = roadStart + (i * interval);
+            
+            // Render Tick
+            const tickWrapper = document.createElement('div');
+            tickWrapper.className = 'milestone-wrapper';
+            tickWrapper.innerHTML = `
+                <div class="tick"></div>
+                <div class="tick-label">${val.toLocaleString()}</div>
+            `;
+            track.appendChild(tickWrapper);
+
+            // Render Segment
+            if (i < count) {
+                const segment = document.createElement('div');
+                segment.className = 'segment';
+                segment.dataset.min = val;
+                segment.dataset.max = val + interval;
+                segment.onclick = () => handleSegmentClick(segment, val, val + interval);
+                track.appendChild(segment);
+            }
+        }
+    }
+
+    function handleSegmentClick(element, min, max) {
+        if (isSolved) return;
+
+        if (targetNumber > min && targetNumber < max) {
+            // --- CORRECT ---
+            isSolved = true;
+            AudioEngine.playCorrect();
+            triggerConfetti();
+            
+            element.classList.add('correct-range');
+            
+            // Move Car visual
+            const car = document.getElementById('game-car');
+            car.style.display = 'block';
+            
+            const roadRect = document.getElementById('road-track').getBoundingClientRect();
+            const segRect = element.getBoundingClientRect();
+            
+            // Calculate precise position based on ratio
+            const ratio = (targetNumber - min) / interval;
+            const preciseLeft = (segRect.left - roadRect.left) + (segRect.width * ratio) - 35; // 35 is half car width
+
+            car.style.left = `${preciseLeft}px`;
+            
+            // Force reflow
+            void car.offsetWidth; 
+            car.classList.add('car-visible');
+
+            // Feedback Text
+            const t = translations[currentLang];
+            const msg = t.correct
+                .replace('{n}', targetNumber.toLocaleString())
+                .replace('{a}', min.toLocaleString())
+                .replace('{b}', max.toLocaleString());
+            
+            const fb = document.getElementById('feedback');
+            fb.textContent = msg;
+            fb.className = 'feedback-area show msg-correct';
+
+        } else {
+            // --- WRONG ---
+            AudioEngine.playWrong();
+            element.classList.add('wrong-range');
+            setTimeout(() => element.classList.remove('wrong-range'), 500);
+            
+            const fb = document.getElementById('feedback');
+            fb.textContent = translations[currentLang].wrong;
+            fb.className = 'feedback-area show msg-wrong';
+        }
+    }
+
+    // --- Visual Effects ---
+    function triggerConfetti() {
+        const container = document.getElementById('confetti-container');
+        const colors = ['#4CC9F0', '#F72585', '#F9C74F', '#43AA8B'];
+        const emojis = ['🌸', '🌼', '🌺', '✨', '💐'];
+        
+        for(let i = 0; i < 80; i++) {
+            const isEmoji = Math.random() < 0.7;
+            const conf = document.createElement(isEmoji ? 'span' : 'div');
+            conf.className = 'confetti';
+            conf.style.left = Math.random() * 100 + '%';
+
+            const dur = (Math.random() * 1.6 + 1.8);
+            conf.style.animationDuration = dur.toFixed(2) + 's';
+            conf.style.animationDelay = (Math.random() * 0.15).toFixed(2) + 's';
+
+            if (isEmoji) {
+                conf.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                conf.style.background = 'transparent';
+                conf.style.fontSize = (Math.random() * 14 + 18).toFixed(0) + 'px';
+                conf.style.transform = `rotate(${Math.floor(Math.random() * 360)}deg)`;
+            } else {
+                conf.style.background = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.width = (Math.random() * 10 + 6) + 'px';
+                conf.style.height = (Math.random() * 10 + 6) + 'px';
+                conf.style.borderRadius = (Math.random() * 8 + 2) + 'px';
+            }
+
+            container.appendChild(conf);
+            setTimeout(() => conf.remove(), Math.ceil((dur + 0.3) * 1000));
+        }
+    }
+
+    // --- Dropdown Logic ---
+    const selectWrapper = document.querySelector('.custom-select-wrapper');
+    const selectCustom = document.querySelector('.custom-select');
+    const options = document.querySelectorAll('.custom-option');
+
+    selectWrapper.addEventListener('click', function() {
+        selectCustom.classList.toggle('open');
+    });
+
+    options.forEach(option => {
+        option.addEventListener('click', function() {
+            if (!this.classList.contains('selected')) {
+                this.parentNode.querySelector('.custom-option.selected').classList.remove('selected');
+                this.classList.add('selected');
+                const label = this.textContent;
+                const value = this.getAttribute('data-value');
+                document.getElementById('current-lang-label').textContent = "🗺️ " + label;
+                currentLang = value;
+                updateText();
+            }
+        });
+    });
+
+    window.addEventListener('click', function(e) {
+        if (!selectCustom.contains(e.target)) {
+            selectCustom.classList.remove('open');
+        }
+    });
+
+    function updateText() {
+        const t = translations[currentLang];
+        document.getElementById('header-title').textContent = t.title;
+        document.getElementById('lbl-target').textContent = t.label;
+        document.getElementById('instruction').textContent = t.inst;
+        document.getElementById('btn-new').textContent = t.newBtn;
+        document.getElementById('feedback').className = 'feedback-area'; // Reset feedback on lang change
+    }
+
+    // Initial Load
+    window.onload = newGame;
+
+</script>
+</body>
+</html>

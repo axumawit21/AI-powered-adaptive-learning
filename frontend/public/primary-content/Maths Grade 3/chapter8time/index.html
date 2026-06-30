@@ -1,0 +1,538 @@
+
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Interactive Clock - ሰዓት ጸወታ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #e0f2fe;
+            --primary: #0ea5e9;
+            --secondary: #f43f5e;
+            --clock-body: #fbbf24;
+            --clock-face: #ffffff;
+            --hand-hour: #ef4444;
+            --hand-min: #2563eb;
+            --text-dark: #0f172a;
+            --white: #ffffff;
+            --shadow: rgba(15, 23, 42, 0.1);
+        }
+
+        * { box-sizing: border-box; transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(var(--primary) 0.5px, transparent 0.5px),
+                radial-gradient(var(--primary) 0.5px, var(--bg-color) 0.5px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            user-select: none;
+            touch-action: none;
+        }
+
+        /* --- Header --- */
+        header {
+            width: 100%;
+            padding: 15px 30px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            border-bottom: 5px solid var(--primary);
+            box-shadow: 0 4px 20px var(--shadow);
+            position: sticky; top: 0;
+        }
+
+        .header-item-left { display: flex; justify-content: flex-start; }
+        .header-item-right { display: flex; justify-content: flex-end; }
+
+        .grade-badge {
+            background: var(--secondary); color: white; width: 55px; height: 55px;
+            border-radius: 15px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.8rem; border: 3px solid white;
+            box-shadow: 0 5px 0 #9f1239; transform: rotate(-5deg);
+        }
+
+        h1 { margin: 0; color: var(--primary); font-size: 1.8rem; font-weight: 900; letter-spacing: -1px; text-align: center; }
+
+        /* Custom Dropdown */
+        .custom-select-wrapper { position: relative; display: inline-block; cursor: pointer; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select__trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 18px; font-weight: 800; color: var(--primary);
+            height: 45px; background: white; border-radius: 22px;
+            width: 170px; border: 2px solid var(--primary);
+            box-shadow: 0 4px 0 rgba(14, 165, 233, 0.1);
+        }
+        .custom-options {
+            position: absolute; top: 115%; right: 0; left: 0;
+            background: white; opacity: 0; visibility: hidden;
+            pointer-events: none; transform: translateY(-10px);
+            transition: all 0.3s ease; display: flex; flex-direction: column;
+            border-radius: 15px; padding: 6px; box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border: 1px solid #eee; z-index: 200;
+        }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; pointer-events: all; transform: translateY(0); }
+        .custom-option { padding: 10px; border-radius: 10px; cursor: pointer; font-weight: 600; color: #444; }
+        .custom-option:hover { background: #f0f9ff; color: var(--primary); }
+
+        /* --- Main Content --- */
+        .container {
+            flex: 1; width: 100%; max-width: 1200px;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px; z-index: 10;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        /* Challenge Display */
+        .challenge-card {
+            background: white; padding: 20px 40px; border-radius: 40px;
+            box-shadow: 0 15px 30px var(--shadow); border: 4px solid var(--primary);
+            text-align: center; margin-bottom: 10px; animation: float 3s infinite ease-in-out;
+        }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .challenge-label { font-size: 1.1rem; color: #64748b; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+        .challenge-time { font-size: 4rem; font-weight: 900; color: var(--text-dark); line-height: 1; }
+
+        /* --- Clock Visual --- */
+        .clock-wrapper {
+            position: relative; width: 500px; height: 500px;
+            filter: drop-shadow(0 30px 60px rgba(15, 23, 42, 0.2));
+            transition: transform 0.2s;
+        }
+        .ringing { animation: ring 0.1s linear infinite; }
+        @keyframes ring { 0% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } 100% { transform: rotate(-1deg); } }
+
+        .cls-body { fill: var(--clock-body); stroke: #d97706; stroke-width: 6px; }
+        .cls-face { fill: var(--clock-face); stroke: #f1f5f9; stroke-width: 3px; }
+        .cls-num { font-family: 'Fredoka', sans-serif; font-weight: 900; font-size: 28px; fill: #475569; text-anchor: middle; dominant-baseline: middle; }
+        
+        .hand-container { cursor: pointer; transform-origin: 250px 250px; }
+        .hand-hour { fill: var(--hand-hour); stroke: #991b1b; stroke-width: 3px; rx: 8; }
+        .hand-min { fill: var(--hand-min); stroke: #1e40af; stroke-width: 3px; rx: 6; }
+        .center-nut { fill: #1e293b; stroke: #fff; stroke-width: 3px; }
+
+        /* Character Details */
+        .eye-white { fill: white; stroke: #1e293b; stroke-width: 3px; }
+        .eye-pupil { fill: #1e293b; animation: blink 4s infinite; }
+        @keyframes blink { 0%, 96% { transform: scaleY(1); } 98% { transform: scaleY(0.1); } 100% { transform: scaleY(1); } }
+
+        /* --- Buttons --- */
+        .btn-group {
+            display: flex; gap: 15px; width: 100%; max-width: 600px;
+            margin-top: 20px;
+        }
+        .btn-action {
+            flex: 1; padding: 20px; border-radius: 40px;
+            font-size: 1.4rem; font-weight: 900; color: white;
+            border: none; cursor: pointer;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.1);
+        }
+        .btn-action:active { transform: translateY(4px); box-shadow: none; }
+        .btn-check { background: #22c55e; box-shadow: 0 8px 0 #15803d; }
+        .btn-show { background: #8b5cf6; box-shadow: 0 8px 0 #6d28d9; }
+        .btn-next { background: var(--primary); box-shadow: 0 8px 0 #0369a1; }
+
+        /* --- Overlays --- */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(12px); padding: 20px;
+        }
+        .overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+        
+        .modal {
+            background: white; padding: 50px; border-radius: 50px;
+            text-align: center; max-width: 450px; width: 95%;
+            border: 10px solid var(--primary);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        }
+        .modal-icon { font-size: 7rem; display: block; margin-bottom: 20px; }
+        .modal-title { font-size: 3rem; font-weight: 900; color: var(--text-dark); margin-bottom: 15px; }
+        .modal-body { font-size: 1.5rem; color: #555; margin-bottom: 35px; font-weight: 700; line-height: 1.4; }
+
+        .btn-modal {
+            background: var(--primary); color: white; border: none;
+            padding: 18px 50px; border-radius: 40px; font-weight: 900;
+            font-size: 1.6rem; cursor: pointer; box-shadow: 0 8px 0 #0369a1;
+            width: 100%;
+        }
+        .btn-modal:active { transform: translateY(4px); box-shadow: none; }
+
+        #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 1100; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media (max-width: 600px) {
+            header { padding: 10px 15px; grid-template-columns: auto 1fr auto; }
+            h1 { font-size: 1.1rem; }
+            .grade-badge { width: 45px; height: 45px; font-size: 1.4rem; }
+            .clock-wrapper { width: 280px; height: 280px; }
+            .challenge-time { font-size: 2.8rem; }
+            .btn-action { font-size: 1rem; padding: 15px 5px; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+    <div class="header-item-left"><div class="grade-badge">3</div></div>
+    <h1 id="app-title">Interactive Clock</h1>
+    <div class="header-item-right">
+        <div class="custom-select-wrapper" id="lang-dropdown">
+            <div class="custom-select">
+                <div class="custom-select__trigger">
+                    <span id="current-lang-text">🗺️ ትግርኛ</span>
+                    <span style="font-size:0.8rem">▼</span>
+                </div>
+                <div class="custom-options">
+                    <div class="custom-option" data-value="ti">ትግርኛ</div>
+                    <div class="custom-option" data-value="am">አማርኛ</div>
+                    <div class="custom-option" data-value="en">English</div>
+                    <div class="custom-option" data-value="om">Afan Oromoo</div>
+                    <div class="custom-option" data-value="so">Soomaali</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="challenge-card">
+        <div class="challenge-label" id="lbl-challenge">Set the clock to:</div>
+        <div class="challenge-time" id="target-time">00:00</div>
+    </div>
+
+    <div class="clock-wrapper" id="clock-wrapper">
+        <svg viewBox="0 0 500 500" width="100%" height="100%">
+            <!-- Bells -->
+            <path d="M120,120 A60,60 0 0,1 210,60 L195,150 Z" fill="#fbbf24" stroke="#d97706" stroke-width="4" transform="rotate(-30 160 120)" />
+            <path d="M290,60 A60,60 0 0,1 380,120 L305,150 Z" fill="#fbbf24" stroke="#d97706" stroke-width="4" transform="rotate(30 340 120)" />
+            <rect x="225" y="40" width="50" height="20" rx="10" fill="#475569" />
+
+            <!-- Body -->
+            <circle cx="250" cy="250" r="180" class="cls-body" />
+            <circle cx="250" cy="250" r="150" class="cls-face" />
+
+            <!-- Markings -->
+            <g id="clock-marks"></g>
+            <g id="clock-numbers"></g>
+
+            <!-- Face Character -->
+            <g transform="translate(250, 210)">
+                <ellipse cx="-45" cy="-25" rx="18" ry="22" class="eye-white" />
+                <ellipse cx="45" cy="-25" rx="18" ry="22" class="eye-white" />
+                <circle cx="-45" cy="-25" r="7" class="eye-pupil" />
+                <circle cx="45" cy="-25" r="7" class="eye-pupil" />
+                <path d="M-15,5 Q0,20 15,5" fill="none" stroke="#1e293b" stroke-width="4" stroke-linecap="round" />
+            </g>
+
+            <!-- Hands -->
+            <g id="hour-hand-group" class="hand-container">
+                <rect x="240" y="140" width="20" height="120" class="hand-hour" />
+            </g>
+            <g id="min-hand-group" class="hand-container">
+                <rect x="243" y="90" width="14" height="170" class="hand-min" />
+            </g>
+
+            <circle cx="250" cy="250" r="12" class="center-nut" />
+        </svg>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-action btn-check" onclick="checkAnswer()" id="btn-check">Check ✓</button>
+        <button class="btn-action btn-show" onclick="showAnswer()" id="btn-answer">Answer 👁️</button>
+        <button class="btn-action btn-next" onclick="generateTime()" id="btn-next">Next ➡</button>
+    </div>
+</div>
+
+<!-- Reactions -->
+<div class="overlay" id="overlay-feedback">
+    <div class="modal">
+        <span class="modal-icon" id="fb-icon">⏰</span>
+        <div class="modal-title" id="fb-title">ትኽክል!</div>
+        <div class="modal-body" id="fb-msg">ብጣዕሚ ጽቡቕ! ጀግና ሕሳብ።</div>
+        <button class="btn-modal" onclick="closeFeedback()" id="btn-modal-next">ቀፃሊ ➡</button>
+    </div>
+</div>
+
+<script>
+    const translations = {
+        ti: {
+            title: "ሰዓት ጸወታ", challenge: "ሰዓት ናብዚ ኣስተኻኽል:", check: "ፈትሽ ✓", answer: "መልሲ ርአ 👁️", next: "ቀፃሊ ➡",
+            correct: "ትኽክል!", correctMsg: "ብጣዕሚ ጽቡቕ! ሰዓት ተማሂርካዮ።", 
+            wrong: "እንደገና ፈትን!", wrongMsg: "መልሲ ጌጋ እዩ። እንደገና ፈትሽ።"
+        },
+        am: {
+            title: "የሰዓት ጨዋታ", challenge: "ሰዓቱን ወደዚህ አስተካክል:", check: "አረጋግጥ ✓", answer: "መልሱን እይ 👁️", next: "ቀጣይ ➡",
+            correct: "ትክክል!", correctMsg: "በጣም ጎበዝ! ሰዓት ማወቅ ችለሃል።", 
+            wrong: "እንደገና ሞክር!", wrongMsg: "መልሱ ልክ አይደለም። እንደገና ሞክር።"
+        },
+        en: {
+            title: "Clock Master", challenge: "Set the clock to:", check: "Check ✓", answer: "Show Answer 👁️", next: "Next ➡",
+            correct: "Correct!", correctMsg: "Great job! You know your time.", 
+            wrong: "Try Again!", wrongMsg: "Oops! Not quite right. Keep trying."
+        },
+        om: {
+            title: "Tapha Sa'aatii", challenge: "Sa'aatii kanatti qajeልchi:", check: "Mirkaneessi ✓", answer: "Deebii Ilaali 👁️", next: "Itti Aanu ➡",
+            correct: "Sirrii!", correctMsg: "Baay'ee gaariidha! Sa'aatii beekta.", 
+            wrong: "Irra deebi'ii!", wrongMsg: "Deebiin dogoggora. Irra deebi'ii ilaali."
+        },
+        so: {
+            title: "Ciyaarta Saacadda", challenge: "Saacadda u hagaaji:", check: "Hubi ✓", answer: "Eeg Jawaabta 👁️", next: "Xiga ➡",
+            correct: "Sax!", correctMsg: "Shaqo fiican! Saacadda waad garanaysaa.", 
+            wrong: "Mar kale isku day!", wrongMsg: "Jawaabtu waa qalad. Mar kale isku day."
+        }
+    };
+
+    let currentLang = 'ti';
+    let targetH = 12, targetM = 0;
+    let userH = 12, userM = 0;
+    let isCorrect = false;
+
+    const hourHand = document.getElementById('hour-hand-group');
+    const minHand = document.getElementById('min-hand-group');
+
+    function init() {
+        initClockFace();
+        updateLanguage();
+        generateTime();
+        makeDraggable(hourHand, true);
+        makeDraggable(minHand, false);
+    }
+
+    function initClockFace() {
+        const marks = document.getElementById('clock-marks');
+        const nums = document.getElementById('clock-numbers');
+        
+        for(let i=0; i<60; i++) {
+            const angle = i * 6;
+            const isHour = i % 5 === 0;
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", 250); line.setAttribute("y1", 105);
+            line.setAttribute("x2", 250); line.setAttribute("y2", isHour ? 125 : 112);
+            line.setAttribute("stroke", isHour ? "#1e293b" : "#94a3b8");
+            line.setAttribute("stroke-width", isHour ? "4" : "2");
+            line.setAttribute("transform", `rotate(${angle} 250 250)`);
+            marks.appendChild(line);
+        }
+
+        for(let i=1; i<=12; i++) {
+            const angle = (i * 30) * (Math.PI / 180);
+            const x = 250 + 115 * Math.sin(angle);
+            const y = 250 - 115 * Math.cos(angle);
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", x); text.setAttribute("y", y);
+            text.textContent = i;
+            text.classList.add('cls-num');
+            nums.appendChild(text);
+        }
+    }
+
+    function generateTime() {
+        targetH = Math.floor(Math.random() * 12) + 1;
+        targetM = Math.floor(Math.random() * 12) * 5; 
+        document.getElementById('target-time').textContent = `${targetH}:${targetM < 10 ? '0' + targetM : targetM}`;
+        
+        // Randomize start pos
+        userH = Math.floor(Math.random() * 12) + 1;
+        userM = Math.floor(Math.random() * 12) * 5;
+        updateRotation();
+        
+        document.getElementById('clock-wrapper').classList.remove('ringing');
+    }
+
+    function updateRotation() {
+        const hRot = (userH % 12) * 30 + (userM * 0.5);
+        const mRot = userM * 6;
+        hourHand.style.transform = `rotate(${hRot}deg)`;
+        minHand.style.transform = `rotate(${mRot}deg)`;
+    }
+
+    function showAnswer() {
+        userH = targetH; userM = targetM;
+        updateRotation();
+        playSound('pop');
+    }
+
+    function checkAnswer() {
+        const tH_Rot = (targetH % 12) * 30 + (targetM * 0.5);
+        const tM_Rot = targetM * 6;
+        
+        // User rotations
+        const uH_Rot = (userH % 12) * 30 + (userM * 0.5);
+        const uM_Rot = userM * 6;
+
+        let diffH = Math.abs(uH_Rot - tH_Rot);
+        if (diffH > 180) diffH = 360 - diffH;
+        let diffM = Math.abs(uM_Rot - tM_Rot);
+        if (diffM > 180) diffM = 360 - diffM;
+
+        isCorrect = (diffH < 10 && diffM < 5);
+        showFeedback();
+    }
+
+    function showFeedback() {
+        const t = translations[currentLang];
+        const modal = document.getElementById('overlay-feedback');
+        const title = document.getElementById('fb-title');
+        const msg = document.getElementById('fb-msg');
+        const icon = document.getElementById('fb-icon');
+
+        if (isCorrect) {
+            title.textContent = t.correct;
+            msg.textContent = t.correctMsg;
+            icon.textContent = '⏰🌟';
+            document.getElementById('clock-wrapper').classList.add('ringing');
+            playSound('win');
+            triggerConfetti();
+        } else {
+            title.textContent = t.wrong;
+            msg.textContent = t.wrongMsg;
+            icon.textContent = '💤';
+            playSound('fail');
+        }
+        modal.classList.add('show');
+    }
+
+    function closeFeedback() {
+        document.getElementById('overlay-feedback').classList.remove('show');
+        if (isCorrect) generateTime();
+    }
+
+    function makeDraggable(el, isHour) {
+        let isDragging = false;
+        const start = (e) => { e.preventDefault(); isDragging = true; el.style.transition = 'none'; };
+        const move = (e) => {
+            if (!isDragging) return;
+            const touch = e.touches ? e.touches[0] : e;
+            const svg = document.querySelector('svg');
+            const pt = svg.createSVGPoint();
+            pt.x = touch.clientX; pt.y = touch.clientY;
+            const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+            const dx = loc.x - 250; const dy = loc.y - 250;
+            let theta = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+            if (theta < 0) theta += 360;
+
+            if (isHour) {
+                let snap = Math.round(theta / 15) * 15;
+                el.style.transform = `rotate(${snap}deg)`;
+                userH = Math.floor(snap / 30); if(userH === 0) userH = 12;
+            } else {
+                let snap = Math.round(theta / 6) * 6;
+                el.style.transform = `rotate(${snap}deg)`;
+                userM = Math.round(snap / 6); if(userM === 60) userM = 0;
+            }
+            playSound('tick');
+        };
+        const end = () => { isDragging = false; el.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'; };
+        el.addEventListener('mousedown', start); el.addEventListener('touchstart', start);
+        window.addEventListener('mousemove', move); window.addEventListener('touchmove', move, {passive: false});
+        window.addEventListener('mouseup', end); window.addEventListener('touchend', end);
+    }
+
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.title;
+        document.getElementById('lbl-challenge').textContent = t.challenge;
+        document.getElementById('btn-check').textContent = t.check;
+        document.getElementById('btn-answer').textContent = t.answer;
+        document.getElementById('btn-next').textContent = t.next;
+        document.getElementById('btn-modal-next').textContent = t.next;
+    }
+
+    // Dropdown Handling
+    const dropdown = document.getElementById('lang-dropdown');
+    const trigger = dropdown.querySelector('.custom-select__trigger');
+    const options = dropdown.querySelectorAll('.custom-option');
+
+    trigger.addEventListener('click', (e) => {
+        dropdown.querySelector('.custom-select').classList.toggle('open');
+        e.stopPropagation();
+    });
+
+    options.forEach(opt => {
+        opt.addEventListener('click', function(e) {
+            e.stopPropagation();
+            currentLang = this.dataset.value;
+            document.getElementById('current-lang-text').textContent = "🗺️ " + this.textContent;
+            dropdown.querySelector('.custom-select').classList.remove('open');
+            updateLanguage();
+        });
+    });
+
+    window.addEventListener('click', () => dropdown.querySelector('.custom-select').classList.remove('open'));
+
+    // --- Audio ---
+    function playSound(type) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        if (type === 'win') {
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(440, t); osc.frequency.exponentialRampToValueAtTime(880, t + 0.15);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+            osc.start(t); osc.stop(t + 0.5);
+        } else if (type === 'tick') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(600, t);
+            gain.gain.setValueAtTime(0.02, t); gain.gain.linearRampToValueAtTime(0, t + 0.05);
+            osc.start(t); osc.stop(t + 0.05);
+        } else {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); osc.frequency.linearRampToValueAtTime(80, t + 0.4);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.4);
+            osc.start(t); osc.stop(t + 0.4);
+        }
+    }
+
+    // --- Confetti ---
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const pieces = [];
+        for(let i=0; i<100; i++) {
+            pieces.push({
+                x: canvas.width / 2, y: canvas.height / 2,
+                vx: (Math.random() - 0.5) * 30, vy: (Math.random() - 0.5) * 30 - 10,
+                color: `hsl(${Math.random()*360}, 100%, 70%)`, size: Math.random() * 12 + 6
+            });
+        }
+        function anim() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            let alive = false;
+            pieces.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.8;
+                if (p.y < canvas.height) {
+                    ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
+                    alive = true;
+                }
+            });
+            if (alive) requestAnimationFrame(anim);
+        }
+        anim();
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>
