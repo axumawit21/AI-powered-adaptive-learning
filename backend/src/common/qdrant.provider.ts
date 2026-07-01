@@ -7,8 +7,12 @@ export const qdrantProvider: Provider = {
   provide: QDRANT,
   useFactory: async () => {
     const url = process.env.QDRANT_URL || 'http://localhost:6333';
-    const client = new QdrantClient({ url });
-    console.log('✅ Connected to Qdrant at', url);
+    const apiKey = process.env.QDRANT_API_KEY;
+    const client = new QdrantClient({
+      url,
+      ...(apiKey && { apiKey }),
+    });
+    console.log('✅ Connected to Qdrant at', url, apiKey ? '(with API key)' : '(no auth)');
     return client;
   },
 };

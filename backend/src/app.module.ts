@@ -49,12 +49,12 @@ import { ThrottlerGuard } from '@nestjs/throttler';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>('MONGO_URI'),
-        // Connection pool — sized for 1000 concurrent users
-        maxPoolSize: 200,           // Max connections (up from 100)
-        minPoolSize: 20,            // Keep 20 warm connections ready
-        serverSelectionTimeoutMS: 5000,
-        connectTimeoutMS: 10000,    // Fail fast on connection issues
-        socketTimeoutMS: 30000,     // Release idle connections faster (was 45s)
+        // Connection pool — sized for cloud deployment
+        maxPoolSize: 50,            // Atlas M0 free tier supports ~500 connections; keep pool reasonable
+        minPoolSize: 5,             // Keep a few warm connections ready
+        serverSelectionTimeoutMS: 30000,  // 30s — Atlas needs more time than local MongoDB
+        connectTimeoutMS: 20000,    // 20s — cloud connection can be slower
+        socketTimeoutMS: 45000,     // 45s — reasonable for cloud operations
         retryWrites: true,
         w: 'majority',
       }),
