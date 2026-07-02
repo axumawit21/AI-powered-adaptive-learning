@@ -150,7 +150,7 @@ async function fetchTeachers() {
   try {
     const token = localStorage.getItem("adminToken");
     const res = await axios.get(
-      `http://localhost:3000/teachers?page=${page.value}&limit=50`,
+      `/teachers?page=${page.value}&limit=50`,
       {
         headers: { Authorization: `Bearer ${token}` },
       },
@@ -181,7 +181,7 @@ async function handleConfirmDelete() {
   try {
     const token = localStorage.getItem("adminToken");
     await axios.delete(
-      `http://localhost:3000/teachers/${teacherToDelete.value}`,
+      `/teachers/${teacherToDelete.value}`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
     toast.success("Teacher deleted successfully");

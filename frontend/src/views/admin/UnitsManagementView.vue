@@ -302,7 +302,7 @@ function handleConfirmRemove() {
 }
 
 async function fetchBooks() {
-  const res = await axios.get("http://localhost:3000/books");
+  const res = await axios.get("/books");
   books.value = res.data;
   if (selectedBookId.value) loadUnits();
 }
@@ -365,7 +365,7 @@ async function generateSummary(unit) {
     };
 
     const res = await axios.post(
-      "http://localhost:3000/summary/generate",
+      "/summary/generate",
       payload,
     );
     if (res.data.ok) {
@@ -403,7 +403,7 @@ async function generateSubunitSummary(unit, subunit) {
     };
 
     const res = await axios.post(
-      "http://localhost:3000/summary/generate",
+      "/summary/generate",
       payload,
     );
     if (res.data.ok) {
@@ -441,7 +441,7 @@ async function generateSubunitQuiz(unit, subunit) {
     };
 
     const res = await axios.post(
-      "http://localhost:3000/quiz/generate",
+      "/quiz/generate",
       payload,
     );
     if (res.data.ok) {
@@ -465,7 +465,7 @@ async function triggerUploadAudio(unit) {
 
   // Check if summary exists first
   try {
-    const res = await axios.get("http://localhost:3000/summary", {
+    const res = await axios.get("/summary", {
       params: {
         grade: book.grade?.title || "Unknown Grade",
         subject: book.subject?.title || "Unknown Subject",
@@ -545,7 +545,7 @@ async function generatePresentation(unit) {
     };
 
     const res = await axios.post(
-      "http://localhost:3000/presentation/generate",
+      "/presentation/generate",
       payload,
     );
     if (res.data.ok) {
@@ -612,12 +612,12 @@ async function saveUnits() {
     }));
 
     await axios.put(
-      `http://localhost:3000/books/${selectedBookId.value}/structure`,
+      `/books/${selectedBookId.value}/structure`,
       { units: payload },
     );
     toast.success("✅ Units saved successfully!");
     // Refresh to get updated data
-    const res = await axios.get("http://localhost:3000/books");
+    const res = await axios.get("/books");
     books.value = res.data;
     loadUnits();
   } catch (err) {

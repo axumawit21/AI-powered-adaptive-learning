@@ -62,7 +62,7 @@ export function useAudio() {
       // Note: Backend currently setup to throw/fallback for stability
       // so this will naturally hit the catch block and use TTS.
       // Once backend TTS is perfect, this line will start working automatically.
-      await axios.post('http://localhost:3000/audio/generate', { text });
+      await axios.post('/audio/generate', { text });
       
       // If we got here, we'd play the blob. 
       // (Implementation pending backend generic binary response support)

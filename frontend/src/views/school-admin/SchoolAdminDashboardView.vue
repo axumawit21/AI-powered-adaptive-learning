@@ -123,7 +123,7 @@ async function fetchStats() {
   try {
     const token = localStorage.getItem("schoolAdminToken");
     const res = await axios.get(
-      `http://localhost:3000/schools/${schoolId.value}/stats`,
+      `/schools/${schoolId.value}/stats`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
     stats.value = res.data;

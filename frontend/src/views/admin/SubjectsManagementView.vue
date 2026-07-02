@@ -114,7 +114,7 @@ const showDeleteConfirm = ref(false);
 const subjectToDelete = ref(null);
 
 async function fetchSubjects() {
-  const res = await axios.get("http://localhost:3000/subjects");
+  const res = await axios.get("/subjects");
   subjects.value = res.data;
 }
 
@@ -127,11 +127,11 @@ function editSubject(subject) {
 async function saveSubject() {
   if (editingId.value) {
     await axios.put(
-      `http://localhost:3000/subjects/${editingId.value}`,
+      `/subjects/${editingId.value}`,
       form.value,
     );
   } else {
-    await axios.post("http://localhost:3000/subjects", form.value);
+    await axios.post("/subjects", form.value);
   }
   closeModal();
   fetchSubjects();
@@ -146,7 +146,7 @@ async function handleConfirmDelete() {
   if (!subjectToDelete.value) return;
   try {
     await axios.delete(
-      `http://localhost:3000/subjects/${subjectToDelete.value}`,
+      `/subjects/${subjectToDelete.value}`,
     );
     toast.success("Subject deleted successfully");
     fetchSubjects();

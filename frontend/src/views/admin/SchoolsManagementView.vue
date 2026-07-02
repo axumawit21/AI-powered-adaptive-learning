@@ -289,7 +289,7 @@ async function fetchSchools() {
   }
 
   try {
-    const res = await axios.get("http://localhost:3000/schools", {
+    const res = await axios.get("/schools", {
       headers: { Authorization: `Bearer ${adminToken}` },
     });
     schools.value = res.data;
@@ -308,7 +308,7 @@ async function fetchSchools() {
 async function createSchool() {
   creating.value = true;
   try {
-    await axios.post("http://localhost:3000/schools", newSchool.value, {
+    await axios.post("/schools", newSchool.value, {
       headers: { Authorization: `Bearer ${token()}` },
     });
     toast.success("School created successfully");
@@ -331,7 +331,7 @@ async function deleteSchool(id) {
     return;
   }
   try {
-    await axios.delete(`http://localhost:3000/schools/${id}`, {
+    await axios.delete(`/schools/${id}`, {
       headers: { Authorization: `Bearer ${token()}` },
     });
     toast.success("School deleted");
@@ -353,7 +353,7 @@ async function createSchoolAdmin() {
   try {
     // Register admin with school_admin role
     await axios.post(
-      "http://localhost:3000/admin/register",
+      "/admin/register",
       {
         ...newAdmin.value,
         role: "school_admin",

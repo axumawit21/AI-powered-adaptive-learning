@@ -85,7 +85,7 @@ const stats = ref({
 
 async function fetchStats() {
   try {
-    const res = await axios.get("http://localhost:3000/analytics/dashboard");
+    const res = await axios.get("/analytics/dashboard");
     stats.value = res.data;
   } catch (err) {
     console.error("Failed to fetch stats:", err);

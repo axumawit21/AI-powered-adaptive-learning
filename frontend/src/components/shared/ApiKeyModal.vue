@@ -180,7 +180,7 @@ async function saveKey() {
     const token = localStorage.getItem(tokenKey);
 
     await axios.patch(
-      `http://localhost:3000${endpoint}`,
+      `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${endpoint}`,
       { geminiApiKey: apiKey.value.trim() },
       {
         headers: { Authorization: `Bearer ${token}` },

@@ -524,10 +524,10 @@ const availableSubunits = computed(() => {
 async function fetchData() {
   try {
     const [booksRes, statsRes, gradesRes, subjectsRes] = await Promise.all([
-      axios.get("http://localhost:3000/books"),
+      axios.get("/books"),
       questionBankApi.getStats(),
-      axios.get("http://localhost:3000/grades"),
-      axios.get("http://localhost:3000/subjects"),
+      axios.get("/grades"),
+      axios.get("/subjects"),
     ]);
     books.value = booksRes.data;
     stats.value = statsRes;

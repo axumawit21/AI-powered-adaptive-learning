@@ -189,7 +189,7 @@ async function uploadFile() {
 
   try {
     const res = await axios.post(
-      `http://localhost:3000/schools/${schoolId.value}/students/bulk-import-csv`,
+      `/schools/${schoolId.value}/students/bulk-import-csv`,
       formData,
       {
         headers: {

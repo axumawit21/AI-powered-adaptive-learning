@@ -151,7 +151,7 @@ async function fetchTeachers() {
     }
 
     const res = await axios.get(
-      `http://localhost:3000/schools/${schoolId}/teachers?page=${page.value}&limit=50`,
+      `/schools/${schoolId}/teachers?page=${page.value}&limit=50`,
       {
         headers: { Authorization: `Bearer ${token}` },
       },
@@ -185,7 +185,7 @@ async function handleConfirmDelete() {
     const schoolId = schoolAdmin.schoolId;
 
     await axios.delete(
-      `http://localhost:3000/schools/${schoolId}/teachers/${teacherToDelete.value}`,
+      `/schools/${schoolId}/teachers/${teacherToDelete.value}`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
     toast.success("Teacher deleted successfully");

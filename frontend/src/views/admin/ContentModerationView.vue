@@ -523,8 +523,8 @@ async function fetchStats() {
 async function fetchGradesSubjects() {
   try {
     const [gradesRes, subjectsRes] = await Promise.all([
-      axios.get("http://localhost:3000/grades"),
-      axios.get("http://localhost:3000/subjects"),
+      axios.get("/grades"),
+      axios.get("/subjects"),
     ]);
     grades.value = gradesRes.data;
     subjects.value = subjectsRes.data;

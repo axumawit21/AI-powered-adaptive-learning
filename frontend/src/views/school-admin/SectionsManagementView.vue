@@ -512,7 +512,7 @@ async function uploadFile() {
 
   try {
     const res = await axios.post(
-      `http://localhost:3000/schools/${schoolId.value}/students/bulk-import-csv`,
+      `/schools/${schoolId.value}/students/bulk-import-csv`,
       formData,
       {
         headers: {
@@ -555,7 +555,7 @@ async function fetchSections() {
   if (!schoolId.value) return;
   try {
     const res = await axios.get(
-      `http://localhost:3000/schools/${schoolId.value}/sections`,
+      `/schools/${schoolId.value}/sections`,
       { headers: { Authorization: `Bearer ${token.value}` } },
     );
     sections.value = res.data;
@@ -569,7 +569,7 @@ async function fetchSections() {
 
 async function fetchGrades() {
   try {
-    const res = await axios.get("http://localhost:3000/grades");
+    const res = await axios.get("/grades");
     grades.value = res.data;
   } catch (err) {
     console.error("Failed to fetch grades:", err);
@@ -581,7 +581,7 @@ async function createSection() {
   creating.value = true;
   try {
     await axios.post(
-      `http://localhost:3000/schools/${schoolId.value}/sections`,
+      `/schools/${schoolId.value}/sections`,
       { name: newSection.value.name, gradeId: newSection.value.gradeId },
       { headers: { Authorization: `Bearer ${token.value}` } },
     );
@@ -599,7 +599,7 @@ async function createSection() {
 async function deleteSection(id) {
   if (!confirm("Are you sure you want to delete this section?")) return;
   try {
-    await axios.delete(`http://localhost:3000/schools/sections/${id}`, {
+    await axios.delete(`/schools/sections/${id}`, {
       headers: { Authorization: `Bearer ${token.value}` },
     });
     toast.success("Section deleted");

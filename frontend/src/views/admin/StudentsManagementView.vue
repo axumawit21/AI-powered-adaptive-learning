@@ -67,7 +67,7 @@ const showDeleteConfirm = ref(false);
 const studentToDelete = ref(null);
 
 async function fetchStudents() {
-  const res = await axios.get("http://localhost:3000/students");
+  const res = await axios.get("/students");
   students.value = res.data.data;
 }
 
@@ -80,7 +80,7 @@ async function handleConfirmDelete() {
   if (!studentToDelete.value) return;
   try {
     await axios.delete(
-      `http://localhost:3000/students/${studentToDelete.value}`,
+      `/students/${studentToDelete.value}`,
     );
     toast.success("Student deleted successfully");
     fetchStudents();

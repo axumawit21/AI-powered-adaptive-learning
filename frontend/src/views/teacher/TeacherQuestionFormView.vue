@@ -579,9 +579,9 @@ onMounted(async () => {
 async function loadData() {
   try {
     const [gradesRes, subjectsRes, booksRes] = await Promise.all([
-      axios.get("http://localhost:3000/grades"),
-      axios.get("http://localhost:3000/subjects"),
-      axios.get("http://localhost:3000/books"),
+      axios.get("/grades"),
+      axios.get("/subjects"),
+      axios.get("/books"),
     ]);
     grades.value = gradesRes.data;
     subjects.value = subjectsRes.data;

@@ -307,7 +307,7 @@ async function fetchStudents() {
   if (!schoolId.value) return;
   try {
     const res = await axios.get(
-      `http://localhost:3000/students?schoolId=${schoolId.value}`,
+      `/students?schoolId=${schoolId.value}`,
       { headers: { Authorization: `Bearer ${token.value}` } },
     );
     students.value = res.data.data || res.data;
@@ -320,7 +320,7 @@ async function fetchSections() {
   if (!schoolId.value) return;
   try {
     const res = await axios.get(
-      `http://localhost:3000/schools/${schoolId.value}/sections`,
+      `/schools/${schoolId.value}/sections`,
       { headers: { Authorization: `Bearer ${token.value}` } },
     );
     sections.value = res.data;
@@ -331,7 +331,7 @@ async function fetchSections() {
 
 async function fetchGrades() {
   try {
-    const res = await axios.get("http://localhost:3000/grades");
+    const res = await axios.get("/grades");
     grades.value = res.data;
   } catch (err) {
     console.error("Failed to fetch grades:", err);

@@ -131,7 +131,7 @@ const showDeleteConfirm = ref(false);
 const gradeToDelete = ref(null);
 
 async function fetchGrades() {
-  const res = await axios.get("http://localhost:3000/grades");
+  const res = await axios.get("/grades");
   grades.value = res.data;
 }
 
@@ -144,11 +144,11 @@ function editGrade(grade) {
 async function saveGrade() {
   if (editingId.value) {
     await axios.put(
-      `http://localhost:3000/grades/${editingId.value}`,
+      `/grades/${editingId.value}`,
       form.value,
     );
   } else {
-    await axios.post("http://localhost:3000/grades", form.value);
+    await axios.post("/grades", form.value);
   }
   closeModal();
   fetchGrades();
@@ -162,7 +162,7 @@ function triggerDelete(id) {
 async function handleConfirmDelete() {
   if (!gradeToDelete.value) return;
   try {
-    await axios.delete(`http://localhost:3000/grades/${gradeToDelete.value}`);
+    await axios.delete(`/grades/${gradeToDelete.value}`);
     toast.success("Grade deleted successfully");
     fetchGrades();
   } catch (err) {

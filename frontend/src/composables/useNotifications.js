@@ -85,8 +85,9 @@ export function useNotifications() {
     }
 
     // Connect to WebSocket
-    console.log('🔌 Attempting to connect to WebSocket: http://localhost:3000/notifications');
-    socket.value = io('http://localhost:3000/notifications', {
+    const wsUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    console.log('🔌 Attempting to connect to WebSocket:', wsUrl + '/notifications');
+    socket.value = io(`${wsUrl}/notifications`, {
       transports: ['websocket'],
     });
 

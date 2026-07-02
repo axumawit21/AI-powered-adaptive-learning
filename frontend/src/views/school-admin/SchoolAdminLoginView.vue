@@ -88,7 +88,7 @@ async function handleLogin() {
   error.value = "";
   try {
     // Use admin login endpoint - school_admin role will be validated
-    const res = await axios.post("http://localhost:3000/admin/login", {
+    const res = await axios.post("/admin/login", {
       email: email.value,
       password: password.value,
     });

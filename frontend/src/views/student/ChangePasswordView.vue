@@ -106,7 +106,7 @@ async function handleChangePassword() {
   loading.value = true;
   try {
     await axios.patch(
-      "http://localhost:3000/auth/change-password",
+      "/auth/change-password",
       {
         currentPassword: currentPassword.value,
         newPassword: newPassword.value,

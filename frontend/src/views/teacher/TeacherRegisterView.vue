@@ -255,7 +255,7 @@ const subjects = ref([]);
 async function fetchSchools() {
   try {
     // Use public endpoint for registration form
-    const res = await axios.get("http://localhost:3000/schools/list");
+    const res = await axios.get("/schools/list");
     schools.value = res.data || [];
   } catch (err) {
     console.error("Error fetching schools:", err);
@@ -264,7 +264,7 @@ async function fetchSchools() {
 
 async function fetchGrades() {
   try {
-    const res = await axios.get("http://localhost:3000/grades");
+    const res = await axios.get("/grades");
     grades.value = res.data || [];
   } catch (err) {
     console.error("Error fetching grades:", err);
@@ -279,7 +279,7 @@ async function fetchSubjects() {
   }
   try {
     // Subjects are not tied to specific grades, so fetch all
-    const res = await axios.get("http://localhost:3000/subjects");
+    const res = await axios.get("/subjects");
     subjects.value = res.data || [];
   } catch (err) {
     console.error("Error fetching subjects:", err);
@@ -302,7 +302,7 @@ async function handleRegister() {
     if (geminiApiKey.value) payload.geminiApiKey = geminiApiKey.value;
 
     const res = await axios.post(
-      "http://localhost:3000/auth/teacher/register",
+      "/auth/teacher/register",
       payload,
     );
 

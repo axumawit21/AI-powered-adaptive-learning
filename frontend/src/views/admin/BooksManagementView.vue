@@ -233,9 +233,9 @@ const filteredAndSortedBooks = computed(() => {
 
 async function fetchData() {
   const [booksRes, gradesRes, subjectsRes] = await Promise.all([
-    axios.get("http://localhost:3000/books"),
-    axios.get("http://localhost:3000/grades"),
-    axios.get("http://localhost:3000/subjects"),
+    axios.get("/books"),
+    axios.get("/grades"),
+    axios.get("/subjects"),
   ]);
   books.value = booksRes.data;
   grades.value = gradesRes.data;
@@ -259,7 +259,7 @@ async function uploadBook() {
   formData.append("subject", form.value.subjectId);
 
   try {
-    await axios.post("http://localhost:3000/books/upload", formData, {
+    await axios.post("/books/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -309,7 +309,7 @@ async function preprocessBook(id) {
 
   processingBooks.value.add(id);
   try {
-    const res = await axios.post(`http://localhost:3000/preprocess/${id}`);
+    const res = await axios.post(`/preprocess/${id}`);
     toast.success(
       `Success: ${res.data.data.message} (${res.data.data.totalPoints} chunks)`,
     );
@@ -333,7 +333,7 @@ function confirmDelete(id) {
 async function deleteBook() {
   if (!bookToDelete.value) return;
   try {
-    await axios.delete(`http://localhost:3000/books/${bookToDelete.value}`);
+    await axios.delete(`/books/${bookToDelete.value}`);
     fetchData();
     toast.success("Book deleted successfully");
   } catch (err) {
