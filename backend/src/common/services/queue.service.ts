@@ -46,10 +46,14 @@ export class QueueService implements OnModuleInit {
   private queues: Map<string, Queue> = new Map();
 
   async onModuleInit() {
-    const redisConfig = {
-      host: process.env.REDIS_HOST || '127.0.0.1',
-      port: Number(process.env.REDIS_PORT || 6379),
-    };
+    // Support REDIS_URL (cloud) or host/port (local)
+    const redisUrl = process.env.REDIS_URL;
+    const redisConfig = redisUrl
+      ? redisUrl
+      : {
+          host: process.env.REDIS_HOST || '127.0.0.1',
+          port: Number(process.env.REDIS_PORT || 6379),
+        };
 
     // Create queues for different job types
     const queueNames = [
