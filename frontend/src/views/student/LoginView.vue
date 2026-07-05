@@ -21,6 +21,36 @@
         Welcome Back
       </h2>
 
+      <!-- Demo Credentials Card -->
+      <div
+        class="mb-5 p-4 rounded-lg border"
+        style="
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(139, 92, 246, 0.08));
+          border-color: rgba(6, 182, 212, 0.25);
+        "
+      >
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-lg">🔑</span>
+          <span class="text-sm font-semibold text-cyan-400">Demo Credentials</span>
+        </div>
+        <div class="text-sm text-slate-300 space-y-1">
+          <p><span class="text-slate-400">Email:</span> <span class="font-mono text-cyan-300">yorda@gmail.com</span></p>
+          <p><span class="text-slate-400">Password:</span> <span class="font-mono text-cyan-300">123456</span></p>
+        </div>
+        <button
+          type="button"
+          @click="fillDemoCredentials"
+          class="mt-3 w-full text-sm font-medium py-1.5 rounded-md transition-all hover:scale-[1.02]"
+          style="
+            background: linear-gradient(90deg, rgba(6, 182, 212, 0.15), rgba(139, 92, 246, 0.15));
+            color: #67e8f9;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+          "
+        >
+          Use Demo Credentials
+        </button>
+      </div>
+
       <form @submit.prevent="handleLogin" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-slate-400 mb-1"
@@ -83,6 +113,11 @@ const error = ref("");
 const loading = ref(false);
 const router = useRouter();
 const { login } = useAuth();
+
+function fillDemoCredentials() {
+  email.value = "yorda@gmail.com";
+  password.value = "123456";
+}
 
 async function handleLogin() {
   loading.value = true;
